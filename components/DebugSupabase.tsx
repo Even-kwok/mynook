@@ -35,13 +35,37 @@ export const DebugSupabase: React.FC = () => {
       const { data, error } = await supabase.from('users').select('count').limit(1);
       if (error) {
         tests.connectionStatus = `❌ 连接失败: ${error.message}`;
-        tests.connectionError = error;
+        tests.connectionError = {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        };
+        
+        // 特殊错误提示
+        if (error.message.includes('Failed to fetch')) {
+          tests.possibleCauses = [
+            '🔥 Supabase项目可能已暂停或未激活',
+            '🌐 网络连接问题',
+            '🔒 防火墙或代理阻止连接',
+            '📍 检查Supabase项目URL是否正确',
+          ];
+        }
       } else {
         tests.connectionStatus = '✅ Supabase连接成功';
       }
     } catch (err: any) {
       tests.connectionStatus = `❌ 连接异常: ${err.message}`;
-      tests.connectionError = err;
+      tests.connectionError = {
+        message: err.message,
+        type: err.constructor.name,
+      };
+      tests.possibleCauses = [
+        '🔥 Supabase项目可能已暂停（免费版会自动暂停）',
+        '📍 URL配置错误',
+        '🌐 网络连接被阻止',
+        '⚠️ 请访问 Supabase Dashboard 检查项目状态',
+      ];
     }
 
     // 测试3: 检查auth状态
