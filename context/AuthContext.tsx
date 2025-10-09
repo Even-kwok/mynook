@@ -77,15 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentUser = await getCurrentUser();
         setUser(currentUser);
         
-        if (currentUser) {
-          try {
-            const userProfile = await getUserProfile(currentUser.id);
-            setProfile(userProfile);
-          } catch (profileError) {
-            console.error('Failed to load user profile:', profileError);
-            // 即使profile加载失败，也继续运行，避免阻塞整个应用
-          }
-        }
+        // 注意：不在初始化时加载profile，避免网络问题导致无限循环
+        // profile会在auth state change时加载
       } catch (error) {
         console.error('Init auth error:', error);
       } finally {
