@@ -1,21 +1,7 @@
-
-
-import { GoogleGenAI, Modality } from "@google/genai";
-
-const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-    console.warn("Google Gemini API key is not configured. AI features will be disabled until GEMINI_API_KEY is set.");
-}
-
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
-
-const requireClient = () => {
-    if (!ai) {
-        throw new Error("Google Gemini API key is not configured. Please add GEMINI_API_KEY to your environment.");
-    }
-    return ai;
-};
+/**
+ * Gemini Service - Now calls backend API endpoints for security
+ * API keys are stored server-side only
+ */
 
 /**
  * Generates a text response from the model, with an optional image and system instruction.
@@ -30,28 +16,25 @@ export const generateTextResponse = async (
     base64Image: string | null
 ): Promise<string> => {
     try {
-        const textPart = { text: instruction };
-        const parts = [];
-
-        if (base64Image) {
-            const imagePart = {
-                inlineData: {
-                    data: base64Image.split(',')[1],
-                    mimeType: 'image/png', // The app consistently uses PNG format
-                },
-            };
-            parts.push(imagePart);
-        }
-        parts.push(textPart);
-
-        const response = await requireClient().models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [{ parts }],
-            config: {
-                systemInstruction: systemInstruction,
+        const response = await fetch('/api/generate-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+                instruction,
+                systemInstruction,
+                base64Image,
+            }),
         });
-        return response.text;
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to get response from server');
+        }
+
+        const data = await response.json();
+        return data.text;
     } catch (error) {
         console.error("Error generating text response:", error);
         throw new Error("Failed to get a response from the advisor. Please try again.");
@@ -66,11 +49,27 @@ export const generateTextResponse = async (
  */
 export const generateDynamicPrompt = async (themeDescription: string): Promise<string> => {
     try {
-        const response = await requireClient().models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Generate a creative and specific interior design style description. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`,
+        const instruction = `Generate a creative and specific interior design style description. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`;
+        
+        const response = await fetch('/api/generate-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                instruction,
+                systemInstruction: '',
+                base64Image: null,
+            }),
         });
-        return response.text;
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to get response from server');
+        }
+
+        const data = await response.json();
+        return data.text;
     } catch (error) {
         console.error("Error generating dynamic prompt:", error);
         throw new Error("Failed to generate a creative style. Please try again.");
@@ -85,39 +84,24 @@ export const generateDynamicPrompt = async (themeDescription: string): Promise<s
  */
 export const generateImage = async (instruction: string, base64Images: string[]): Promise<string> => {
     try {
-        const textPart = { text: instruction };
-        const imageParts = base64Images.map(imgData => ({
-            inlineData: {
-                data: imgData,
-                mimeType: 'image/png', // The app consistently uses PNG format
+        const response = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             },
-        }));
-
-        const response = await requireClient().models.generateContent({
-            // FIX: Use the correct model for image editing tasks.
-            model: 'gemini-2.5-flash-image',
-            // FIX: Wrap the 'parts' object in a 'contents' array to match the expected `Content[]` type,
-            // which is more robust for multi-modal requests.
-            contents: [{
-                parts: [
-                    ...imageParts,
-                    textPart,
-                ],
-            }],
-            config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
-            },
+            body: JSON.stringify({
+                instruction,
+                base64Images,
+            }),
         });
 
-        // The model can return multiple parts, find the image part.
-        const imagePart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-        
-        if (imagePart && imagePart.inlineData) {
-            const base64Data = imagePart.inlineData.data;
-            return `data:image/png;base64,${base64Data}`;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to get response from server');
         }
-        
-        throw new Error("API response did not contain image data.");
+
+        const data = await response.json();
+        return data.imageUrl;
     } catch (error) {
         console.error("Error generating image with Gemini:", error);
         throw new Error("Image generation failed. Please check the console for details.");
