@@ -12,6 +12,9 @@ import { PricingPage } from './components/PricingPage';
 import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
+import { useAuth } from './context/AuthContext';
+import { LoginModal } from './components/LoginModal';
+import { MEMBERSHIP_CONFIG } from './types/database';
 
 // --- Re-styled Helper Components ---
 
@@ -535,8 +538,24 @@ const Header: React.FC<{
             </div>
             <div className="flex items-center gap-4">
                 {user && (
-                    <div className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full">
-                        {`Credits: ${user.credits}`}
+                    <div className="flex items-center gap-2">
+                        {/* 会员等级徽章 */}
+                        <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                            user.permissionLevel === 1 ? 'bg-slate-100 text-slate-700' :
+                            user.permissionLevel === 2 ? 'bg-blue-100 text-blue-700' :
+                            user.permissionLevel === 3 ? 'bg-purple-100 text-purple-700' :
+                            'bg-amber-100 text-amber-700'
+                        }`}>
+                            {user.permissionLevel === 1 ? '🆓 FREE' :
+                             user.permissionLevel === 2 ? '⭐ PRO' :
+                             user.permissionLevel === 3 ? '👑 PREMIUM' :
+                             '💼 BUSINESS'}
+                        </div>
+                        {/* 信用点显示 */}
+                        <div className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-1.5">
+                            <IconSparkles className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>{user.permissionLevel === 4 ? '∞' : user.credits}</span>
+                        </div>
                     </div>
                 )}
 
@@ -936,132 +955,6 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (page: 
     );
 };
 
-const AuthModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    onLogin: (email: string, password: string) => string | null;
-    onRegister: (email: string, password: string) => string | null;
-}> = ({ isOpen, onClose, onLogin, onRegister }) => {
-    const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [authError, setAuthError] = useState<string | null>(null);
-    
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setAuthError(null);
-        let errorResult: string | null = null;
-        if (activeTab === 'signin') {
-            errorResult = onLogin(email, password);
-        } else {
-            errorResult = onRegister(email, password);
-        }
-        if (errorResult) {
-            setAuthError(errorResult);
-        } else {
-            onClose(); // Close modal on success
-        }
-    };
-
-    const handleSocialLogin = (providerEmail: string) => {
-        const errorResult = onLogin(providerEmail, 'social_login_placeholder');
-        if (errorResult) {
-            const registerError = onRegister(providerEmail, 'social_login_placeholder');
-            if (registerError) {
-                setAuthError(registerError);
-            } else {
-                onClose();
-            }
-        } else {
-            onClose();
-        }
-    };
-
-    useEffect(() => {
-        if (isOpen) {
-            setEmail('');
-            setPassword('');
-            setAuthError(null);
-            setActiveTab('signin');
-        }
-    }, [isOpen]);
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-slate-200/80 shadow-2xl w-full max-w-sm text-center relative"
-            >
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"><IconX /></button>
-                <div className="flex items-center justify-center gap-2 mb-6">
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent animate-gradient-pan">MyNook.AI</h2>
-                </div>
-                
-                <div className="flex justify-center border-b border-slate-200 mb-6">
-                    <button onClick={() => { setActiveTab('signin'); setAuthError(null); }} className={`py-3 px-6 text-sm font-medium transition-colors relative ${activeTab === 'signin' ? 'text-slate-800' : 'text-slate-500'}`}>
-                        Sign In
-                        {activeTab === 'signin' && <motion.div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500" layoutId="auth-underline" />}
-                    </button>
-                    <button onClick={() => { setActiveTab('signup'); setAuthError(null); }} className={`py-3 px-6 text-sm font-medium transition-colors relative ${activeTab === 'signup' ? 'text-slate-800' : 'text-slate-500'}`}>
-                        Sign Up
-                        {activeTab === 'signup' && <motion.div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500" layoutId="auth-underline" />}
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full p-3 bg-slate-100/80 border border-slate-300 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        />
-                    </div>
-                    <div>
-                         <input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full p-3 bg-slate-100/80 border border-slate-300 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        />
-                    </div>
-                    {authError && <p className="text-red-500 text-sm text-left">{authError}</p>}
-                     <Button type="submit" primary className="w-full py-3 text-base">
-                        {activeTab === 'signin' ? 'Sign In' : 'Create Account'}
-                    </Button>
-                </form>
-
-                <div className="flex items-center my-4">
-                    <div className="flex-grow border-t border-slate-300"></div>
-                    <span className="flex-shrink mx-4 text-slate-400 text-sm font-medium">OR</span>
-                    <div className="flex-grow border-t border-slate-300"></div>
-                </div>
-
-                <div className="space-y-3">
-                    <Button onClick={() => handleSocialLogin('user@google.com')} className="w-full !py-3">
-                        <IconGoogle />
-                        <span>Continue with Google</span>
-                    </Button>
-                    <Button onClick={() => handleSocialLogin('user@apple.com')} className="w-full !py-3">
-                        <IconApple className="w-6 h-6"/>
-                        <span>Continue with Apple</span>
-                    </Button>
-                </div>
-            </motion.div>
-        </div>
-    );
-};
-
-
 // --- Custom iOS-style Select Component ---
 
 const CustomSelect: React.FC<{
@@ -1152,6 +1045,31 @@ interface FreeCanvasState {
 
 
 const App: React.FC = () => {
+    // Auth - 使用新的Supabase认证系统
+    const auth = useAuth();
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    
+    // 创建兼容的用户对象（兼容旧的User类型）
+    const currentUser: User | null = auth.profile ? {
+        id: auth.profile.id,
+        email: auth.profile.email,
+        password: '', // 不再存储密码
+        status: 'Active',
+        joined: auth.profile.created_at,
+        lastIp: '',
+        registrationIp: '',
+        permissionLevel: (() => {
+            switch (auth.profile.membership_tier) {
+                case 'free': return 1;
+                case 'pro': return 2;
+                case 'premium': return 3;
+                case 'business': return 4;
+                default: return 1;
+            }
+        })(),
+        credits: auth.profile.credits,
+    } : null;
+
     // Navigation state
     const [activePage, setActivePage] = useState('Explore');
     
@@ -1171,91 +1089,20 @@ const App: React.FC = () => {
         setSelectedItemType(ITEM_TYPES[0].id);
     }, [activePage]);
 
-
-    // Auth state
-    const [users, setUsers] = useState<User[]>([]);
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-    // Load users from localStorage on initial render
-    useEffect(() => {
-        try {
-            const storedUsers = localStorage.getItem('homevision_users');
-            if (storedUsers) {
-                setUsers(JSON.parse(storedUsers));
-            }
-        } catch (error) {
-            console.error("Failed to parse users from localStorage", error);
-        }
-    }, []);
-
-    // Save users to localStorage whenever the users state changes
-    useEffect(() => {
-        try {
-            localStorage.setItem('homevision_users', JSON.stringify(users));
-        } catch (error) {
-            console.error("Failed to save users to localStorage", error);
-        }
-    }, [users]);
-
-
-    // --- Auth Handlers ---
-    const handleRegister = (email: string, password: string): string | null => {
-        if (users.some(u => u.email === email)) {
-            return "An account with this email already exists.";
-        }
-        const newUser: User = {
-            id: `user_${Date.now()}`,
-            email,
-            password,
-            status: 'Active',
-            joined: new Date().toISOString(),
-            registrationIp: '127.0.0.1', // Mock IP
-            lastIp: '127.0.0.1',       // Mock IP
-            permissionLevel: 1,        // Default to Normal User
-            credits: 10,               // Starting credits
-        };
-        setUsers(prev => [...prev, newUser]);
-        setCurrentUser(newUser);
-        return null;
+    // --- Auth Handlers (使用 Supabase) ---
+    const handleLogout = async () => {
+        await auth.signOut();
     };
     
-    const handleLogin = (email: string, password: string): string | null => {
-        const user = users.find(u => u.email === email);
-        if (!user) {
-            return "No account found with this email.";
-        }
-        if (user.password !== password) {
-            return "Incorrect password. Please try again.";
-        }
-        if (user.status === 'Banned') {
-            return "This account has been banned.";
-        }
-        
-        const updatedUser = { ...user, lastIp: '127.0.0.1' }; // Mock IP update
-        setUsers(users.map(u => u.id === user.id ? updatedUser : u));
-        setCurrentUser(updatedUser);
-        return null;
-    };
-
-    const handleLogout = () => {
-        setCurrentUser(null);
-    };
-    
+    // 保留用于Admin页面的用户更新函数（如果需要的话）
     const handleUpdateUser = (userId: string, updates: Partial<User>) => {
-        setUsers(currentUsers =>
-            currentUsers.map(u => (u.id === userId ? { ...u, ...updates } : u))
-        );
-         if (currentUser?.id === userId) {
-            setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
-        }
+        // TODO: 如果需要管理其他用户，需要通过Supabase API实现
+        console.log('Update user:', userId, updates);
     };
 
     const handleDeleteUser = (userId: string) => {
-        setUsers(users.filter(u => u.id !== userId));
-        if (currentUser?.id === userId) {
-            setCurrentUser(null);
-        }
+        // TODO: 如果需要删除用户，需要通过Supabase API实现
+        console.log('Delete user:', userId);
     };
 
     // Core generator state
@@ -2279,11 +2126,9 @@ const App: React.FC = () => {
             <AnimatePresence>
                 <ImageViewerModal imageUrl={fullScreenImage} onClose={() => setFullScreenImage(null)} />
             </AnimatePresence>
-            <AuthModal 
+            <LoginModal 
                 isOpen={isAuthModalOpen} 
                 onClose={() => setIsAuthModalOpen(false)}
-                onLogin={handleLogin}
-                onRegister={handleRegister}
             />
 
             <Header 
