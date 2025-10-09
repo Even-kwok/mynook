@@ -343,7 +343,16 @@ const ImageUploader: React.FC<{
                 {isUploading ? (
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
                 ) : imageUrl ? (
-                    <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-2xl" />
+                    <>
+                        <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-2xl" />
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                            className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            aria-label="Remove uploaded image"
+                        >
+                            <IconX />
+                        </button>
+                    </>
                 ) : (
                     <div className="flex flex-col items-center text-center p-4 cursor-pointer" onClick={onFileSelect}>
                          <div className="space-y-1 text-center">
@@ -1338,10 +1347,12 @@ const App: React.FC = () => {
     const handleFileSelect = (module: 'm1' | 'item' | 'sm' | 'multi', index: number) => {
         uploadTargetRef.current = { module, index };
         const input = fileInputRef.current;
-        if (input) {
-            input.multiple = false;
-            input.click();
-        }
+        if (!input) return;
+
+        input.value = "";
+        input.multiple = false;
+        input.accept = "image/png,image/jpeg";
+        input.click();
     };
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
