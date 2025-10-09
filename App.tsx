@@ -15,6 +15,7 @@ import { AdminPage } from './components/AdminPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { MEMBERSHIP_CONFIG } from './types/database';
+import { DebugSupabase } from './components/DebugSupabase';
 
 // --- Re-styled Helper Components ---
 
@@ -2130,6 +2131,9 @@ const App: React.FC = () => {
                 isOpen={isAuthModalOpen} 
                 onClose={() => setIsAuthModalOpen(false)}
             />
+            
+            {/* 开发调试工具 - 部署后可以删除 */}
+            <DebugSupabase />
 
             <Header 
                 activeItem={activePage} 
