@@ -29,6 +29,8 @@ export interface GenerationBatch {
   chatHistory?: ChatMessage[];
   multiModelResponses?: {
     personaId: string;
+    personaName: string;
+    personaImageUrl: string;
     text: string;
   }[];
   buildingTypeId?: string;

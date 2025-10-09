@@ -1281,6 +1281,11 @@ const App: React.FC = () => {
     const [selectedAdvisorIds, setSelectedAdvisorIds] = useState<string[]>([]);
     const [currentAdvisorResponse, setCurrentAdvisorResponse] = useState<GenerationBatch | null>(null);
     const [isAdvisorLoading, setIsAdvisorLoading] = useState(false);
+    const advisorById = useMemo(() => {
+        const map = new Map<string, AdvisorPersona>();
+        ALL_ADVISORS.forEach(persona => map.set(persona.id, persona));
+        return map;
+    }, []);
 
     // History state
     const [generationHistory, setGenerationHistory] = useState<GenerationBatch[]>([]);
@@ -1787,17 +1792,43 @@ const App: React.FC = () => {
         setGeneratedImages([]);
 
         const roomImage = module1Images.find((img): img is string => !!img);
-        const selectedPersonas = selectedAdvisorIds.map(id => ALL_ADVISORS.find(p => p.id === id)).filter((p): p is AdvisorPersona => !!p);
-
-        // Single persona response for now
-        const primaryPersona = selectedPersonas[0];
+        const selectedPersonas = selectedAdvisorIds
+            .map(id => ALL_ADVISORS.find(p => p.id === id))
+            .filter((p): p is AdvisorPersona => !!p);
 
         try {
-            const responseText = await generateTextResponse(
-                advisorQuestion,
-                primaryPersona.systemInstruction,
-                roomImage
+            const personaResults = await Promise.allSettled(
+                selectedPersonas.map(async persona => {
+                    const text = await generateTextResponse(
+                        advisorQuestion,
+                        persona.systemInstruction,
+                        roomImage
+                    );
+                    return { persona, text: text?.trim() ?? '' };
+                })
             );
+
+            const successfulResponses = personaResults.flatMap(result => {
+                if (result.status === 'fulfilled' && result.value.text) {
+                    return [result.value];
+                }
+                if (result.status === 'rejected') {
+                    console.error("Advisor persona request failed:", result.reason);
+                }
+                return [];
+            });
+
+            if (successfulResponses.length === 0) {
+                throw new Error("No advisor was able to generate a response.");
+            }
+
+            const chatHistory: ChatMessage[] = [
+                { role: 'user', text: advisorQuestion },
+                ...successfulResponses.map(({ persona, text }) => ({
+                    role: 'model',
+                    text: `${persona.name}: ${text}`,
+                }))
+            ];
 
             const newBatch: GenerationBatch = {
                 id: `advisor_${Date.now()}`,
@@ -1808,18 +1839,23 @@ const App: React.FC = () => {
                 prompt: advisorQuestion,
                 results: [],
                 templateIds: [],
-                textResponse: responseText,
-                chatHistory: [
-                    { role: 'user', text: advisorQuestion },
-                    { role: 'model', text: responseText }
-                ],
-                multiModelResponses: [{ personaId: primaryPersona.id, text: responseText }],
+                textResponse: successfulResponses[0].text,
+                chatHistory,
+                multiModelResponses: successfulResponses.map(({ persona, text }) => ({
+                    personaId: persona.id,
+                    personaName: persona.name,
+                    personaImageUrl: persona.imageUrl,
+                    text,
+                })),
                 userId: currentUser.id,
             };
 
             setCurrentAdvisorResponse(newBatch);
             setGenerationHistory(prev => [newBatch, ...prev]);
             
+            if (successfulResponses.length < selectedPersonas.length) {
+                setError("Some advisors could not respond. Showing available answers.");
+            }
         } catch (err) {
              console.error("Advisor generation failed:", err);
              setError("Failed to get a response from the advisor.");
@@ -2175,15 +2211,53 @@ const App: React.FC = () => {
                             ))}
                         </div>
                     ) : currentAdvisorResponse ? (
-                        <div className="p-8 max-w-4xl mx-auto">
-                            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                                <h2 className="text-xl font-semibold text-slate-800 mb-2">AI Advisor's Answer</h2>
-                                <p className="text-sm text-slate-500 mb-4 whitespace-pre-wrap"><strong>Your Question:</strong> {currentAdvisorResponse.prompt}</p>
-                                <div className="prose prose-slate max-w-none">
-                                    <p>{currentAdvisorResponse.textResponse}</p>
+                        (() => {
+                            const responses = (currentAdvisorResponse.multiModelResponses && currentAdvisorResponse.multiModelResponses.length > 0)
+                                ? currentAdvisorResponse.multiModelResponses
+                                : currentAdvisorResponse.textResponse
+                                    ? [{
+                                        personaId: 'ai-advisor-default',
+                                        personaName: 'AI Advisor',
+                                        personaImageUrl: '',
+                                        text: currentAdvisorResponse.textResponse,
+                                    }]
+                                    : [];
+                            return (
+                                <div className="p-8">
+                                    <div className="max-w-4xl mx-auto space-y-6">
+                                        <div className="flex justify-end">
+                                            <div className="max-w-xl bg-indigo-600 text-white rounded-3xl rounded-tr-sm shadow-lg p-5">
+                                                <div className="text-xs uppercase tracking-wide text-indigo-100 mb-2">You</div>
+                                                <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{currentAdvisorResponse.prompt}</p>
+                                            </div>
+                                        </div>
+                                        {responses.map((response) => {
+                                            const persona = advisorById.get(response.personaId);
+                                            const personaName = response.personaName || persona?.name || "Advisor";
+                                            const personaImage = response.personaImageUrl || persona?.imageUrl || '';
+                                            return (
+                                                <div key={`${currentAdvisorResponse.id}-${response.personaId}`} className="flex items-start gap-4">
+                                                    {personaImage ? (
+                                                        <img src={personaImage} alt={personaName} className="w-12 h-12 rounded-full border border-slate-200 object-cover" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600">
+                                                            {personaName.slice(0, 1)}
+                                                        </div>
+                                                    )}
+                                                    <div className="max-w-xl bg-white border border-slate-200 rounded-3xl rounded-tl-sm shadow-sm p-5">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="font-semibold text-slate-800">{personaName}</span>
+                                                            <span className="text-xs text-slate-400 uppercase tracking-wide">AI Designer</span>
+                                                        </div>
+                                                        <p className="text-sm sm:text-base leading-relaxed text-slate-600 whitespace-pre-wrap">{response.text}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            );
+                        })()
                     ) : (
                         <ResultsPlaceholder isAdvisor={isAIAdvisor} />
                     )}
