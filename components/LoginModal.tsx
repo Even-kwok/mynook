@@ -252,7 +252,7 @@ function getErrorMessage(error: any): string {
     return '邮箱或密码错误';
   }
   if (message.includes('Email not confirmed')) {
-    return '请先验证你的邮箱';
+    return '请先验证邮箱，或联系管理员禁用邮箱验证';
   }
   if (message.includes('User already registered')) {
     return '该邮箱已被注册';
@@ -263,8 +263,15 @@ function getErrorMessage(error: any): string {
   if (message.includes('Unable to validate email address')) {
     return '邮箱格式无效';
   }
+  if (message.includes('Email link is invalid')) {
+    return '邮箱链接无效或已过期';
+  }
+  if (message.includes('User not found')) {
+    return '用户不存在，请先注册';
+  }
   
-  // 默认错误
-  return '操作失败，请稍后重试';
+  // 显示原始错误信息以便调试
+  console.error('Auth error:', error);
+  return `操作失败: ${message || '未知错误'}`;
 }
 
