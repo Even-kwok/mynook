@@ -60,37 +60,45 @@ export default async function handler(
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const parts = [];
+    const sanitizedInstruction = instruction.trim();
+    const parts = [] as Array<{ text?: string; inlineData?: { data: string; mimeType: string } }>;
 
     if (typeof base64Image === 'string' && base64Image.length > 0) {
-      const [, imageData = base64Image] = base64Image.includes(',')
-        ? base64Image.split(',')
-        : [null, base64Image];
-      const imagePart = {
-        inlineData: {
-          data: imageData,
-          mimeType: 'image/png',
-        },
-      };
-      parts.push(imagePart);
+      const trimmedImage = base64Image.trim();
+      const commaIndex = trimmedImage.indexOf(',');
+      const imageData = commaIndex >= 0 ? trimmedImage.slice(commaIndex + 1) : trimmedImage;
+      if (imageData) {
+        parts.push({
+          inlineData: {
+            data: imageData,
+            mimeType: 'image/png',
+          },
+        });
+      }
     }
-    parts.push({ text: instruction });
+
+    parts.push({ text: sanitizedInstruction });
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash-exp',
-      contents: [{ parts }],
+      contents: [{
+        role: 'user',
+        parts,
+      }],
       config: typeof systemInstruction === 'string' && systemInstruction.trim().length > 0 ? {
-        systemInstruction: systemInstruction,
+        systemInstruction: systemInstruction.trim(),
       } : undefined,
     });
 
-    return res.status(200).json({ 
-      text: response.text 
+    return res.status(200).json({
+      text: response.text ?? ''
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error generating text response:', error);
-    return res.status(500).json({ 
-      error: 'Failed to generate response. Please try again.' 
+    return res.status(500).json({
+      error: 'Failed to generate response. Please try again.',
+      details: message,
     });
   }
 }

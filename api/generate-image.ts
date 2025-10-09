@@ -45,6 +45,20 @@ const extractInlineImage = (part: any): { data: string; mimeType: string | undef
   return null;
 };
 
+const normalizeBase64Image = (value: unknown): string | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const commaIndex = trimmed.indexOf(',');
+  return commaIndex >= 0 ? trimmed.slice(commaIndex + 1) : trimmed;
+};
+
 const downloadFilePart = async (
   ai: GoogleGenAI,
   part: any
@@ -59,7 +73,7 @@ const downloadFilePart = async (
   const tempPath = join(tmpdir(), `gemini-image-${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`);
 
   try {
-    await ai.files.downloadFile({ file: fileUri, downloadPath: tempPath });
+    await ai.files.download({ file: fileUri, downloadPath: tempPath });
     const fileBuffer = await fs.readFile(tempPath);
     return {
       data: fileBuffer.toString('base64'),
@@ -105,14 +119,22 @@ export default async function handler(
 
     const ai = new GoogleGenAI({ apiKey });
     const textPart = { text: instruction };
-    const imageParts = base64Images
-      .filter((imgData): imgData is string => typeof imgData === 'string' && imgData.length > 0)
-      .map((imgData) => ({
-        inlineData: {
-          data: imgData,
-          mimeType: 'image/png',
-        },
-      }));
+    const normalizedImages = base64Images
+      .map(normalizeBase64Image)
+      .filter((value): value is string => typeof value === 'string' && value.length > 0);
+
+    if (normalizedImages.length === 0) {
+      return res.status(400).json({
+        error: 'No valid base64 images were provided for generation.'
+      });
+    }
+
+    const imageParts = normalizedImages.map((imgData) => ({
+      inlineData: {
+        data: imgData,
+        mimeType: 'image/png',
+      },
+    }));
 
     if (imageParts.length === 0) {
       return res.status(400).json({
@@ -161,9 +183,11 @@ export default async function handler(
       error: 'API response did not contain image data.'
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error generating image:', error);
     return res.status(500).json({
-      error: 'Image generation failed. Please try again.'
+      error: 'Image generation failed. Please try again.',
+      details: message,
     });
   }
 }

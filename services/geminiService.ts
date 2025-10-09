@@ -30,7 +30,8 @@ export const generateTextResponse = async (
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to get response from server');
+            const detail = errorData.details ? ` Details: ${errorData.details}` : '';
+            throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
 
         const data = await response.json();
@@ -65,7 +66,8 @@ export const generateDynamicPrompt = async (themeDescription: string): Promise<s
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to get response from server');
+            const detail = errorData.details ? ` Details: ${errorData.details}` : '';
+            throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
 
         const data = await response.json();
@@ -97,7 +99,8 @@ export const generateImage = async (instruction: string, base64Images: string[])
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to get response from server');
+            const detail = errorData.details ? ` Details: ${errorData.details}` : '';
+            throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
 
         const data = await response.json();
