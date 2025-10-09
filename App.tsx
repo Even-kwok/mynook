@@ -1793,7 +1793,7 @@ const App: React.FC = () => {
 
         const roomImage = module1Images.find((img): img is string => !!img);
         const selectedPersonas = selectedAdvisorIds
-            .map(id => ALL_ADVISORS.find(p => p.id === id))
+            .map(id => advisorById.get(id))
             .filter((p): p is AdvisorPersona => !!p);
 
         try {
