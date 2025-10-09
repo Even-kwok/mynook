@@ -3,8 +3,19 @@
  * 用于用户认证、数据库操作等
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
+import type { createClient as CreateClient } from '@supabase/supabase-js';
+
+type SupabaseModule = {
+  createClient: CreateClient;
+};
+
+const loadSupabaseClient = async (): Promise<SupabaseModule> => {
+  const module = await import(
+    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2.75.0?bundle'
+  );
+  return module as SupabaseModule;
+};
 
 // 从环境变量获取配置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -23,6 +34,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
+const { createClient } = await loadSupabaseClient();
+
+const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
+
 // 创建 Supabase 客户端实例
 export const supabase = createClient<Database>(
   supabaseUrl || '',
@@ -32,7 +47,7 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storage: window.localStorage,
+      ...(storage ? { storage } : {}),
     },
     global: {
       headers: {
