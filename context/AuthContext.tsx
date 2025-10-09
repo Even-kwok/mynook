@@ -35,7 +35,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: any }>;
   
   // 用户操作
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (userId?: string) => Promise<void>;
   deductCredits: (amount?: number) => Promise<{ success: boolean; remainingCredits: number }>;
   
   // 便捷访问
@@ -56,10 +56,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   // 刷新用户资料
-  const refreshProfile = useCallback(async () => {
-    if (user) {
+  const refreshProfile = useCallback(async (userId?: string) => {
+    const targetUserId = userId || user?.id;
+
+    if (targetUserId) {
       try {
-        const userProfile = await getUserProfile(user.id);
+        const userProfile = await getUserProfile(targetUserId);
         setProfile(userProfile);
       } catch (error) {
         console.error('Failed to refresh profile:', error);
@@ -68,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       setProfile(null);
     }
-  }, [user]);
+  }, [user?.id]);
 
   // 初始化：获取当前用户
   useEffect(() => {
@@ -98,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (newSession?.user) {
         try {
-          await refreshProfile();
+          await refreshProfile(newSession.user.id);
         } catch (error) {
           console.error('Failed to refresh profile on auth change:', error);
           // 继续运行，不阻塞
@@ -129,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (authUser) {
         try {
-          await refreshProfile();
+          await refreshProfile(authUser.id);
         } catch (profileError) {
           console.error('Failed to load profile after sign in:', profileError);
           // 即使profile加载失败，也让用户登录成功
@@ -158,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (authUser) {
         try {
-          await refreshProfile();
+          await refreshProfile(authUser.id);
         } catch (profileError) {
           console.error('Failed to load profile after sign up:', profileError);
           // 即使profile加载失败，也让用户注册成功
