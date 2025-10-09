@@ -354,7 +354,7 @@ const ImageUploader: React.FC<{
                         </button>
                     </>
                 ) : (
-                    <div className="flex flex-col items-center text-center p-4 cursor-pointer" onClick={onFileSelect}>
+                    <div className="flex flex-col items-center text-center p-4 cursor-pointer">
                          <div className="space-y-1 text-center">
                             <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
                             <p className="text-sm text-slate-500">{description}</p>
