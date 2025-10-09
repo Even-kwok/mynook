@@ -1,0 +1,8 @@
+{
+  "name": "MyNookv5.1(满意)",
+  "description": "An AI-powered interior design studio that transforms your room photos into various creative themes and styles.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
