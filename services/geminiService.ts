@@ -2,11 +2,20 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
+const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+    console.warn("Google Gemini API key is not configured. AI features will be disabled until GEMINI_API_KEY is set.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const requireClient = () => {
+    if (!ai) {
+        throw new Error("Google Gemini API key is not configured. Please add GEMINI_API_KEY to your environment.");
+    }
+    return ai;
+};
 
 /**
  * Generates a text response from the model, with an optional image and system instruction.
@@ -35,7 +44,7 @@ export const generateTextResponse = async (
         }
         parts.push(textPart);
 
-        const response = await ai.models.generateContent({
+        const response = await requireClient().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: [{ parts }],
             config: {
@@ -57,7 +66,7 @@ export const generateTextResponse = async (
  */
 export const generateDynamicPrompt = async (themeDescription: string): Promise<string> => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await requireClient().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Generate a creative and specific interior design style description. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`,
         });
@@ -84,7 +93,7 @@ export const generateImage = async (instruction: string, base64Images: string[])
             },
         }));
 
-        const response = await ai.models.generateContent({
+        const response = await requireClient().models.generateContent({
             // FIX: Use the correct model for image editing tasks.
             model: 'gemini-2.5-flash-image',
             // FIX: Wrap the 'parts' object in a 'contents' array to match the expected `Content[]` type,
