@@ -167,7 +167,7 @@ export const PricingPage: React.FC = () => {
                                     ))}
                                 </ul>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>
