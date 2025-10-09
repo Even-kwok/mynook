@@ -1,6 +1,38 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
+interface GenerateTextRequestBody {
+  instruction?: unknown;
+  systemInstruction?: unknown;
+  base64Image?: unknown;
+}
+
+const parseRequestBody = (body: VercelRequest['body']): GenerateTextRequestBody => {
+  if (!body) {
+    return {};
+  }
+
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body);
+    } catch (error) {
+      console.error('Failed to parse request body:', error);
+      return {};
+    }
+  }
+
+  if (Buffer.isBuffer(body)) {
+    try {
+      return JSON.parse(body.toString('utf-8'));
+    } catch (error) {
+      console.error('Failed to parse request body:', error);
+      return {};
+    }
+  }
+
+  return body as GenerateTextRequestBody;
+};
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -21,19 +53,22 @@ export default async function handler(
   }
 
   try {
-    const { instruction, systemInstruction, base64Image } = req.body;
+    const { instruction, systemInstruction, base64Image } = parseRequestBody(req.body);
 
-    if (!instruction) {
+    if (typeof instruction !== 'string' || instruction.trim().length === 0) {
       return res.status(400).json({ error: 'instruction is required' });
     }
 
     const ai = new GoogleGenAI({ apiKey });
     const parts = [];
 
-    if (base64Image) {
+    if (typeof base64Image === 'string' && base64Image.length > 0) {
+      const [, imageData = base64Image] = base64Image.includes(',')
+        ? base64Image.split(',')
+        : [null, base64Image];
       const imagePart = {
         inlineData: {
-          data: base64Image.split(',')[1],
+          data: imageData,
           mimeType: 'image/png',
         },
       };
@@ -44,7 +79,7 @@ export default async function handler(
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash-exp',
       contents: [{ parts }],
-      config: systemInstruction ? {
+      config: typeof systemInstruction === 'string' && systemInstruction.trim().length > 0 ? {
         systemInstruction: systemInstruction,
       } : undefined,
     });
@@ -59,4 +94,3 @@ export default async function handler(
     });
   }
 }
-
