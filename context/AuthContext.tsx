@@ -58,8 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 刷新用户资料
   const refreshProfile = useCallback(async () => {
     if (user) {
-      const userProfile = await getUserProfile(user.id);
-      setProfile(userProfile);
+      try {
+        const userProfile = await getUserProfile(user.id);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Failed to refresh profile:', error);
+        // 不要在这里抛出错误，避免无限循环
+      }
     } else {
       setProfile(null);
     }
@@ -73,8 +78,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentUser);
         
         if (currentUser) {
-          const userProfile = await getUserProfile(currentUser.id);
-          setProfile(userProfile);
+          try {
+            const userProfile = await getUserProfile(currentUser.id);
+            setProfile(userProfile);
+          } catch (profileError) {
+            console.error('Failed to load user profile:', profileError);
+            // 即使profile加载失败，也继续运行，避免阻塞整个应用
+          }
         }
       } catch (error) {
         console.error('Init auth error:', error);
@@ -94,7 +104,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newSession?.user || null);
       
       if (newSession?.user) {
-        await refreshProfile();
+        try {
+          await refreshProfile();
+        } catch (error) {
+          console.error('Failed to refresh profile on auth change:', error);
+          // 继续运行，不阻塞
+        }
       } else {
         setProfile(null);
       }
