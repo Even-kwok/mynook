@@ -327,12 +327,6 @@ const ImageUploader: React.FC<{
 
     return (
         <div>
-            {imageUrl && (
-                 <div className="space-y-1 mb-3">
-                    <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
-                    <p className="text-sm text-slate-500">{description}</p>
-                </div>
-            )}
             <div
                 className={`aspect-square w-full bg-slate-100 rounded-3xl flex items-center justify-center border-2 border-dashed relative group hover:border-indigo-400 transition-all duration-300 ${isDragOver ? 'border-indigo-500 bg-indigo-50 scale-105' : 'border-slate-300'} ${imageUrl ? 'cursor-pointer' : ''}`}
                 onClick={() => {
@@ -349,16 +343,7 @@ const ImageUploader: React.FC<{
                 {isUploading ? (
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
                 ) : imageUrl ? (
-                    <>
-                        <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-2xl" />
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                            className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                            aria-label={`Remove image`}
-                        >
-                            <IconX />
-                        </button>
-                    </>
+                    <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                     <div className="flex flex-col items-center text-center p-4 cursor-pointer" onClick={onFileSelect}>
                          <div className="space-y-1 text-center">
