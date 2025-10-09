@@ -135,7 +135,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(authSession);
       
       if (authUser) {
-        await refreshProfile();
+        try {
+          await refreshProfile();
+        } catch (profileError) {
+          console.error('Failed to load profile after sign in:', profileError);
+          // 即使profile加载失败，也让用户登录成功
+          // 可以稍后重试或提示用户
+        }
       }
       
       return { error: null };
@@ -158,7 +164,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(authSession);
       
       if (authUser) {
-        await refreshProfile();
+        try {
+          await refreshProfile();
+        } catch (profileError) {
+          console.error('Failed to load profile after sign up:', profileError);
+          // 即使profile加载失败，也让用户注册成功
+          // 触发器可能需要几秒钟创建记录，稍后会自动重试
+        }
       }
       
       return { error: null };
