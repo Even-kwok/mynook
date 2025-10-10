@@ -8,6 +8,7 @@ import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
 import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark } from './components/Icons';
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
+import { getAllTemplates } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
 import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
@@ -1476,6 +1477,28 @@ const App: React.FC = () => {
     ];
     const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>(ADMIN_PAGE_CATEGORIES);
     const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>(Object.keys(ADMIN_PAGE_CATEGORIES));
+    const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
+
+    // Load templates from database on mount
+    useEffect(() => {
+        const loadTemplates = async () => {
+            try {
+                setTemplatesLoading(true);
+                const templates = await getAllTemplates();
+                if (Object.keys(templates).length > 0) {
+                    setAdminTemplateData(templates);
+                    setAdminCategoryOrder(Object.keys(templates));
+                }
+            } catch (error) {
+                console.error('Failed to load templates from database:', error);
+                // Keep using ADMIN_PAGE_CATEGORIES as fallback
+            } finally {
+                setTemplatesLoading(false);
+            }
+        };
+        
+        loadTemplates();
+    }, []);
 
     // --- Image Handling ---
     

@@ -7,6 +7,8 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates } from '../services/templateService';
+import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
 
@@ -221,6 +223,7 @@ const TemplateManagement: React.FC<{
     const [editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [targetCategory, setTargetCategory] = useState<{ main: string, sub: string } | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -240,34 +243,80 @@ const TemplateManagement: React.FC<{
         setIsTemplateModalOpen(true);
     };
 
-    const handleSaveTemplate = (updatedTemplate: PromptTemplate) => {
+    const handleSaveTemplate = async (updatedTemplate: PromptTemplate) => {
         if (!targetCategory) return;
         
-        setTemplateData(prevData => {
-            const newData = JSON.parse(JSON.stringify(prevData));
-            const subCategory = newData[targetCategory.main].find((c: ManagedPromptTemplateCategory) => c.name === targetCategory.sub);
-            if (!subCategory) return prevData;
-
-            const existingIndex = subCategory.templates.findIndex((t: PromptTemplate) => t.id === updatedTemplate.id);
-            if (existingIndex > -1) {
-                subCategory.templates[existingIndex] = updatedTemplate;
+        try {
+            // Check if this is a new template (temporary ID) or existing template
+            const isNewTemplate = updatedTemplate.id.startsWith('template_');
+            
+            if (isNewTemplate) {
+                // Create new template in database
+                await createTemplate({
+                    name: updatedTemplate.name,
+                    image_url: updatedTemplate.imageUrl,
+                    prompt: updatedTemplate.prompt,
+                    main_category: targetCategory.main,
+                    sub_category: targetCategory.sub,
+                    enabled: true,
+                    sort_order: 0
+                });
             } else {
-                subCategory.templates.push(updatedTemplate);
+                // Update existing template in database
+                await updateTemplate(updatedTemplate.id, {
+                    name: updatedTemplate.name,
+                    image_url: updatedTemplate.imageUrl,
+                    prompt: updatedTemplate.prompt,
+                    main_category: targetCategory.main,
+                    sub_category: targetCategory.sub
+                });
             }
-            return newData;
-        });
-        setIsTemplateModalOpen(false);
+            
+            // Update local state
+            setTemplateData(prevData => {
+                const newData = JSON.parse(JSON.stringify(prevData));
+                const subCategory = newData[targetCategory.main].find((c: ManagedPromptTemplateCategory) => c.name === targetCategory.sub);
+                if (!subCategory) return prevData;
+
+                const existingIndex = subCategory.templates.findIndex((t: PromptTemplate) => t.id === updatedTemplate.id);
+                if (existingIndex > -1) {
+                    subCategory.templates[existingIndex] = updatedTemplate;
+                } else {
+                    subCategory.templates.push(updatedTemplate);
+                }
+                return newData;
+            });
+            
+            setIsTemplateModalOpen(false);
+            
+            // Reload templates from database to get the actual IDs
+            window.location.reload();
+        } catch (error) {
+            console.error('Failed to save template:', error);
+            alert('Failed to save template. Please try again.');
+        }
     };
 
-    const handleDeleteTemplate = (templateId: string, mainCategory: string, subCategoryName: string) => {
-         setTemplateData(prevData => {
-            const newData = JSON.parse(JSON.stringify(prevData));
-            const subCategory = newData[mainCategory].find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
-            if (subCategory) {
-                subCategory.templates = subCategory.templates.filter((t: PromptTemplate) => t.id !== templateId);
-            }
-            return newData;
-        });
+    const handleDeleteTemplate = async (templateId: string, mainCategory: string, subCategoryName: string) => {
+        if (!confirm('Are you sure you want to delete this template?')) return;
+        
+        try {
+            // Delete from database
+            await deleteTemplateFromDB(templateId);
+            
+            // Update local state
+            setTemplateData(prevData => {
+                const newData = JSON.parse(JSON.stringify(prevData));
+                const subCategory = newData[mainCategory].find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
+                if (subCategory) {
+                    subCategory.templates = subCategory.templates.filter((t: PromptTemplate) => t.id !== templateId);
+                }
+                return newData;
+            });
+        } catch (error) {
+            console.error('Failed to delete template:', error);
+            alert('Failed to delete template. Please try again.');
+        }
     };
 
     const toggleSubCategory = (mainCategory: string, subCategoryName: string) => {
@@ -281,9 +330,53 @@ const TemplateManagement: React.FC<{
         });
     };
 
+    const handleImportTemplates = async () => {
+        if (!confirm('This will import all hard-coded templates into the database. Continue?')) return;
+        
+        setIsImporting(true);
+        try {
+            const templatesToImport: any[] = [];
+            
+            // 遍历所有分类
+            for (const [mainCategory, subCategories] of Object.entries(ADMIN_PAGE_CATEGORIES)) {
+                for (const subCategory of subCategories) {
+                    for (const template of subCategory.templates) {
+                        templatesToImport.push({
+                            name: template.name,
+                            image_url: template.imageUrl,
+                            prompt: template.prompt,
+                            main_category: mainCategory,
+                            sub_category: subCategory.name,
+                            enabled: subCategory.enabled !== false,
+                            sort_order: 0
+                        });
+                    }
+                }
+            }
+            
+            await batchImportTemplates(templatesToImport);
+            alert(`Successfully imported ${templatesToImport.length} templates! The page will reload now.`);
+            window.location.reload();
+        } catch (error) {
+            console.error('Failed to import templates:', error);
+            alert('Failed to import templates. Please check the console for details.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-800">Template Management</h3>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">Template Management</h3>
+                <Button 
+                    onClick={handleImportTemplates} 
+                    disabled={isImporting}
+                    className="!bg-green-50 hover:!bg-green-100 !text-green-600 !border-green-200"
+                >
+                    {isImporting ? 'Importing...' : 'Import Default Templates'}
+                </Button>
+            </div>
             <div className="mt-4 space-y-4">
                 {categoryOrder.map(mainCategory => (
                     <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
