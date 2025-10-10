@@ -7,7 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
@@ -247,7 +247,6 @@ const TemplateManagement: React.FC<{
         if (!targetCategory) return;
         
         try {
-            // Check if this is a new template (temporary ID) or existing template
             const templateId = typeof updatedTemplate.id === 'string'
                 ? updatedTemplate.id
                 : String(updatedTemplate.id);
@@ -275,25 +274,17 @@ const TemplateManagement: React.FC<{
                 });
             }
             
-            // Update local state
-            setTemplateData(prevData => {
-                const newData = JSON.parse(JSON.stringify(prevData));
-                const subCategory = newData[targetCategory.main].find((c: ManagedPromptTemplateCategory) => c.name === targetCategory.sub);
-                if (!subCategory) return prevData;
-
-                const existingIndex = subCategory.templates.findIndex((t: PromptTemplate) => t.id === updatedTemplate.id);
-                if (existingIndex > -1) {
-                    subCategory.templates[existingIndex] = updatedTemplate;
-                } else {
-                    subCategory.templates.push(updatedTemplate);
-                }
-                return newData;
-            });
+            // 重新从数据库加载所有模板
+            const freshTemplates = await getAllTemplates();
+            
+            // 更新父组件的state
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
             
             setIsTemplateModalOpen(false);
             
-            // Reload templates from database to get the actual IDs
-            window.location.reload();
+            alert('Template saved successfully!');
+            
         } catch (error) {
             console.error('Failed to save template:', error);
             alert('Failed to save template. Please try again.');
@@ -307,15 +298,12 @@ const TemplateManagement: React.FC<{
             // Delete from database
             await deleteTemplateFromDB(templateId);
             
-            // Update local state
-            setTemplateData(prevData => {
-                const newData = JSON.parse(JSON.stringify(prevData));
-                const subCategory = newData[mainCategory].find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
-                if (subCategory) {
-                    subCategory.templates = subCategory.templates.filter((t: PromptTemplate) => t.id !== templateId);
-                }
-                return newData;
-            });
+            // 重新从数据库加载
+            const freshTemplates = await getAllTemplates();
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
+            
+            alert('Template deleted successfully!');
         } catch (error) {
             console.error('Failed to delete template:', error);
             alert('Failed to delete template. Please try again.');
@@ -358,8 +346,13 @@ const TemplateManagement: React.FC<{
             }
             
             await batchImportTemplates(templatesToImport);
-            alert(`Successfully imported ${templatesToImport.length} templates! The page will reload now.`);
-            window.location.reload();
+            
+            // 重新从数据库加载
+            const freshTemplates = await getAllTemplates();
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
+            
+            alert(`Successfully imported ${templatesToImport.length} templates!`);
         } catch (error) {
             console.error('Failed to import templates:', error);
             alert('Failed to import templates. Please check the console for details.');

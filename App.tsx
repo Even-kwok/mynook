@@ -1484,55 +1484,36 @@ const App: React.FC = () => {
         const loadTemplates = async () => {
             try {
                 setTemplatesLoading(true);
-                // 使用公共API（不包含 prompt）
-                // 对于普通用户：只能看到模板的图片和名字
-                // 对于管理员：在 AdminPage 中会使用 getAllTemplates 获取完整数据
-                const templates = await getAllTemplatesPublic();
                 
-                // FIX: 合并数据库模板和硬编码模板，而不是完全替换
-                // 这样即使数据库中只有部分模板，用户仍然可以看到所有默认模板
+                // 根据用户角色选择API
+                const isAdminUser = currentUser?.permissionLevel === 4;
+                const templates = isAdminUser 
+                    ? await getAllTemplates()      // 管理员：获取完整数据（含prompt）
+                    : await getAllTemplatesPublic(); // 普通用户：不含prompt
+                
+                // 完全使用数据库模板，不合并硬编码模板
                 if (Object.keys(templates).length > 0) {
-                    // 创建合并后的模板数据
-                    const mergedTemplates: ManagedTemplateData = { ...ADMIN_PAGE_CATEGORIES };
-                    
-                    // 将数据库模板合并到对应的分类中
-                    for (const [mainCategory, subCategories] of Object.entries(templates)) {
-                        if (!mergedTemplates[mainCategory]) {
-                            mergedTemplates[mainCategory] = [];
-                        }
-                        
-                        // 合并子分类
-                        for (const dbSubCategory of subCategories) {
-                            const existingSubCategoryIndex = mergedTemplates[mainCategory].findIndex(
-                                sc => sc.name === dbSubCategory.name
-                            );
-                            
-                            if (existingSubCategoryIndex >= 0) {
-                                // 如果子分类已存在，替换该子分类的模板
-                                mergedTemplates[mainCategory][existingSubCategoryIndex] = dbSubCategory;
-                            } else {
-                                // 如果子分类不存在，添加新的子分类
-                                mergedTemplates[mainCategory].push(dbSubCategory);
-                            }
-                        }
-                    }
-                    
-                    setAdminTemplateData(mergedTemplates);
-                    setAdminCategoryOrder(Object.keys(mergedTemplates));
-                    console.log('✅ Templates loaded and merged from database');
+                    setAdminTemplateData(templates);
+                    setAdminCategoryOrder(Object.keys(templates));
+                    console.log('✅ Templates loaded from database');
                 } else {
-                    console.log('ℹ️ No templates in database, using default templates');
+                    // 仅在数据库完全为空时使用默认模板作为fallback
+                    console.log('ℹ️ Database empty, using default templates as fallback');
+                    setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
+                    setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
                 }
             } catch (error) {
-                console.error('Failed to load templates from database:', error);
-                // Keep using ADMIN_PAGE_CATEGORIES as fallback
+                console.error('Failed to load templates:', error);
+                // 错误时使用默认模板
+                setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
+                setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
             } finally {
                 setTemplatesLoading(false);
             }
         };
         
         loadTemplates();
-    }, []);
+    }, [currentUser?.permissionLevel]);
 
     // --- Image Handling ---
     
