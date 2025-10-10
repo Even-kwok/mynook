@@ -111,14 +111,22 @@ export const PricingPage: React.FC = () => {
             // Handle non-OK responses
             if (!response.ok) {
                 let errorMessage = 'Failed to create checkout session';
+                
+                // Clone response so we can read it multiple times if needed
+                const responseClone = response.clone();
+                
                 try {
                     const errorData = await response.json();
                     errorMessage = errorData.error || errorData.message || errorMessage;
                 } catch (parseError) {
-                    // If response is not JSON, try to read as text
-                    const textError = await response.text();
-                    errorMessage = textError || `Server error: ${response.status}`;
-                    console.error('Non-JSON error response:', textError);
+                    // If response is not JSON, try to read as text from the clone
+                    try {
+                        const textError = await responseClone.text();
+                        errorMessage = textError || `Server error: ${response.status}`;
+                        console.error('Non-JSON error response:', textError);
+                    } catch (textError) {
+                        errorMessage = `Server error: ${response.status}`;
+                    }
                 }
                 throw new Error(errorMessage);
             }
