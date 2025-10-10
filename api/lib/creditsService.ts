@@ -73,8 +73,8 @@ export async function getUserCredits(userId: string): Promise<{ credits: number;
     }
 
     return {
-      credits: data.credits,
-      membershipTier: data.membership_tier,
+      credits: data.credits as number,
+      membershipTier: data.membership_tier as string,
       error: null,
     };
   } catch (error) {
@@ -126,23 +126,23 @@ export async function deductCredits(
     }
 
     // 2. Business 会员不扣除信用点
-    const newCredits = user.membership_tier === 'business' 
-      ? user.credits 
-      : user.credits - amount;
+    const newCredits = (user.membership_tier as string) === 'business' 
+      ? (user.credits as number)
+      : (user.credits as number) - amount;
 
     // 3. 更新数据库
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         credits: newCredits,
-        total_generations: user.total_generations + 1,
+        total_generations: (user.total_generations as number) + 1,
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', userId);
 
     if (updateError) {
       console.error('Deduct credits error:', updateError);
-      return { success: false, remainingCredits: user.credits, error: 'Failed to deduct credits' };
+      return { success: false, remainingCredits: user.credits as number, error: 'Failed to deduct credits' };
     }
 
     return { success: true, remainingCredits: newCredits, error: null };
@@ -171,17 +171,17 @@ export async function refundCredits(
     }
 
     // Business 会员不需要回滚
-    if (user.membership_tier === 'business') {
+    if ((user.membership_tier as string) === 'business') {
       return { success: true, error: null };
     }
 
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
-        credits: user.credits + amount,
-        total_generations: Math.max(0, user.total_generations - 1),
+        credits: (user.credits as number) + amount,
+        total_generations: Math.max(0, (user.total_generations as number) - 1),
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', userId);
 
     if (updateError) {
