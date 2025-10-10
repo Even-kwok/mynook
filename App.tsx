@@ -674,6 +674,45 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 }
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
+    const [displayedCount, setDisplayedCount] = useState(20);
+    const [isLoading, setIsLoading] = useState(false);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+    const ITEMS_PER_LOAD = 20;
+    const TOTAL_ITEMS = EXPLORE_GALLERY_ITEMS.length;
+
+    // Infinite scroll with Intersection Observer
+    useEffect(() => {
+        const currentRef = loadMoreRef.current;
+        if (!currentRef) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const firstEntry = entries[0];
+                if (firstEntry.isIntersecting && !isLoading && displayedCount < TOTAL_ITEMS) {
+                    setIsLoading(true);
+                    
+                    // Simulate loading delay for better UX
+                    setTimeout(() => {
+                        setDisplayedCount((prev) => Math.min(prev + ITEMS_PER_LOAD, TOTAL_ITEMS));
+                        setIsLoading(false);
+                    }, 500);
+                }
+            },
+            { threshold: 0.1, rootMargin: '100px' }
+        );
+
+        observer.observe(currentRef);
+
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef);
+            }
+        };
+    }, [displayedCount, isLoading, TOTAL_ITEMS]);
+
+    const displayedItems = EXPLORE_GALLERY_ITEMS.slice(0, displayedCount);
+    const hasMore = displayedCount < TOTAL_ITEMS;
+
     return (
         <main className="flex-1 overflow-y-auto bg-white text-slate-800 scrollbar-hide flex flex-col">
             {/* Hero Section */}
@@ -704,7 +743,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             
             <section className="px-4 sm:px-6 lg:px-8 py-16">
                 <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
-                    {EXPLORE_GALLERY_ITEMS.map((item) => (
+                    {displayedItems.map((item) => (
                         <div 
                             key={item.id} 
                             className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 bg-slate-200"
@@ -713,7 +752,12 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             }}
                         >
                             {item.type === 'image' ? (
-                                <img src={item.src} alt={item.title} className="w-full h-full object-cover" />
+                                <img 
+                                    src={item.src} 
+                                    alt={item.title} 
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                />
                             ) : (
                                 <video 
                                     src={item.src} 
@@ -733,6 +777,32 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Loading indicator / End message */}
+                <div ref={loadMoreRef} className="flex justify-center items-center py-12">
+                    {isLoading && hasMore && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center gap-3"
+                        >
+                            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                            <p className="text-slate-500 text-sm">Loading more images...</p>
+                        </motion.div>
+                    )}
+                    
+                    {!hasMore && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col items-center gap-2"
+                        >
+                            <IconCheck className="w-8 h-8 text-indigo-600" />
+                            <p className="text-slate-600 font-medium">All {TOTAL_ITEMS} images loaded</p>
+                            <p className="text-slate-400 text-sm">You've reached the end</p>
+                        </motion.div>
+                    )}
                 </div>
             </section>
 

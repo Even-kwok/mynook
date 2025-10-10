@@ -626,125 +626,52 @@ export const ALL_PROMPT_TEMPLATES: PromptTemplate[] = [
     ...Object.values(ALL_FLOOR_STYLES),
 ];
 
-export const EXPLORE_GALLERY_ITEMS: GalleryItem[] = [
-  {
-    id: 'gallery-1',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_1.png',
-    title: 'Cozy Reading Nook',
-    author: 'DesignInspo',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 600,
-  },
-  {
-    id: 'gallery-2',
-    type: 'video',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/vid_1.mp4',
-    title: 'Sunlight in Modern Kitchen',
-    author: 'ArchViz',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 640,
-    height: 360,
-  },
-  {
-    id: 'gallery-3',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_2.png',
-    title: 'Minimalist Bedroom Sanctuary',
-    author: 'SereneSpaces',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 700,
-  },
-  {
-    id: 'gallery-4',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/templates/interior-industrial-loft.png',
-    title: 'Industrial Loft Living',
-    author: 'UrbanDesigns',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 500,
-    height: 600,
-  },
-  {
-    id: 'gallery-5',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_3.png',
-    title: 'Bohemian Patio Escape',
-    author: 'WanderlustHomes',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 550,
-  },
-  {
-    id: 'gallery-6',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png',
-    title: 'Japandi Harmony',
-    author: 'ZenInteriors',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 650,
-  },
-    {
-    id: 'gallery-7',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_4.png',
-    title: 'Dark Academia Library',
-    author: 'ClassicReads',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 500,
-  },
-    {
-    id: 'gallery-8',
-    type: 'video',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/vid_2.mp4',
-    title: 'Rainy Day Cafe',
-    author: 'CozyVibes',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 360,
-    height: 640,
-  },
-  {
-    id: 'gallery-9',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/templates/interior-art-deco.png',
-    title: 'Art Deco Glamour',
-    author: 'GatsbyHomes',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 500,
-    height: 750,
-  },
-  {
-    id: 'gallery-10',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_5.png',
-    title: 'Sleek Bathroom Design',
-    author: 'ModernBath',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 600,
-  },
-  {
-    id: 'gallery-11',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/templates/garden-zen.png',
-    title: 'Peaceful Zen Garden',
-    author: 'TranquilScapes',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 500,
-    height: 650,
-  },
-    {
-    id: 'gallery-12',
-    type: 'image',
-    src: 'https://storage.googleapis.com/aistudio-hosting/gallery/img_6.png',
-    title: 'Rustic Farmhouse Kitchen',
-    author: 'CountryLiving',
-    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-    width: 400,
-    height: 500,
-  },
-];
+// Generate 100 gallery items with random aspect ratios for waterfall layout
+const generateGalleryItems = (): GalleryItem[] => {
+  const ratios = [
+    { w: 600, h: 600 },   // 1:1 Square
+    { w: 600, h: 900 },   // 2:3 Portrait
+    { w: 600, h: 800 },   // 3:4 Portrait
+    { w: 600, h: 1067 },  // 9:16 Mobile portrait
+    { w: 600, h: 450 },   // 4:3 Landscape
+    { w: 600, h: 338 },   // 16:9 Wide landscape
+    { w: 600, h: 400 }    // 3:2 Landscape
+  ];
+
+  const titles = [
+    'Modern Living Room', 'Cozy Bedroom', 'Minimalist Kitchen', 'Industrial Loft',
+    'Bohemian Patio', 'Scandinavian Interior', 'Art Deco Glamour', 'Zen Garden',
+    'Rustic Farmhouse', 'Contemporary Office', 'Luxury Bathroom', 'Urban Balcony',
+    'Victorian Library', 'Coastal Retreat', 'Mountain Cabin', 'Desert Oasis',
+    'Japanese Harmony', 'French Cottage', 'Mediterranean Villa', 'Nordic Simplicity'
+  ];
+
+  const authors = [
+    'DesignInspo', 'ArchViz', 'SereneSpaces', 'UrbanDesigns', 'WanderlustHomes',
+    'ZenInteriors', 'ClassicReads', 'CozyVibes', 'GatsbyHomes', 'ModernBath',
+    'TranquilScapes', 'CountryLiving', 'MinimalStudio', 'LuxurySpaces', 'HomeArtistry'
+  ];
+
+  const items: GalleryItem[] = [];
+  
+  for (let i = 1; i <= 100; i++) {
+    const ratio = ratios[Math.floor(Math.random() * ratios.length)];
+    const title = titles[Math.floor(Math.random() * titles.length)];
+    const author = authors[Math.floor(Math.random() * authors.length)];
+    
+    items.push({
+      id: `gallery-${i}`,
+      type: 'image',
+      src: `https://picsum.photos/${ratio.w}/${ratio.h}?random=${i}`,
+      title: `${title} ${i}`,
+      author: author,
+      authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
+      width: ratio.w,
+      height: ratio.h,
+    });
+  }
+  
+  return items;
+};
+
+export const EXPLORE_GALLERY_ITEMS: GalleryItem[] = generateGalleryItems();
