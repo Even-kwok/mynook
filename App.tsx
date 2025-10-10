@@ -1174,6 +1174,74 @@ const App: React.FC = () => {
 
     // Navigation state
     const [activePage, setActivePage] = useState('Explore');
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [adminLevel, setAdminLevel] = useState<string>('none');
+    
+    // Check admin access on mount and user change
+    useEffect(() => {
+        const checkAdmin = async () => {
+            if (currentUser) {
+                const { checkAdminAccess, getAdminLevel } = await import('./services/adminService');
+                const hasAccess = await checkAdminAccess();
+                const level = await getAdminLevel();
+                setIsAdmin(hasAccess);
+                setAdminLevel(level);
+            } else {
+                setIsAdmin(false);
+                setAdminLevel('none');
+            }
+        };
+        
+        checkAdmin();
+    }, [currentUser]);
+    
+    // Monitor URL hash for admin access
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            
+            if (hash === '#admin' || hash === '#/admin') {
+                if (!currentUser) {
+                    alert('请先登录');
+                    window.location.hash = '';
+                    setIsAuthModalOpen(true);
+                } else if (!isAdmin) {
+                    alert('访问被拒绝：您没有管理员权限');
+                    window.location.hash = '';
+                } else {
+                    setActivePage('Admin');
+                }
+            }
+        };
+        
+        // Check on mount
+        handleHashChange();
+        
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, [currentUser, isAdmin]);
+    
+    // Keyboard shortcut for admin access (Ctrl/Cmd + Shift + A)
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                if (!currentUser) {
+                    alert('请先登录');
+                    setIsAuthModalOpen(true);
+                } else if (!isAdmin) {
+                    alert('访问被拒绝：您没有管理员权限');
+                } else {
+                    window.location.hash = '#admin';
+                    setActivePage('Admin');
+                }
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [currentUser, isAdmin]);
     
     useEffect(() => {
         // Reset selections and results when changing design tools to prevent state leakage
