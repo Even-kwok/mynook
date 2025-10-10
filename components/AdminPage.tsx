@@ -466,7 +466,7 @@ const TemplateModal: React.FC<{
                             <div className="col-span-1 space-y-2">
                                 <label className="text-sm font-medium text-slate-700">Image</label>
                                 <div 
-                                    className="aspect-square rounded-xl bg-slate-100 overflow-hidden cursor-pointer group"
+                                    className="relative aspect-square rounded-xl bg-slate-100 overflow-hidden cursor-pointer group"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     <img src={editingTemplate.imageUrl} alt="Template preview" className="w-full h-full object-cover" />
