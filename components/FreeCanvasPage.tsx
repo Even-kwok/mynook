@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toBase64 } from '../utils/imageUtils';
 import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
+import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath, Annotation, PromptPreset } from '../types';
 
@@ -17,6 +18,7 @@ interface FreeCanvasPageProps {
     onUpdateUser: (userId: string, updates: Partial<User>) => void;
     onLoginRequest: () => void;
     onError: (message: string | null) => void;
+    onUpgrade: () => void; // 导航到定价页面的回调
     canvasState: {
         images: CanvasImage[];
         prompt: string;
@@ -316,14 +318,15 @@ const ClearConfirmationModal: React.FC<ClearConfirmationModalProps> = ({ isOpen,
 
 
 export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({ 
-    setGenerationHistory, 
-    generationHistory, 
-    onDownload, 
-    setFullScreenImage, 
-    currentUser, 
+    setGenerationHistory,
+    generationHistory,
+    onDownload,
+    setFullScreenImage,
+    currentUser,
     onUpdateUser, 
     onLoginRequest, 
     onError,
+    onUpgrade,
     canvasState,
     setCanvasState
 }) => {
@@ -1374,60 +1377,17 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         );
     };
 
-    const PermissionModal = () => {
-        if (!isPermissionModalOpen) return null;
-
-        const tierName = currentUser?.membershipTier 
-            ? currentUser.membershipTier.charAt(0).toUpperCase() + currentUser.membershipTier.slice(1)
-            : 'Free';
-
-        return (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setIsPermissionModalOpen(false)}>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white/90 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md shadow-2xl border border-slate-200"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="text-center">
-                        <div className="text-6xl mb-4">🔒</div>
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">Premium Feature</h3>
-                        <p className="text-slate-600 mb-4">
-                            Free Canvas generation is available for <span className="font-semibold text-purple-600">Premium</span> and <span className="font-semibold text-amber-600">Business</span> members.
-                        </p>
-                        <div className="bg-slate-50 rounded-xl p-4 mb-6">
-                            <p className="text-sm text-slate-500 mb-3">
-                                Your current plan: <span className="font-semibold text-slate-700">{tierName}</span>
-                            </p>
-                            <div className="space-y-2 text-left">
-                                <p className="text-sm font-semibold text-slate-700">Unlock with Premium:</p>
-                                <ul className="text-sm text-slate-600 space-y-1.5">
-                                    <li>✨ AI-powered canvas generation</li>
-                                    <li>🎨 Combine multiple images freely</li>
-                                    <li>🖼️ Advanced drawing and annotation</li>
-                                    <li>⚡ Priority queue processing</li>
-                                    <li>💎 5,000 generation credits</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <Button onClick={() => setIsPermissionModalOpen(false)} className="flex-1">
-                                Maybe Later
-                            </Button>
-                            <Button primary className="flex-1">
-                                Upgrade to Premium
-                            </Button>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        );
-    };
 
     return (
         <>
             <PresetModal />
-            <PermissionModal />
+            <UpgradeModal 
+                isOpen={isPermissionModalOpen}
+                onClose={() => setIsPermissionModalOpen(false)}
+                featureName="Free Canvas"
+                requiredTier="premium"
+                onUpgrade={onUpgrade}
+            />
             <div className="flex flex-1 overflow-hidden">
                 <aside className="w-[380px] bg-white flex flex-col overflow-hidden flex-shrink-0 border-r border-slate-200">
                     <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
@@ -1567,11 +1527,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                             onClick={handleGenerate} 
                             disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0 && annotations.length === 0)} 
                             primary 
-                            className="w-full text-base py-3 relative"
+                            className="w-full text-base py-3"
+                            locked={!hasGeneratePermission}
+                            onLockedClick={() => setIsPermissionModalOpen(true)}
                         >
-                            {!hasGeneratePermission && (
-                                <IconLock className="w-4 h-4 absolute left-4" />
-                            )}
                             <IconSparkles className="w-5 h-5" />
                             {isLoading ? "Generating your vision..." : "Generate (1 Credit)"}
                         </Button>

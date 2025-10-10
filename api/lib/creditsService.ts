@@ -98,12 +98,7 @@ export async function checkCreditsAvailable(
     return { available: false, currentCredits: 0, membershipTier: 'free', error };
   }
 
-  // Business 会员无限制
-  if (membershipTier === 'business') {
-    return { available: true, currentCredits: credits, membershipTier, error: null };
-  }
-
-  // 其他会员检查余额
+  // 所有会员都需要检查信用点余额
   const available = credits >= requiredCredits;
   return { available, currentCredits: credits, membershipTier, error: null };
 }
@@ -130,10 +125,8 @@ export async function deductCredits(
     // Use any to bypass type checking
     const userData = user as any;
     
-    // 2. Business 会员不扣除信用点
-    const newCredits = userData.membership_tier === 'business' 
-      ? userData.credits
-      : userData.credits - amount;
+    // 2. 所有会员都需要扣除信用点
+    const newCredits = userData.credits - amount;
 
     // 3. 更新数据库
     const { error: updateError } = await supabaseAdmin
@@ -178,11 +171,7 @@ export async function refundCredits(
     // Use any to bypass type checking
     const userData = user as any;
 
-    // Business 会员不需要回滚
-    if (userData.membership_tier === 'business') {
-      return { success: true, error: null };
-    }
-
+    // 所有会员都需要回滚信用点
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({

@@ -570,7 +570,7 @@ const Header: React.FC<{
                         {/* 信用点显示 */}
                         <div className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-1.5">
                             <IconSparkles className="w-3.5 h-3.5 text-indigo-500" />
-                            <span>{user.permissionLevel === 4 ? '∞' : user.credits}</span>
+                            <span>{user.credits.toLocaleString()}</span>
                         </div>
                     </div>
                 )}
@@ -1885,6 +1885,7 @@ const App: React.FC = () => {
                     onUpdateUser={handleUpdateUser} 
                     onLoginRequest={() => setIsAuthModalOpen(true)} 
                     onError={setError}
+                    onUpgrade={() => setActivePage('Pricing')}
                     canvasState={freeCanvasState}
                     setCanvasState={setFreeCanvasState}
                 />;
