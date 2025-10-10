@@ -93,16 +93,13 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
  */
 export async function signInWithGoogle(): Promise<{ error: AuthError | null }> {
   try {
-    // 动态获取重定向URL，支持多种部署环境
-    const redirectTo = getRedirectUrl();
-    
     console.log('🔐 Initiating Google OAuth login...');
-    console.log('📍 Redirect URL:', redirectTo);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo,
+        // 移除redirectTo，让Supabase自动处理重定向
+        // Supabase会自动重定向回当前页面
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -121,24 +118,6 @@ export async function signInWithGoogle(): Promise<{ error: AuthError | null }> {
     console.error('❌ Google sign in error:', error);
     return { error: error as AuthError };
   }
-}
-
-/**
- * 获取OAuth重定向URL
- * 自动检测环境（本地开发、Vercel预览、生产环境）
- */
-function getRedirectUrl(): string {
-  // 如果是浏览器环境
-  if (typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    
-    // 返回当前域名作为重定向地址
-    // Vercel会自动处理预览和生产环境的域名
-    return origin;
-  }
-  
-  // 服务器端渲染的后备方案
-  return 'http://localhost:3000';
 }
 
 /**
