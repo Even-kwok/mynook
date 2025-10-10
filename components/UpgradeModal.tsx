@@ -1,6 +1,6 @@
 /**
- * 会员升级提示弹窗组件
- * 当用户尝试使用高级功能但权限不足时显示
+ * Membership Upgrade Modal Component
+ * Displayed when users try to use premium features without sufficient permissions
  */
 
 import React from 'react';
@@ -12,9 +12,9 @@ import { useAuth } from '../context/AuthContext';
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  featureName: string; // 功能名称，如 "Free Canvas"
-  requiredTier: 'premium' | 'business'; // 需要的会员等级
-  onUpgrade?: () => void; // 跳转到升级页面的回调
+  featureName: string; // Feature name, e.g., "Free Canvas"
+  requiredTier: 'premium' | 'business'; // Required membership tier
+  onUpgrade?: () => void; // Callback to upgrade page
 }
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ 
@@ -26,32 +26,32 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 }) => {
   const { membershipTier } = useAuth();
 
-  // 会员等级配置
+  // Tier configuration
   const tierConfig = {
     premium: {
       name: 'Premium',
       icon: '👑',
-      price: '$42/月',
+      price: '$42/month',
       color: 'from-purple-500 to-pink-500',
       features: [
-        '5,000 积分/月',
-        '解锁 Free Canvas 功能',
-        '优先处理队列',
-        '同时生成最多 9 个设计',
-        '商业使用授权',
+        '5,000 credits/month',
+        'Unlock Free Canvas feature',
+        'Priority processing queue',
+        'Generate up to 9 designs simultaneously',
+        'Commercial use license',
       ]
     },
     business: {
       name: 'Business',
       icon: '💼',
-      price: '$142/月',
+      price: '$142/month',
       color: 'from-blue-500 to-indigo-600',
       features: [
-        '25,000 积分/月',
-        '所有 Premium 功能',
-        '同时生成最多 18 个设计',
-        '最快响应速度',
-        '优先体验新功能',
+        '25,000 credits/month',
+        'All Premium features',
+        'Generate up to 18 designs simultaneously',
+        'Fastest response time',
+        'Early access to new features',
       ]
     }
   };
@@ -70,7 +70,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* 背景遮罩 */}
+        {/* Background overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -79,14 +79,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         />
 
-        {/* 模态框内容 */}
+        {/* Modal content */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden"
         >
-          {/* 关闭按钮 */}
+          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
@@ -94,7 +94,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
             <IconX />
           </button>
 
-          {/* 渐变头部 */}
+          {/* Gradient header */}
           <div className={`bg-gradient-to-br ${config.color} p-8 text-white`}>
             <div className="flex items-center justify-center mb-4">
               <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl">
@@ -102,35 +102,35 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               </div>
             </div>
             <h2 className="text-3xl font-bold text-center mb-2">
-              升级到 {config.name}
+              Upgrade to {config.name}
             </h2>
             <p className="text-center text-white/90 text-lg">
-              解锁 <span className="font-semibold">{featureName}</span> 功能
+              Unlock <span className="font-semibold">{featureName}</span> feature
             </p>
           </div>
 
-          {/* 内容区域 */}
+          {/* Content area */}
           <div className="p-8">
-            {/* 当前状态提示 */}
+            {/* Current status notice */}
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <p className="text-amber-800 text-sm text-center">
-                <span className="font-semibold">💡 提示：</span>
-                您当前是 <span className="font-semibold capitalize">{membershipTier}</span> 会员，
-                需要升级到 <span className="font-semibold">{config.name}</span> 才能使用此功能
+                <span className="font-semibold">💡 Notice:</span>
+                {' '}You are currently a <span className="font-semibold capitalize">{membershipTier}</span> member,
+                you need to upgrade to <span className="font-semibold">{config.name}</span> to use this feature
               </p>
             </div>
 
-            {/* 价格显示 */}
+            {/* Price display */}
             <div className="text-center mb-6">
               <div className="text-4xl font-bold text-slate-800 mb-1">
                 {config.price}
               </div>
               <div className="text-sm text-slate-500">
-                年付可享受更多优惠
+                Save more with annual billing
               </div>
             </div>
 
-            {/* 功能列表 */}
+            {/* Features list */}
             <div className="space-y-3 mb-8">
               {config.features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-3">
@@ -142,7 +142,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               ))}
             </div>
 
-            {/* 按钮组 */}
+            {/* Button group */}
             <div className="space-y-3">
               <Button
                 onClick={handleUpgrade}
@@ -150,21 +150,21 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 className="w-full py-3 text-base font-semibold"
               >
                 <IconCrown className="w-5 h-5 mr-2" />
-                立即升级到 {config.name}
+                Upgrade to {config.name}
               </Button>
               
               <button
                 onClick={onClose}
                 className="w-full py-3 text-slate-600 hover:text-slate-800 transition-colors text-sm font-medium"
               >
-                稍后再说
+                Maybe Later
               </button>
             </div>
 
-            {/* 额外说明 */}
+            {/* Additional info */}
             <div className="mt-6 text-center">
               <p className="text-xs text-slate-500">
-                升级后立即生效，无需等待
+                Takes effect immediately after upgrade
               </p>
             </div>
           </div>
