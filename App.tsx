@@ -1485,17 +1485,15 @@ const App: React.FC = () => {
             try {
                 setTemplatesLoading(true);
                 
-                // 根据用户角色选择API
-                const isAdminUser = currentUser?.permissionLevel === 4;
-                const templates = isAdminUser 
-                    ? await getAllTemplates()      // 管理员：获取完整数据（含prompt）
-                    : await getAllTemplatesPublic(); // 普通用户：不含prompt
+                // 前端功能页面总是使用 getAllTemplatesPublic()（只显示启用的模板）
+                // Admin Panel 会在组件内部单独调用 getAllTemplates()
+                const templates = await getAllTemplatesPublic();
                 
                 // 完全使用数据库模板，不合并硬编码模板
                 if (Object.keys(templates).length > 0) {
                     setAdminTemplateData(templates);
                     setAdminCategoryOrder(Object.keys(templates));
-                    console.log('✅ Templates loaded from database');
+                    console.log('✅ Templates loaded from database (public)');
                 } else {
                     // 仅在数据库完全为空时使用默认模板作为fallback
                     console.log('ℹ️ Database empty, using default templates as fallback');

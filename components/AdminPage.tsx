@@ -449,13 +449,12 @@ const TemplateManagement: React.FC<{
             <div className="mt-4 space-y-4">
                 {categoryOrder.map(mainCategory => {
                     const subCategories = templateData[mainCategory] || [];
-                    // 过滤掉没有模板的子分类
-                    const visibleSubCategories = subCategories.filter((sc: ManagedPromptTemplateCategory) => sc.templates.length > 0);
                     
-                    // 如果主分类下没有任何可见的子分类，不显示整个主分类
-                    if (visibleSubCategories.length === 0) return null;
+                    // Admin Panel 显示所有子分类（包括没有模板或被禁用的），方便管理
+                    // 不过滤任何内容
+                    if (subCategories.length === 0) return null;
                     
-                    const hasAnyEnabled = visibleSubCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
+                    const hasAnyEnabled = subCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
                     
                     return (
                         <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
@@ -472,7 +471,7 @@ const TemplateManagement: React.FC<{
                             </label>
                         </div>
                         <div className="mt-3 space-y-3">
-                            {visibleSubCategories.map((subCategory: ManagedPromptTemplateCategory) => (
+                            {subCategories.map((subCategory: ManagedPromptTemplateCategory) => (
                                 <div key={subCategory.name}>
                                     <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                                         <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
@@ -715,6 +714,22 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'gallery', name: 'Gallery', icon: IconPhoto },
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
+
+    // Admin Panel 独立加载所有模板（包括禁用的），不受前端功能页面影响
+    useEffect(() => {
+        const loadAdminTemplates = async () => {
+            try {
+                const allTemplates = await getAllTemplates(); // 获取所有模板（包括禁用的）
+                setTemplateData(allTemplates);
+                setCategoryOrder(Object.keys(allTemplates));
+                console.log('✅ Admin Panel loaded all templates (including disabled)');
+            } catch (error) {
+                console.error('Failed to load admin templates:', error);
+            }
+        };
+        
+        loadAdminTemplates();
+    }, []); // 只在 mount 时执行一次
 
     const renderContent = () => {
         switch (activeTab) {
