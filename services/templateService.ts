@@ -442,3 +442,55 @@ export async function getTemplatePrompts(templateIds: string[]): Promise<Map<str
   }
 }
 
+/**
+ * 删除整个主分类及其所有模板
+ */
+export async function deleteMainCategory(mainCategory: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('design_templates')
+      .delete()
+      .eq('main_category', mainCategory);
+    
+    if (error) throw error;
+    
+    console.log(`✅ Deleted main category: ${mainCategory}`);
+  } catch (error) {
+    console.error('Error deleting main category:', error);
+    throw error;
+  }
+}
+
+/**
+ * 删除子分类及其所有模板
+ * 对于Interior Design，使用room_type；对于其他分类，使用sub_category
+ */
+export async function deleteSubCategory(
+  mainCategory: string,
+  subCategoryOrRoomType: string
+): Promise<void> {
+  try {
+    const isInteriorDesign = mainCategory === 'Interior Design';
+    
+    let query = supabase
+      .from('design_templates')
+      .delete()
+      .eq('main_category', mainCategory);
+    
+    if (isInteriorDesign) {
+      query = query.eq('room_type', subCategoryOrRoomType);
+    } else {
+      query = query.eq('sub_category', subCategoryOrRoomType);
+    }
+    
+    const { error } = await query;
+    
+    if (error) throw error;
+    
+    console.log(`✅ Deleted sub-category: ${mainCategory} > ${subCategoryOrRoomType}`);
+  } catch (error) {
+    console.error('Error deleting sub-category:', error);
+    throw error;
+  }
+}
+

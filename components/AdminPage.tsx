@@ -7,7 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
@@ -353,8 +353,14 @@ const TemplateManagement: React.FC<{
         if (!confirm(`Are you sure you want to delete the entire "${mainCategory}" category? This will delete ALL templates under it.`)) return;
         
         try {
-            // TODO: 实现删除API
-            alert('Delete Main Category API not implemented yet');
+            await deleteMainCategoryFromDB(mainCategory);
+            
+            // 重新从数据库加载
+            const freshTemplates = await getAllTemplates();
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
+            
+            alert(`Successfully deleted "${mainCategory}" category!`);
         } catch (error) {
             console.error('Failed to delete main category:', error);
             alert('Failed to delete category. Please try again.');
@@ -372,8 +378,14 @@ const TemplateManagement: React.FC<{
         if (!confirm(`Are you sure you want to delete "${subCategoryName}"? This will delete ALL templates under it.`)) return;
         
         try {
-            // TODO: 实现删除API
-            alert('Delete Sub Category API not implemented yet');
+            await deleteSubCategoryFromDB(mainCategory, subCategoryName);
+            
+            // 重新从数据库加载
+            const freshTemplates = await getAllTemplates();
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
+            
+            alert(`Successfully deleted "${subCategoryName}"!`);
         } catch (error) {
             console.error('Failed to delete sub category:', error);
             alert('Failed to delete category. Please try again.');
@@ -590,10 +602,37 @@ const TemplateManagement: React.FC<{
                 context={categoryModalContext}
                 onClose={() => setIsCategoryModalOpen(false)}
                 onSave={(categoryName) => {
-                    // TODO: 实现保存逻辑
-                    console.log('Save category:', categoryName, categoryModalType, categoryModalContext);
-                    alert(`Add ${categoryModalType} category API not implemented yet`);
+                    // 添加分类到本地状态（空的分类，等待用户添加模板）
+                    if (categoryModalType === 'main') {
+                        // 添加新的主分类
+                        setTemplateData(prev => ({
+                            ...prev,
+                            [categoryName]: []
+                        }));
+                        setCategoryOrder(prev => [...prev, categoryName]);
+                    } else {
+                        // 添加子分类到现有主分类
+                        const mainCategory = categoryModalContext?.mainCategory;
+                        if (mainCategory) {
+                            setTemplateData(prev => {
+                                const newData = JSON.parse(JSON.stringify(prev));
+                                if (!newData[mainCategory]) {
+                                    newData[mainCategory] = [];
+                                }
+                                // 检查是否已存在
+                                if (!newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === categoryName)) {
+                                    newData[mainCategory].push({
+                                        name: categoryName,
+                                        templates: [],
+                                        enabled: false
+                                    });
+                                }
+                                return newData;
+                            });
+                        }
+                    }
                     setIsCategoryModalOpen(false);
+                    alert(`"${categoryName}" added! Now you can add templates to it.`);
                 }}
             />
         </div>
