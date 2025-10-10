@@ -17,6 +17,7 @@ import {
   GalleryItemDB
 } from '../services/galleryService';
 import { deleteImage } from '../services/storageService';
+import { supabase } from '../config/supabase';
 
 export interface GalleryManagerProps {
   onSuccess?: () => void;
@@ -483,7 +484,7 @@ const GalleryItemCard: React.FC<{
   onToggleActive: () => void;
   onDelete: () => void;
 }> = ({ item, onToggleActive, onDelete }) => {
-  const { data } = require('../config/supabase').supabase.storage
+  const { data } = supabase.storage
     .from('gallery-images')
     .getPublicUrl(item.storage_path);
 
