@@ -450,8 +450,7 @@ const TemplateManagement: React.FC<{
                 {categoryOrder.map(mainCategory => {
                     const subCategories = templateData[mainCategory] || [];
                     
-                    // Admin Panel 显示所有子分类（包括没有模板或被禁用的），方便管理
-                    // 不过滤任何内容
+                    // Admin Panel 显示所有子分类（包括被禁用的），不过滤
                     if (subCategories.length === 0) return null;
                     
                     const hasAnyEnabled = subCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);

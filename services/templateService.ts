@@ -34,10 +34,11 @@ export interface TemplateCategory {
  */
 export async function getAllTemplates(): Promise<ManagedTemplateData> {
   try {
+    // Admin用：获取所有模板（包括禁用的），这样管理员才能管理它们
     const { data, error } = await supabase
       .from('design_templates')
       .select('*')
-      .eq('enabled', true)
+      // 不过滤 enabled 状态，Admin Panel 需要看到所有模板
       .order('sort_order')
       .order('name');
 
@@ -63,10 +64,11 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
       // 查找或创建子分类
       let subCategory = grouped[mainCat].find(sc => sc.name === categoryKey);
       if (!subCategory) {
+        // 子分类的 enabled 状态：使用第一个模板的状态作为初始值
         subCategory = {
           name: categoryKey,
           templates: [],
-          enabled: true
+          enabled: template.enabled
         };
         grouped[mainCat].push(subCategory);
       }
@@ -80,6 +82,11 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
         category: template.main_category,
         roomType: template.room_type
       });
+      
+      // 更新子分类的 enabled 状态：如果有任何模板是启用的，子分类就是启用的
+      if (template.enabled) {
+        subCategory.enabled = true;
+      }
     });
 
     return grouped;
