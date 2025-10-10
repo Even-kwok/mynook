@@ -1,0 +1,303 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/api/generate-image.ts b/api/generate-image.ts
+index 47a0a5193ff3771770aebe6374bd6449078eae81..6cae7c620f82179de6a61089a40982a7366d565f 100644
+--- a/api/generate-image.ts
++++ b/api/generate-image.ts
+@@ -1,28 +1,29 @@
+ import type { VercelRequest, VercelResponse } from '@vercel/node';
+ import { GoogleGenAI, Modality } from '@google/genai';
+ import { promises as fs } from 'fs';
++import { Buffer } from 'node:buffer';
+ import { tmpdir } from 'os';
+ import { join } from 'path';
+ 
+ interface GenerateImageRequestBody {
+   instruction?: unknown;
+   base64Images?: unknown;
+ }
+ 
+ const parseRequestBody = (body: VercelRequest['body']): GenerateImageRequestBody => {
+   if (!body) {
+     return {};
+   }
+ 
+   if (typeof body === 'string') {
+     try {
+       return JSON.parse(body);
+     } catch (error) {
+       console.error('Failed to parse request body:', error);
+       return {};
+     }
+   }
+ 
+   if (Buffer.isBuffer(body)) {
+     try {
+       return JSON.parse(body.toString('utf-8'));
+diff --git a/api/generate-image.ts b/api/generate-image.ts
+index 47a0a5193ff3771770aebe6374bd6449078eae81..6cae7c620f82179de6a61089a40982a7366d565f 100644
+--- a/api/generate-image.ts
++++ b/api/generate-image.ts
+@@ -37,157 +38,241 @@ const parseRequestBody = (body: VercelRequest['body']): GenerateImageRequestBody
+ 
+ const extractInlineImage = (part: any): { data: string; mimeType: string | undefined } | null => {
+   if (part?.inlineData?.data) {
+     return {
+       data: part.inlineData.data,
+       mimeType: part.inlineData.mimeType,
+     };
+   }
+   return null;
+ };
+ 
+ const normalizeBase64Image = (value: unknown): string | null => {
+   if (typeof value !== 'string') {
+     return null;
+   }
+ 
+   const trimmed = value.trim();
+   if (!trimmed) {
+     return null;
+   }
+ 
+   const commaIndex = trimmed.indexOf(',');
+   return commaIndex >= 0 ? trimmed.slice(commaIndex + 1) : trimmed;
+ };
+ 
++type UploadedImagePart = { part: { fileData: { fileUri: string; mimeType: string } }; fileName?: string };
++
++const uploadBase64Image = async (
++  ai: GoogleGenAI,
++  base64Image: string,
++  index: number
++): Promise<UploadedImagePart | null> => {
++  try {
++    const imageBuffer = Buffer.from(base64Image, 'base64');
++    if (imageBuffer.length === 0) {
++      return null;
++    }
++
++    const mimeType = 'image/png';
++    const blob = new Blob([imageBuffer], { type: mimeType });
++    const displayName = `source-image-${Date.now()}-${index}.png`;
++
++    const uploadedFile = await ai.files.upload({
++      file: blob,
++      config: {
++        mimeType,
++        displayName,
++      },
++    });
++
++    const fileUri = uploadedFile.uri ?? uploadedFile.name;
++    if (!fileUri) {
++      console.error('Uploaded file is missing a URI and name.');
++      return null;
++    }
++
++    return {
++      part: {
++        fileData: {
++          fileUri,
++          mimeType: uploadedFile.mimeType ?? mimeType,
++        },
++      },
++      fileName: uploadedFile.name,
++    };
++  } catch (error) {
++    console.error('Failed to upload base64 image to Gemini Files API:', error);
++    return null;
++  }
++};
++
++const cleanupUploadedFiles = async (ai: GoogleGenAI, uploadedFiles: UploadedImagePart[]) => {
++  await Promise.all(
++    uploadedFiles
++      .map((file) => file.fileName)
++      .filter((name): name is string => typeof name === 'string' && name.length > 0)
++      .map(async (name) => {
++        try {
++          await ai.files.delete({ name });
++        } catch (cleanupError) {
++          console.warn('Failed to delete uploaded source image:', cleanupError);
++        }
++      })
++  );
++};
++
+ const downloadFilePart = async (
+   ai: GoogleGenAI,
+   part: any
+ ): Promise<{ data: string; mimeType: string | undefined } | null> => {
+   const fileUri: unknown = part?.fileData?.fileUri;
+   if (typeof fileUri !== 'string' || !fileUri) {
+     return null;
+   }
+ 
+   const mimeType: string | undefined = part?.fileData?.mimeType;
+   const extension = mimeType?.split('/')?.[1] ?? 'png';
+   const tempPath = join(tmpdir(), `gemini-image-${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`);
+ 
+   try {
+     await ai.files.download({ file: fileUri, downloadPath: tempPath });
+     const fileBuffer = await fs.readFile(tempPath);
+     return {
+       data: fileBuffer.toString('base64'),
+       mimeType,
+     };
+   } finally {
+     try {
+       await fs.unlink(tempPath);
+     } catch (cleanupError) {
+       // Ignore cleanup errors but log for visibility
+       console.warn('Failed to remove temporary image file:', cleanupError);
+     }
+   }
+ };
+ 
+ export default async function handler(
+   req: VercelRequest,
+   res: VercelResponse
+ ) {
+   // Only allow POST requests
+   if (req.method !== 'POST') {
+     return res.status(405).json({ error: 'Method not allowed' });
+   }
+ 
+   // Get API key from environment variables (server-side only)
+   const apiKey = process.env.GEMINI_API_KEY;
+   
+   if (!apiKey) {
+     console.error('GEMINI_API_KEY is not configured');
+     return res.status(500).json({ 
+       error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.' 
+     });
+   }
+ 
++  let ai: GoogleGenAI | null = null;
++  let uploadedImageParts: UploadedImagePart[] = [];
++
+   try {
+     const { instruction, base64Images } = parseRequestBody(req.body);
+ 
+     if (typeof instruction !== 'string' || !Array.isArray(base64Images) || base64Images.length === 0) {
+       return res.status(400).json({
+         error: 'instruction and base64Images (array) are required'
+       });
+     }
+ 
+-    const ai = new GoogleGenAI({ apiKey });
++    const aiClient = new GoogleGenAI({ apiKey });
++    ai = aiClient;
+     const textPart = { text: instruction };
+     const normalizedImages = base64Images
+       .map(normalizeBase64Image)
+       .filter((value): value is string => typeof value === 'string' && value.length > 0);
+ 
+     if (normalizedImages.length === 0) {
+       return res.status(400).json({
+         error: 'No valid base64 images were provided for generation.'
+       });
+     }
+ 
+-    const imageParts = normalizedImages.map((imgData) => ({
+-      inlineData: {
+-        data: imgData,
+-        mimeType: 'image/png',
+-      },
+-    }));
++    uploadedImageParts = (
++      await Promise.all(
++        normalizedImages.map((imgData, index) => uploadBase64Image(aiClient, imgData, index))
++      )
++    ).filter((value): value is UploadedImagePart => value !== null);
+ 
+-    if (imageParts.length === 0) {
++    if (uploadedImageParts.length === 0) {
++      await cleanupUploadedFiles(aiClient, uploadedImageParts);
+       return res.status(400).json({
+         error: 'No valid base64 images were provided for generation.'
+       });
+     }
+ 
+-    const response = await ai.models.generateContent({
++    const response = await aiClient.models.generateContent({
+       model: 'gemini-2.0-flash-exp',
+       contents: [{
+         role: 'user',
+         parts: [
+-          ...imageParts,
++          ...uploadedImageParts.map((item) => item.part),
+           textPart,
+         ],
+       }],
+       config: {
+         responseModalities: [Modality.IMAGE],
+       },
+     });
+ 
+     const candidates = response.candidates ?? [];
++    let generatedImage: { data: string; mimeType: string } | null = null;
++
+     for (const candidate of candidates) {
+       const parts = candidate?.content?.parts ?? [];
+       for (const part of parts) {
+         const inlineImage = extractInlineImage(part);
+         if (inlineImage) {
+-          const mimeType = inlineImage.mimeType ?? 'image/png';
+-          return res.status(200).json({
+-            imageUrl: `data:${mimeType};base64,${inlineImage.data}`,
+-          });
++          generatedImage = {
++            data: inlineImage.data,
++            mimeType: inlineImage.mimeType ?? 'image/png',
++          };
++          break;
+         }
+ 
+-        const downloaded = await downloadFilePart(ai, part);
++        const downloaded = await downloadFilePart(aiClient, part);
+         if (downloaded) {
+-          const mimeType = downloaded.mimeType ?? 'image/png';
+-          return res.status(200).json({
+-            imageUrl: `data:${mimeType};base64,${downloaded.data}`,
+-          });
++          generatedImage = {
++            data: downloaded.data,
++            mimeType: downloaded.mimeType ?? 'image/png',
++          };
++          break;
+         }
+       }
++
++      if (generatedImage) {
++        break;
++      }
++    }
++
++    await cleanupUploadedFiles(aiClient, uploadedImageParts);
++
++    if (generatedImage) {
++      return res.status(200).json({
++        imageUrl: `data:${generatedImage.mimeType};base64,${generatedImage.data}`,
++      });
+     }
+ 
+     console.error('API response did not contain inline or file-based image data:', JSON.stringify(response, null, 2));
+     return res.status(500).json({
+       error: 'API response did not contain image data.'
+     });
+   } catch (error) {
+     const message = error instanceof Error ? error.message : 'Unknown error';
+     console.error('Error generating image:', error);
++    if (ai && uploadedImageParts.length > 0) {
++      await cleanupUploadedFiles(ai, uploadedImageParts);
++    }
+     return res.status(500).json({
+       error: 'Image generation failed. Please try again.',
+       details: message,
+     });
+   }
+ }
+ 
+EOF
+)
