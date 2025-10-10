@@ -14,6 +14,8 @@ import {
   getUserProfile,
   deductCredits as deductCreditsService,
   onAuthStateChange,
+  sendPasswordResetEmail,
+  updatePassword,
   type SignInData,
   type SignUpData,
 } from '../services/authService';
@@ -33,6 +35,10 @@ interface AuthContextType {
   signUp: (data: SignUpData) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  
+  // 密码重置
+  sendPasswordResetEmail: (email: string) => Promise<{ error: any }>;
+  updatePassword: (newPassword: string) => Promise<{ error: any }>;
   
   // 用户操作
   refreshProfile: (userId?: string) => Promise<void>;
@@ -209,6 +215,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
+  // 发送密码重置邮件
+  const handleSendPasswordResetEmail = async (email: string) => {
+    try {
+      const { error } = await sendPasswordResetEmail(email);
+      return { error };
+    } catch (error) {
+      console.error('Send password reset email error:', error);
+      return { error };
+    }
+  };
+
+  // 更新密码
+  const handleUpdatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await updatePassword(newPassword);
+      return { error };
+    } catch (error) {
+      console.error('Update password error:', error);
+      return { error };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     profile,
@@ -218,6 +246,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp: handleSignUp,
     signOut: handleSignOut,
     signInWithGoogle: handleSignInWithGoogle,
+    sendPasswordResetEmail: handleSendPasswordResetEmail,
+    updatePassword: handleUpdatePassword,
     refreshProfile,
     deductCredits: handleDeductCredits,
     showLoginModal,

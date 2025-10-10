@@ -26,12 +26,17 @@
    - 复制全部内容并粘贴到 SQL 编辑器
    - 点击 **Run** 执行
 
-3. **配置 Google OAuth**（可选）
-   - 进入 **Authentication** > **Providers**
-   - 启用 **Google** 提供商
+3. **配置 Google OAuth**（推荐）
+   
+   > 📘 **完整配置指南**: 请查看 [GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md)
+   
+   **快速配置步骤**：
    - 在 [Google Cloud Console](https://console.cloud.google.com/) 创建 OAuth 2.0 客户端
-   - 复制 Client ID 和 Client Secret 填入 Supabase
-   - 添加回调 URL：`https://<your-project>.supabase.co/auth/v1/callback`
+   - 配置授权重定向URI：`https://<your-project>.supabase.co/auth/v1/callback`
+   - 复制 Client ID 和 Client Secret
+   - 在 Supabase Dashboard > **Authentication** > **Providers** 启用 **Google**
+   - 填入 Client ID 和 Client Secret
+   - 按照 [测试清单](./GOOGLE_LOGIN_TEST_CHECKLIST.md) 验证功能
 
 ### 步骤 2: 配置环境变量
 
@@ -251,10 +256,17 @@ const handleGenerate = async () => {
 ## ✅ 下一步
 
 - [ ] 测试注册登录功能
-- [ ] 配置 Google OAuth（可选）
+- [ ] 配置 Google OAuth - **参考**: [GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md)
+- [ ] 运行Google登录测试 - **参考**: [GOOGLE_LOGIN_TEST_CHECKLIST.md](./GOOGLE_LOGIN_TEST_CHECKLIST.md)
 - [ ] 实现信用点扣除逻辑
 - [ ] 添加会员升级功能
 - [ ] 实现密码重置功能
+
+## 📖 相关文档
+
+- **[GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md)** - Google账号登录完整配置指南
+- **[GOOGLE_LOGIN_TEST_CHECKLIST.md](./GOOGLE_LOGIN_TEST_CHECKLIST.md)** - Google登录测试清单
+- **[DEBUG_GUIDE.md](./DEBUG_GUIDE.md)** - 问题排查指南
 
 ---
 

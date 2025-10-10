@@ -89,13 +89,20 @@ export async function signIn(data: SignInData): Promise<AuthResult> {
 
 /**
  * Google OAuth 登录
+ * 支持本地开发、Vercel预览和生产环境
  */
 export async function signInWithGoogle(): Promise<{ error: AuthError | null }> {
   try {
+    // 动态获取重定向URL，支持多种部署环境
+    const redirectTo = getRedirectUrl();
+    
+    console.log('🔐 Initiating Google OAuth login...');
+    console.log('📍 Redirect URL:', redirectTo);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -103,11 +110,35 @@ export async function signInWithGoogle(): Promise<{ error: AuthError | null }> {
       },
     });
 
+    if (error) {
+      console.error('❌ Google OAuth error:', error);
+    } else {
+      console.log('✅ Google OAuth initiated successfully');
+    }
+
     return { error };
   } catch (error) {
-    console.error('Google sign in error:', error);
+    console.error('❌ Google sign in error:', error);
     return { error: error as AuthError };
   }
+}
+
+/**
+ * 获取OAuth重定向URL
+ * 自动检测环境（本地开发、Vercel预览、生产环境）
+ */
+function getRedirectUrl(): string {
+  // 如果是浏览器环境
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    
+    // 返回当前域名作为重定向地址
+    // Vercel会自动处理预览和生产环境的域名
+    return origin;
+  }
+  
+  // 服务器端渲染的后备方案
+  return 'http://localhost:3000';
 }
 
 /**
@@ -245,6 +276,57 @@ export async function deductCredits(
   } catch (error) {
     console.error('Deduct credits error:', error);
     return { success: false, remainingCredits: 0 };
+  }
+}
+
+/**
+ * 发送密码重置邮件
+ */
+export async function sendPasswordResetEmail(email: string): Promise<{ error: AuthError | null }> {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    return { error };
+  } catch (error) {
+    console.error('Send password reset email error:', error);
+    return { error: error as AuthError };
+  }
+}
+
+/**
+ * 更新用户密码
+ * 用户点击邮件中的重置链接后，使用此方法设置新密码
+ */
+export async function updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    return { error };
+  } catch (error) {
+    console.error('Update password error:', error);
+    return { error: error as AuthError };
+  }
+}
+
+/**
+ * 验证密码重置token是否有效
+ */
+export async function verifyPasswordResetToken(): Promise<{ isValid: boolean; user: User | null }> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    
+    if (error || !data.user) {
+      return { isValid: false, user: null };
+    }
+
+    return { isValid: true, user: data.user };
+  } catch (error) {
+    console.error('Verify password reset token error:', error);
+    return { isValid: false, user: null };
   }
 }
 

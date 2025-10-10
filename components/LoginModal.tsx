@@ -14,10 +14,10 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'forgot-password';
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, sendPasswordResetEmail } = useAuth();
   
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
@@ -25,6 +25,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // 重置表单
   const resetForm = () => {
@@ -32,6 +33,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setPassword('');
     setFullName('');
     setError(null);
+    setSuccessMessage(null);
   };
 
   // 切换模式
@@ -98,6 +100,34 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  // 处理忘记密码
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setLoading(true);
+
+    try {
+      const { error } = await sendPasswordResetEmail(email);
+      
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        setError(errorMessage);
+      } else {
+        setSuccessMessage('密码重置邮件已发送！请查看您的邮箱并点击链接重置密码。');
+        // 3秒后自动切换回登录模式
+        setTimeout(() => {
+          setMode('signin');
+          resetForm();
+        }, 3000);
+      }
+    } catch (err) {
+      setError('发送邮件失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -132,10 +162,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {/* 标题 */}
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-800 mb-2">
-                {mode === 'signin' ? '欢迎回来' : '创建账户'}
+                {mode === 'signin' && '欢迎回来'}
+                {mode === 'signup' && '创建账户'}
+                {mode === 'forgot-password' && '重置密码'}
               </h2>
               <p className="text-slate-500">
-                {mode === 'signin' ? '登录继续使用 AI 设计工具' : '注册开始你的设计之旅'}
+                {mode === 'signin' && '登录继续使用 AI 设计工具'}
+                {mode === 'signup' && '注册开始你的设计之旅'}
+                {mode === 'forgot-password' && '输入您的邮箱地址，我们将发送重置密码的链接'}
               </p>
             </div>
 
@@ -150,7 +184,72 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </motion.div>
             )}
 
-            {/* 表单 */}
+            {/* 成功提示 */}
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm"
+              >
+                {successMessage}
+              </motion.div>
+            )}
+
+            {/* 忘记密码表单 */}
+            {mode === 'forgot-password' && (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    邮箱
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  primary
+                  disabled={loading}
+                  className="w-full py-3 text-base font-semibold relative"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <motion.span
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                      发送中...
+                    </span>
+                  ) : (
+                    '发送重置邮件'
+                  )}
+                </Button>
+
+                {/* 返回登录 */}
+                <div className="mt-6 text-center text-sm text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('signin');
+                      resetForm();
+                    }}
+                    className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                  >
+                    返回登录
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* 登录/注册表单 */}
+            {mode !== 'forgot-password' && (
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {mode === 'signup' && (
                 <div>
@@ -182,9 +281,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  密码
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    密码
+                  </label>
+                  {mode === 'signin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('forgot-password');
+                        resetForm();
+                      }}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
+                    >
+                      忘记密码？
+                    </button>
+                  )}
+                </div>
                 <input
                   type="password"
                   value={password}
@@ -219,7 +332,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 )}
               </Button>
             </form>
+            )}
 
+            {/* 只在登录/注册模式显示以下内容 */}
+            {mode !== 'forgot-password' && (
+            <>
             {/* 分隔线 */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -263,6 +380,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 {mode === 'signin' ? '立即注册' : '去登录'}
               </button>
             </div>
+            </>
+            )}
           </div>
         </motion.div>
       </div>

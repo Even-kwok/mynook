@@ -17,6 +17,7 @@ import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
+import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { MEMBERSHIP_CONFIG } from './types/database';
 
 // --- Re-styled Helper Components ---
@@ -1158,6 +1159,7 @@ const App: React.FC = () => {
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [upgradeFeatureName, setUpgradeFeatureName] = useState('');
     const [upgradeRequiredTier, setUpgradeRequiredTier] = useState<'premium' | 'business'>('premium');
+    const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
     
     // 创建兼容的用户对象（兼容旧的User类型）
     const currentUser: User | null = auth.profile ? {
@@ -1190,6 +1192,21 @@ const App: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     
+    // 检测密码重置URL
+    useEffect(() => {
+        // 检查URL hash中是否包含密码重置的token
+        // Supabase会在用户点击重置链接后重定向，并在URL hash中包含access_token和type=recovery
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get('type');
+        
+        if (type === 'recovery') {
+            // 显示密码重置模态框
+            setIsResetPasswordModalOpen(true);
+            // 清除URL hash，避免刷新页面时再次触发
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+    }, []);
+
     // Check admin access on mount and user change
     useEffect(() => {
         const checkAdmin = async () => {
@@ -2585,6 +2602,10 @@ const App: React.FC = () => {
                     setIsUpgradeModalOpen(false);
                     setActivePage('Pricing');
                 }}
+            />
+            <ResetPasswordModal
+                isOpen={isResetPasswordModalOpen}
+                onClose={() => setIsResetPasswordModalOpen(false)}
             />
 
             <Header 
