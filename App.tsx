@@ -14,6 +14,7 @@ import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
+import { UpgradeModal } from './components/UpgradeModal';
 import { MEMBERSHIP_CONFIG } from './types/database';
 import { DebugSupabase } from './components/DebugSupabase';
 
@@ -431,11 +432,8 @@ const DesignToolsMenu: React.FC<{
     user: User | null;
 }> = ({ onNavigate, activeItem, designTools, user }) => {
     const handleNavigate = (item: { key: string; label: string; requiresPremium?: boolean; }) => {
-        // 检查是否需要 Premium 权限
-        if (item.requiresPremium && (!user || user.permissionLevel < 3)) {
-            alert('此功能仅限 Premium 和 Business 会员使用。请升级您的会员等级以解锁此功能！');
-            return;
-        }
+        // 允许所有用户进入页面浏览功能
+        // 权限检查将在具体使用功能时进行（如点击生成按钮）
         onNavigate(item.label);
     };
 
@@ -1064,6 +1062,9 @@ const App: React.FC = () => {
     // Auth - 使用新的Supabase认证系统
     const auth = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState('');
+    const [upgradeRequiredTier, setUpgradeRequiredTier] = useState<'premium' | 'business'>('premium');
     
     // 创建兼容的用户对象（兼容旧的User类型）
     const currentUser: User | null = auth.profile ? {
@@ -1120,6 +1121,23 @@ const App: React.FC = () => {
     const handleDeleteUser = (userId: string) => {
         // TODO: 如果需要删除用户，需要通过Supabase API实现
         console.log('Delete user:', userId);
+    };
+
+    // 检查用户是否有Premium权限（Premium或Business）
+    const checkPremiumPermission = (featureName: string): boolean => {
+        if (!currentUser) return false;
+        
+        const hasPremiumAccess = currentUser.membershipTier === 'premium' || 
+                                 currentUser.membershipTier === 'business';
+        
+        if (!hasPremiumAccess) {
+            setUpgradeFeatureName(featureName);
+            setUpgradeRequiredTier('premium');
+            setIsUpgradeModalOpen(true);
+            return false;
+        }
+        
+        return true;
     };
 
     // Core generator state
@@ -1482,6 +1500,12 @@ const App: React.FC = () => {
             setIsAuthModalOpen(true);
             return;
         }
+        
+        // 权限检查：Item Replace 需要 Premium 权限
+        if (!checkPremiumPermission('Item Replace')) {
+            return;
+        }
+        
         if (currentUser.credits < 1) {
             setError("You have run out of credits. Please upgrade your plan to continue generating.");
             return;
@@ -1544,6 +1568,12 @@ const App: React.FC = () => {
             setIsAuthModalOpen(true);
             return;
         }
+        
+        // 权限检查：Reference Style Match 需要 Premium 权限
+        if (!checkPremiumPermission('Reference Style Match')) {
+            return;
+        }
+        
         if (currentUser.credits < 1) {
             setError("You have run out of credits. Please upgrade your plan to continue generating.");
             return;
@@ -1606,6 +1636,12 @@ const App: React.FC = () => {
             setIsAuthModalOpen(true);
             return;
         }
+        
+        // 权限检查：Multi-Item Preview 需要 Premium 权限
+        if (!checkPremiumPermission('Multi-Item Preview')) {
+            return;
+        }
+        
         if (currentUser.credits < 1) {
             setError("You have run out of credits. Please upgrade your plan to continue generating.");
             return;
@@ -1670,6 +1706,12 @@ const App: React.FC = () => {
             setIsAuthModalOpen(true);
             return;
         }
+        
+        // 权限检查：AI Design Advisor 需要 Premium 权限
+        if (!checkPremiumPermission('AI Design Advisor')) {
+            return;
+        }
+        
         if (currentUser.credits < 1) {
             setError("You have run out of credits. Please upgrade your plan to continue generating.");
             return;
@@ -2181,6 +2223,16 @@ const App: React.FC = () => {
             <LoginModal 
                 isOpen={isAuthModalOpen} 
                 onClose={() => setIsAuthModalOpen(false)}
+            />
+            <UpgradeModal
+                isOpen={isUpgradeModalOpen}
+                onClose={() => setIsUpgradeModalOpen(false)}
+                featureName={upgradeFeatureName}
+                requiredTier={upgradeRequiredTier}
+                onUpgrade={() => {
+                    setIsUpgradeModalOpen(false);
+                    setActivePage('Pricing');
+                }}
             />
             
             {/* 开发调试工具 - 部署后可以删除 */}
