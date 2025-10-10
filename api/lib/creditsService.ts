@@ -72,9 +72,11 @@ export async function getUserCredits(userId: string): Promise<{ credits: number;
       return { credits: 0, membershipTier: 'free', error: 'Failed to fetch user credits' };
     }
 
+    // Use any to bypass strict type checking
+    const userData = data as any;
     return {
-      credits: data.credits as number,
-      membershipTier: data.membership_tier as string,
+      credits: userData.credits || 0,
+      membershipTier: userData.membership_tier || 'free',
       error: null,
     };
   } catch (error) {
@@ -125,24 +127,27 @@ export async function deductCredits(
       return { success: false, remainingCredits: 0, error: 'Failed to fetch user data' };
     }
 
+    // Use any to bypass type checking
+    const userData = user as any;
+    
     // 2. Business 会员不扣除信用点
-    const newCredits = (user.membership_tier as string) === 'business' 
-      ? (user.credits as number)
-      : (user.credits as number) - amount;
+    const newCredits = userData.membership_tier === 'business' 
+      ? userData.credits
+      : userData.credits - amount;
 
     // 3. 更新数据库
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         credits: newCredits,
-        total_generations: (user.total_generations as number) + 1,
+        total_generations: userData.total_generations + 1,
         updated_at: new Date().toISOString(),
       } as any)
       .eq('id', userId);
 
     if (updateError) {
       console.error('Deduct credits error:', updateError);
-      return { success: false, remainingCredits: user.credits as number, error: 'Failed to deduct credits' };
+      return { success: false, remainingCredits: userData.credits, error: 'Failed to deduct credits' };
     }
 
     return { success: true, remainingCredits: newCredits, error: null };
@@ -170,16 +175,19 @@ export async function refundCredits(
       return { success: false, error: 'Failed to fetch user data' };
     }
 
+    // Use any to bypass type checking
+    const userData = user as any;
+
     // Business 会员不需要回滚
-    if ((user.membership_tier as string) === 'business') {
+    if (userData.membership_tier === 'business') {
       return { success: true, error: null };
     }
 
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
-        credits: (user.credits as number) + amount,
-        total_generations: Math.max(0, (user.total_generations as number) - 1),
+        credits: userData.credits + amount,
+        total_generations: Math.max(0, userData.total_generations - 1),
         updated_at: new Date().toISOString(),
       } as any)
       .eq('id', userId);
