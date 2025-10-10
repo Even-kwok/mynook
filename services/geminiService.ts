@@ -3,6 +3,16 @@
  * API keys are stored server-side only
  */
 
+import { supabase } from '../config/supabase';
+
+/**
+ * 获取用户认证 token
+ */
+const getAuthToken = async (): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+};
+
 /**
  * Generates a text response from the model, with an optional image and system instruction.
  * @param instruction The user's text prompt.
@@ -16,10 +26,16 @@ export const generateTextResponse = async (
     base64Image: string | null
 ): Promise<string> => {
     try {
+        const token = await getAuthToken();
+        if (!token) {
+            throw new Error('You must be logged in to use this feature');
+        }
+
         const response = await fetch('/api/generate-text', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
                 instruction,
@@ -50,12 +66,18 @@ export const generateTextResponse = async (
  */
 export const generateDynamicPrompt = async (themeDescription: string): Promise<string> => {
     try {
+        const token = await getAuthToken();
+        if (!token) {
+            throw new Error('You must be logged in to use this feature');
+        }
+
         const instruction = `Generate a creative and specific interior design style description. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`;
         
         const response = await fetch('/api/generate-text', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
                 instruction,
@@ -86,10 +108,16 @@ export const generateDynamicPrompt = async (themeDescription: string): Promise<s
  */
 export const generateImage = async (instruction: string, base64Images: string[]): Promise<string> => {
     try {
+        const token = await getAuthToken();
+        if (!token) {
+            throw new Error('You must be logged in to use this feature');
+        }
+
         const response = await fetch('/api/generate-image', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
                 instruction,

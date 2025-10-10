@@ -4,6 +4,14 @@ import { promises as fs } from 'fs';
 import { Buffer } from 'node:buffer';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { 
+  verifyUserToken, 
+  checkCreditsAvailable, 
+  deductCredits, 
+  refundCredits,
+  CREDIT_COSTS,
+  logGeneration 
+} from './lib/creditsService';
 
 interface GenerateImageRequestBody {
   instruction?: unknown;
@@ -160,10 +168,72 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // ========================================
+  // 1. 验证用户身份
+  // ========================================
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ 
+      error: 'Authentication required',
+      code: 'AUTH_REQUIRED'
+    });
+  }
+
+  const { userId, error: authError } = await verifyUserToken(authHeader);
+  if (authError || !userId) {
+    return res.status(401).json({ 
+      error: authError || 'Invalid authentication',
+      code: 'AUTH_INVALID'
+    });
+  }
+
+  // ========================================
+  // 2. 检查信用点余额
+  // ========================================
+  const requiredCredits = CREDIT_COSTS.IMAGE_GENERATION;
+  const { available, currentCredits, membershipTier, error: checkError } = await checkCreditsAvailable(userId, requiredCredits);
+  
+  if (checkError) {
+    return res.status(500).json({ 
+      error: 'Failed to check credits',
+      code: 'CREDITS_CHECK_FAILED'
+    });
+  }
+
+  if (!available) {
+    return res.status(402).json({ 
+      error: `Insufficient credits. Required: ${requiredCredits}, Available: ${currentCredits}`,
+      code: 'INSUFFICIENT_CREDITS',
+      required: requiredCredits,
+      available: currentCredits,
+      membershipTier
+    });
+  }
+
+  // ========================================
+  // 3. 扣除信用点
+  // ========================================
+  const { success: deductSuccess, remainingCredits, error: deductError } = await deductCredits(userId, requiredCredits);
+  
+  if (!deductSuccess) {
+    return res.status(500).json({ 
+      error: deductError || 'Failed to deduct credits',
+      code: 'CREDITS_DEDUCT_FAILED'
+    });
+  }
+
+  console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
+
+  // ========================================
+  // 4. 执行图片生成
+  // ========================================
+
   // Get API key from environment variables (server-side only)
   const apiKey = process.env.GEMINI_API_KEY;
   
   if (!apiKey) {
+    // 回滚信用点
+    await refundCredits(userId, requiredCredits);
     console.error('GEMINI_API_KEY is not configured');
     return res.status(500).json({ 
       error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.' 
@@ -172,11 +242,14 @@ export default async function handler(
 
   let ai: GoogleGenAI | null = null;
   let uploadedImageParts: UploadedImagePart[] = [];
+  let generationSuccess = false;
 
   try {
     const { instruction, base64Images } = parseRequestBody(req.body);
 
     if (typeof instruction !== 'string' || !Array.isArray(base64Images) || base64Images.length === 0) {
+      // 回滚信用点
+      await refundCredits(userId, requiredCredits);
       return res.status(400).json({
         error: 'instruction and base64Images (array) are required'
       });
@@ -190,6 +263,8 @@ export default async function handler(
       .filter((value): value is string => typeof value === 'string' && value.length > 0);
 
     if (normalizedImages.length === 0) {
+      // 回滚信用点
+      await refundCredits(userId, requiredCredits);
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
@@ -203,6 +278,8 @@ export default async function handler(
 
     if (uploadedImageParts.length === 0) {
       await cleanupUploadedFiles(aiClient, uploadedImageParts);
+      // 回滚信用点
+      await refundCredits(userId, requiredCredits);
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
@@ -255,10 +332,33 @@ export default async function handler(
     await cleanupUploadedFiles(aiClient, uploadedImageParts);
 
     if (generatedImage) {
+      generationSuccess = true;
+      
+      // 记录生成日志
+      await logGeneration({
+        userId,
+        type: 'image',
+        creditsUsed: requiredCredits,
+        success: true,
+        timestamp: new Date().toISOString(),
+      });
+
       return res.status(200).json({
         imageUrl: `data:${generatedImage.mimeType};base64,${generatedImage.data}`,
+        creditsUsed: requiredCredits,
+        creditsRemaining: remainingCredits,
       });
     }
+
+    // 生成失败，回滚信用点
+    await refundCredits(userId, requiredCredits);
+    await logGeneration({
+      userId,
+      type: 'image',
+      creditsUsed: 0,
+      success: false,
+      timestamp: new Date().toISOString(),
+    });
 
     console.error('API response did not contain inline or file-based image data:', JSON.stringify(response, null, 2));
     return res.status(500).json({
@@ -267,9 +367,24 @@ export default async function handler(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error generating image:', error);
+    
+    // 清理上传的文件
     if (ai && uploadedImageParts.length > 0) {
       await cleanupUploadedFiles(ai, uploadedImageParts);
     }
+
+    // 如果生成失败，回滚信用点
+    if (!generationSuccess) {
+      await refundCredits(userId, requiredCredits);
+      await logGeneration({
+        userId,
+        type: 'image',
+        creditsUsed: 0,
+        success: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     return res.status(500).json({
       error: 'Image generation failed. Please try again.',
       details: message,
