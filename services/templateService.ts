@@ -278,6 +278,30 @@ export async function toggleCategoryEnabled(
 }
 
 /**
+ * 批量更新整个主分类下所有模板的 enabled 状态
+ * @param mainCategory - 主分类名称
+ * @param enabled - 启用/禁用状态
+ */
+export async function toggleMainCategoryEnabled(
+  mainCategory: string,
+  enabled: boolean
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('design_templates')
+      .update({ enabled })
+      .eq('main_category', mainCategory);
+    
+    if (error) throw error;
+    
+    console.log(`✅ Toggled entire ${mainCategory} to ${enabled}`);
+  } catch (error) {
+    console.error('Error toggling main category enabled:', error);
+    throw error;
+  }
+}
+
+/**
  * 获取分类列表
  */
 export async function getCategories(): Promise<TemplateCategory[]> {

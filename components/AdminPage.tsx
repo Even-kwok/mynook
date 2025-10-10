@@ -7,7 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
@@ -310,6 +310,36 @@ const TemplateManagement: React.FC<{
         }
     };
 
+    const toggleMainCategory = async (mainCategory: string) => {
+        // 获取当前所有子分类的状态，如果至少有一个是启用的，则全部禁用；否则全部启用
+        const currentData = templateData[mainCategory];
+        if (!currentData || currentData.length === 0) return;
+        
+        const hasAnyEnabled = currentData.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
+        const newEnabledState = !hasAnyEnabled;
+        
+        try {
+            // 同步到数据库
+            await toggleMainCategoryEnabled(mainCategory, newEnabledState);
+            
+            // 更新本地状态 - 更新所有子分类
+            setTemplateData(prevData => {
+                const newData = JSON.parse(JSON.stringify(prevData));
+                if (newData[mainCategory]) {
+                    newData[mainCategory].forEach((sc: ManagedPromptTemplateCategory) => {
+                        sc.enabled = newEnabledState;
+                    });
+                }
+                return newData;
+            });
+            
+            console.log(`✅ Main category ${mainCategory} toggled to ${newEnabledState}`);
+        } catch (error) {
+            console.error('Failed to toggle main category:', error);
+            alert('Failed to update main category status. Please try again.');
+        }
+    };
+
     const toggleSubCategory = async (mainCategory: string, subCategoryName: string) => {
         // 先获取当前状态
         const currentData = templateData[mainCategory];
@@ -417,9 +447,22 @@ const TemplateManagement: React.FC<{
                 </Button>
             </div>
             <div className="mt-4 space-y-4">
-                {categoryOrder.map(mainCategory => (
+                {categoryOrder.map(mainCategory => {
+                    const hasAnyEnabled = templateData[mainCategory]?.some((sc: ManagedPromptTemplateCategory) => sc.enabled) ?? false;
+                    return (
                     <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
-                        <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
+                            <label className="inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={hasAnyEnabled} 
+                                    onChange={() => toggleMainCategory(mainCategory)} 
+                                    className="sr-only peer" 
+                                />
+                                <div className="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
                         <div className="mt-3 space-y-3">
                             {templateData[mainCategory].map(subCategory => (
                                 <div key={subCategory.name}>
@@ -452,7 +495,8 @@ const TemplateManagement: React.FC<{
                             ))}
                         </div>
                     </div>
-                ))}
+                    );
+                })}
             </div>
             <TemplateModal
                 isOpen={isTemplateModalOpen}
