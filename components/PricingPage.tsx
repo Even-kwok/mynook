@@ -5,27 +5,34 @@ import { motion } from 'framer-motion';
 const plans = [
     {
         name: 'Pro Plan',
+        icon: '⭐',
         monthlyPrice: 39,
         yearlyPrice: 17,
         yearlyBilled: 199,
+        credits: 1000,
         features: [
-            'Create 1,000 interior designs',
+            '1,000 credits for AI generation',
+            'Design generation features',
             'Create up to 4 designs in parallel',
             'Commercial use license',
             'No watermark',
             'Style transfer',
-            'Slow response times',
+            'Standard response times',
         ],
         isPopular: false,
     },
     {
         name: 'Premium Plan',
+        icon: '👑',
         monthlyPrice: 99,
         yearlyPrice: 42,
         yearlyBilled: 499,
+        credits: 5000,
         description: 'All Pro features, plus:',
         features: [
-            'Create 5,000 interior designs',
+            '5,000 credits for AI generation',
+            '🎨 Unlock Free Canvas feature',
+            'Priority queue processing',
             'Create up to 8 designs in parallel',
             'Commercial use license',
             'No watermark',
@@ -41,12 +48,16 @@ const plans = [
     },
     {
         name: 'Business Plan',
+        icon: '💼',
         monthlyPrice: 299,
         yearlyPrice: 142,
         yearlyBilled: 1699,
+        credits: 25000,
         description: 'All Premium features, plus:',
         features: [
-            'Create 25,000 interior designs',
+            '25,000 credits for AI generation',
+            '💰 Best value per credit',
+            '🎨 Free Canvas feature included',
             'Create up to 16 designs in parallel',
             'Commercial use license',
             'No watermark',
@@ -58,6 +69,7 @@ const plans = [
             'Outdoor landscaping mode',
             'Cloud storage',
             'Early access to new features',
+            'Priority support',
         ],
         isPopular: false,
     },
@@ -133,7 +145,14 @@ export const PricingPage: React.FC = () => {
                                 </div>
                             )}
 
-                            <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                            <div className="flex items-center gap-3">
+                                <span className="text-4xl">{plan.icon}</span>
+                                <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                            </div>
+                            
+                            <div className="mt-2 inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full">
+                                {plan.credits.toLocaleString()} Credits
+                            </div>
                             
                             <div className="mt-6 flex items-baseline gap-x-2">
                                 <span className="text-5xl font-extrabold tracking-tight text-slate-900">

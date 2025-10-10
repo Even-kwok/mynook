@@ -70,31 +70,35 @@ export type MembershipTier = UserProfile['membership_tier'];
 export const MEMBERSHIP_CONFIG = {
   free: {
     name: 'Free',
-    credits: 10,
+    credits: 0, // Free 用户没有信用点额度
     color: 'text-slate-600',
     bgColor: 'bg-slate-100',
     icon: '🆓',
+    features: ['浏览功能', '基础设计查看'],
   },
   pro: {
     name: 'Pro',
-    credits: 100,
+    credits: 1000, // Pro 用户 1000 点
     color: 'text-blue-600',
     bgColor: 'bg-blue-100',
     icon: '⭐',
+    features: ['设计生图功能', '1000 信用点'],
   },
   premium: {
     name: 'Premium',
-    credits: 500,
+    credits: 5000, // Premium 用户 5000 点
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
     icon: '👑',
+    features: ['优先队列', '解锁 Free Canvas 功能', '5000 信用点'],
   },
   business: {
     name: 'Business',
-    credits: -1, // -1 表示无限
+    credits: 25000, // Business 用户 25000 点
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
     icon: '💼',
+    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低'],
   },
 } as const;
 

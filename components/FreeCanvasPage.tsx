@@ -327,6 +327,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     canvasState,
     setCanvasState
 }) => {
+    // 检查用户是否有权限访问 Free Canvas（只有 Premium 和 Business 可以访问）
+    const hasAccess = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
     const workspaceRef = useRef<HTMLDivElement>(null);
     const dragInfo = useRef<({ type: 'image'; id: string; offsetX: number; offsetY: number } | { type: 'path'; id: string; startX: number; startY: number; originalPath: DrawablePath }) | null>(null);
@@ -1143,8 +1146,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             onLoginRequest();
             return;
         }
-        if (currentUser.credits < 5) {
-            onError("You need at least 5 credits to generate an image. Please upgrade your plan to continue.");
+        if (currentUser.credits < 1) {
+            onError("You need at least 1 credit to generate an image. Please upgrade your plan to continue.");
             return;
         }
         if (!prompt || (images.length === 0 && paths.length === 0)) {
@@ -1358,6 +1361,54 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             </div>
         );
     };
+
+    // 如果没有登录，显示登录提示
+    if (!currentUser) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-slate-50">
+                <div className="text-center max-w-md px-6">
+                    <div className="text-6xl mb-4">👑</div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-4">Free Canvas - Premium Feature</h2>
+                    <p className="text-slate-600 mb-6">
+                        Please log in to access the Free Canvas feature.
+                    </p>
+                    <Button onClick={onLoginRequest} primary>
+                        Login to Continue
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+    
+    // 如果用户等级不够，显示升级提示
+    if (!hasAccess) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-slate-50">
+                <div className="text-center max-w-md px-6">
+                    <div className="text-6xl mb-4">👑</div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-4">Free Canvas - Premium Feature</h2>
+                    <p className="text-slate-600 mb-4">
+                        Free Canvas is a premium feature available for <span className="font-semibold text-purple-600">Premium</span> and <span className="font-semibold text-amber-600">Business</span> members.
+                    </p>
+                    <p className="text-sm text-slate-500 mb-6">
+                        Your current plan: <span className="font-semibold">{currentUser.membershipTier.charAt(0).toUpperCase() + currentUser.membershipTier.slice(1)}</span>
+                    </p>
+                    <div className="space-y-3 text-left bg-white rounded-2xl p-4 mb-6">
+                        <p className="text-sm font-semibold text-slate-700">With Premium or Business, you can:</p>
+                        <ul className="text-sm text-slate-600 space-y-2">
+                            <li>✨ Combine multiple images on a canvas</li>
+                            <li>🎨 Draw and annotate freely</li>
+                            <li>🖼️ Generate custom designs with AI</li>
+                            <li>🔧 Advanced editing tools</li>
+                        </ul>
+                    </div>
+                    <Button primary>
+                        Upgrade to Premium
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
