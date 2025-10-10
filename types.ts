@@ -171,3 +171,26 @@ export interface GalleryItem {
   categoryName: string;  // Display name for category
   toolPage: string;      // Target page to navigate to
 }
+
+// Hero Banner 过渡效果类型
+export type TransitionEffect = 'fade' | 'slide' | 'zoom';
+
+// Hero Banner 项目接口（扩展自 GalleryItem）
+export interface HeroBannerItem extends GalleryItem {
+  bannerTitle: string;        // 横幅主标题
+  bannerSubtitle: string;     // 横幅副标题
+  transitionEffect: TransitionEffect;  // 过渡效果
+  displayDuration: number;    // 显示时长（秒）
+  isAutoplay: boolean;        // 是否自动播放
+  sortOrder: number;          // 排序顺序
+}
+
+// Hero Banner 轮播配置
+export interface HeroBannerConfig {
+  autoplay: boolean;           // 全局自动播放设置
+  defaultDuration: number;     // 默认显示时长
+  defaultTransition: TransitionEffect;  // 默认过渡效果
+  pauseOnHover: boolean;       // 悬停时暂停
+  showIndicators: boolean;     // 显示指示器
+  showControls: boolean;       // 显示控制按钮
+}

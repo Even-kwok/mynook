@@ -41,6 +41,7 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
   const [galleryItems, setGalleryItems] = useState<GalleryItemDB[]>([]);
   const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [globalCategory, setGlobalCategory] = useState<string>(GALLERY_CATEGORIES[0].id);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +61,7 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
     if (!files || files.length === 0) return;
 
     const newImages: UploadingImage[] = [];
+    const selectedCat = GALLERY_CATEGORIES.find(c => c.id === globalCategory) || GALLERY_CATEGORIES[0];
 
     for (let i = 0; i < Math.min(files.length, 20); i++) {
       const file = files[i];
@@ -77,9 +79,9 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
           preview,
           metadata,
           title: file.name.replace(/\.[^/.]+$/, ''),
-          category: GALLERY_CATEGORIES[0].id,
-          categoryName: GALLERY_CATEGORIES[0].name,
-          toolPage: GALLERY_CATEGORIES[0].page,
+          category: selectedCat.id,
+          categoryName: selectedCat.name,
+          toolPage: selectedCat.page,
           author: 'MyNook Team',
           uploading: false,
           uploaded: false
@@ -115,18 +117,6 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
     setUploadingImages((prev) =>
       prev.map((img, i) => (i === index ? { ...img, ...updates } : img))
     );
-  };
-
-  // 更新分类
-  const updateCategory = (index: number, categoryId: string) => {
-    const category = GALLERY_CATEGORIES.find((c) => c.id === categoryId);
-    if (category) {
-      updateUploadingImage(index, {
-        category: category.id,
-        categoryName: category.name,
-        toolPage: category.page
-      });
-    }
   };
 
   // 移除上传图片
@@ -277,6 +267,27 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
       <div className="bg-white p-6 rounded-2xl shadow-sm">
         <h2 className="text-xl font-semibold text-slate-800 mb-4">Upload New Images</h2>
 
+        {/* 全局分类选择器 */}
+        <div className="mb-6 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl">
+          <label className="block text-sm font-semibold text-indigo-900 mb-2">
+            📁 Select Category for All Uploads / 为所有图片选择分类
+          </label>
+          <select
+            value={globalCategory}
+            onChange={(e) => setGlobalCategory(e.target.value)}
+            className="w-full px-4 py-3 text-base font-medium border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          >
+            {GALLERY_CATEGORIES.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs text-indigo-700">
+            All uploaded images will be assigned to this category. You can change this anytime before uploading.
+          </p>
+        </div>
+
         {/* 拖拽上传区 */}
         <div
           className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
@@ -340,13 +351,12 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {uploadingImages.map((image, index) => (
                 <UploadingImageCard
                   key={index}
                   image={image}
                   onUpdate={(updates) => updateUploadingImage(index, updates)}
-                  onCategoryChange={(categoryId) => updateCategory(index, categoryId)}
                   onRemove={() => removeUploadingImage(index)}
                 />
               ))}
@@ -401,59 +411,50 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({ onSuccess }) => 
 const UploadingImageCard: React.FC<{
   image: UploadingImage;
   onUpdate: (updates: Partial<UploadingImage>) => void;
-  onCategoryChange: (categoryId: string) => void;
   onRemove: () => void;
-}> = ({ image, onUpdate, onCategoryChange, onRemove }) => {
+}> = ({ image, onUpdate, onRemove }) => {
   return (
-    <div className="border border-slate-200 rounded-xl p-4 relative">
+    <div className="border border-slate-200 rounded-xl p-3 relative">
       {/* 状态指示器 */}
       {image.uploaded && (
-        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center z-10">
           <IconCheck className="w-4 h-4 text-white" />
         </div>
       )}
       {image.uploading && (
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10">
           <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
       {!image.uploaded && !image.uploading && (
         <button
           onClick={onRemove}
-          className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600"
+          className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 z-10"
         >
           <IconX className="w-4 h-4 text-white" />
         </button>
       )}
 
-      {/* 预览图 */}
-      <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 mb-3">
+      {/* 预览图 - 固定 100px */}
+      <div className="w-full h-[100px] rounded-lg overflow-hidden bg-slate-100 mb-2">
         <img src={image.preview} alt={image.title} className="w-full h-full object-cover" />
       </div>
 
       {/* 表单 */}
       <div className="space-y-2">
+        {/* 分类标签（只读显示） */}
+        <div className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded text-center truncate">
+          {image.categoryName}
+        </div>
+
         <input
           type="text"
           value={image.title}
           onChange={(e) => onUpdate({ title: e.target.value })}
           placeholder="Title"
           disabled={image.uploading || image.uploaded}
-          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
+          className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
         />
-
-        <select
-          value={image.category}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          disabled={image.uploading || image.uploaded}
-          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
-        >
-          {GALLERY_CATEGORIES.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
 
         <input
           type="text"
@@ -461,17 +462,17 @@ const UploadingImageCard: React.FC<{
           onChange={(e) => onUpdate({ author: e.target.value })}
           placeholder="Author"
           disabled={image.uploading || image.uploaded}
-          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
+          className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
         />
 
         {image.metadata && (
-          <p className="text-xs text-slate-500">
+          <p className="text-[10px] text-slate-500 truncate">
             {image.metadata.width} x {image.metadata.height} • {(image.metadata.size / 1024).toFixed(0)}KB
           </p>
         )}
 
         {image.error && (
-          <p className="text-xs text-red-600">{image.error}</p>
+          <p className="text-[10px] text-red-600 truncate">{image.error}</p>
         )}
       </div>
     </div>

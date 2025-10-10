@@ -13,6 +13,7 @@ import { PricingPage } from './components/PricingPage';
 import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
+import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -678,7 +679,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     const [displayedCount, setDisplayedCount] = useState(20);
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [heroBanner, setHeroBanner] = useState<string>('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png');
+    const [heroBanners, setHeroBanners] = useState<any[]>([]);
+    const [isBannersLoading, setIsBannersLoading] = useState(true);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_LOAD = 20;
     const TOTAL_ITEMS = galleryItems.length;
@@ -703,22 +705,23 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
         loadGalleryItems();
     }, []);
 
-    // Load Hero Banner from Supabase (separate from gallery items)
+    // Load Hero Banners from Supabase
     useEffect(() => {
-        const loadHeroBanner = async () => {
+        const loadHeroBanners = async () => {
+            setIsBannersLoading(true);
             try {
-                const { fetchGalleryItemsByCategory } = await import('./services/galleryService');
-                const heroBanners = await fetchGalleryItemsByCategory('hero-banner');
-                if (heroBanners.length > 0) {
-                    setHeroBanner(heroBanners[0].src);
-                }
+                const { fetchHeroBanners } = await import('./services/galleryService');
+                const banners = await fetchHeroBanners();
+                setHeroBanners(banners);
             } catch (error) {
-                console.error('Failed to load hero banner:', error);
-                // Keep default banner on error
+                console.error('Failed to load hero banners:', error);
+                // Empty array will show default banner in HeroBannerCarousel
+            } finally {
+                setIsBannersLoading(false);
             }
         };
 
-        loadHeroBanner();
+        loadHeroBanners();
     }, []);
 
     // Infinite scroll with Intersection Observer
@@ -756,31 +759,16 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
 
     return (
         <main className="flex-1 overflow-y-auto bg-white text-slate-800 scrollbar-hide flex flex-col">
-            {/* Hero Section */}
-            <section 
-              className="relative bg-cover bg-center text-white pt-[168px] pb-24 sm:pt-[200px] sm:pb-32 px-4 h-[50vh] flex items-center justify-center" 
-              style={{ backgroundImage: `url('${heroBanner}')` }}
-            >
-                <div className="absolute inset-0 bg-black/40"></div>
-                <div className="relative container mx-auto max-w-4xl text-center">
-                    <motion.h1 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                        className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg"
-                    >
-                        Effortless Design, Powered by AI
-                    </motion.h1>
-                    <motion.p 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-                        className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto text-white/90 drop-shadow-md"
-                    >
-                        Transform photos of your rooms with powerful AI. Create stunning visuals for home renovations, staging, lookbooks, and more.
-                    </motion.p>
-                </div>
-            </section>
+            {/* Hero Banner Carousel */}
+            {!isBannersLoading && (
+                <HeroBannerCarousel
+                    banners={heroBanners}
+                    autoplay={true}
+                    pauseOnHover={true}
+                    showIndicators={true}
+                    showControls={true}
+                />
+            )}
             
             <section className="px-4 sm:px-6 lg:px-8 py-16">
                 {isInitialLoading ? (

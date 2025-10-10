@@ -7,6 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
+import { HeroBannerManager } from './HeroBannerManager';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
@@ -227,6 +228,8 @@ const TemplateManagement: React.FC<{
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
+    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(new Set());
+    const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -421,6 +424,31 @@ const TemplateManagement: React.FC<{
         }
     };
 
+    const toggleMainCategoryCollapse = (mainCategory: string) => {
+        setCollapsedMainCategories(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(mainCategory)) {
+                newSet.delete(mainCategory);
+            } else {
+                newSet.add(mainCategory);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleSubCategoryCollapse = (mainCategory: string, subCategoryName: string) => {
+        const key = `${mainCategory}::${subCategoryName}`;
+        setCollapsedSubCategories(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(key)) {
+                newSet.delete(key);
+            } else {
+                newSet.add(key);
+            }
+            return newSet;
+        });
+    };
+
     const handleImportTemplates = async () => {
         if (!confirm('This will import all hard-coded templates into the database. Continue?')) return;
         
@@ -516,10 +544,19 @@ const TemplateManagement: React.FC<{
                     
                     const hasAnyEnabled = subCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
                     
+                    const isMainCollapsed = collapsedMainCategories.has(mainCategory);
+                    
                     return (
                         <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => toggleMainCategoryCollapse(mainCategory)}
+                                    className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                                    title={isMainCollapsed ? "Expand" : "Collapse"}
+                                >
+                                    <IconChevronDown className={`w-5 h-5 text-slate-600 transition-transform ${isMainCollapsed ? '-rotate-90' : ''}`} />
+                                </button>
                                 <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
                                 <button 
                                     onClick={() => handleDeleteMainCategory(mainCategory)}
@@ -539,11 +576,23 @@ const TemplateManagement: React.FC<{
                                 <div className="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                             </label>
                         </div>
+                        {!isMainCollapsed && (
                         <div className="mt-3 space-y-3">
-                            {subCategories.map((subCategory: ManagedPromptTemplateCategory) => (
+                            {subCategories.map((subCategory: ManagedPromptTemplateCategory) => {
+                                const subKey = `${mainCategory}::${subCategory.name}`;
+                                const isSubCollapsed = collapsedSubCategories.has(subKey);
+                                
+                                return (
                                 <div key={subCategory.name}>
                                     <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                                         <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => toggleSubCategoryCollapse(mainCategory, subCategory.name)}
+                                                className="p-0.5 hover:bg-slate-200 rounded transition-colors"
+                                                title={isSubCollapsed ? "Expand" : "Collapse"}
+                                            >
+                                                <IconChevronDown className={`w-4 h-4 text-slate-600 transition-transform ${isSubCollapsed ? '-rotate-90' : ''}`} />
+                                            </button>
                                             <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
                                             <button 
                                                 onClick={() => handleDeleteSubCategory(mainCategory, subCategory.name)}
@@ -558,26 +607,29 @@ const TemplateManagement: React.FC<{
                                             <div className="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                         </label>
                                     </div>
-                                    <div className="grid grid-cols-4 gap-3 mt-3">
+                                    {!isSubCollapsed && (
+                                    <div className="grid grid-cols-8 gap-2 mt-2">
                                         {subCategory.templates.map(template => (
                                             <div key={template.id} className="group relative">
-                                                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
+                                                <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
                                                     <img src={template.imageUrl} alt={template.name} className="w-full h-full object-cover" />
                                                 </div>
-                                                <p className="text-xs text-center mt-1 text-slate-600 truncate">{template.name}</p>
-                                                <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleEditTemplate(template, mainCategory, subCategory.name)} className="p-2 bg-white/80 rounded-full hover:bg-white"><IconPencil className="w-4 h-4" /></button>
-                                                    <button onClick={() => handleDeleteTemplate(template.id, mainCategory, subCategory.name)} className="p-2 bg-white/80 rounded-full hover:bg-white text-red-500"><IconTrash className="w-4 h-4" /></button>
+                                                <p className="text-[10px] text-center mt-1 text-slate-600 truncate">{template.name}</p>
+                                                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleEditTemplate(template, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white"><IconPencil className="w-3 h-3" /></button>
+                                                    <button onClick={() => handleDeleteTemplate(template.id, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white text-red-500"><IconTrash className="w-3 h-3" /></button>
                                                 </div>
                                             </div>
                                         ))}
-                                        <button onClick={() => handleAddTemplate(mainCategory, subCategory.name)} className="flex flex-col items-center justify-center aspect-square rounded-xl border-2 border-dashed border-slate-300 text-slate-400 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
-                                            <IconPlus />
-                                            <span className="text-xs mt-1">Add</span>
+                                        <button onClick={() => handleAddTemplate(mainCategory, subCategory.name)} className="flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed border-slate-300 text-slate-400 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
+                                            <IconPlus className="w-4 h-4" />
+                                            <span className="text-[10px] mt-0.5">Add</span>
                                         </button>
                                     </div>
+                                    )}
                                 </div>
-                            ))}
+                                );
+                            })}
                             <button
                                 onClick={() => handleAddSubCategory(mainCategory)}
                                 className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-500 transition-colors flex items-center justify-center gap-2"
@@ -586,6 +638,7 @@ const TemplateManagement: React.FC<{
                                 <span className="text-sm font-medium">Add {mainCategory === 'Interior Design' ? 'Room Type' : 'Sub-Category'}</span>
                             </button>
                         </div>
+                        )}
                         </div>
                     );
                 })}
@@ -923,6 +976,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
+        { id: 'hero-banner', name: 'Hero Banner', icon: IconSparkles },
         { id: 'gallery', name: 'Gallery', icon: IconPhoto },
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
@@ -953,6 +1007,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} />;
+            case 'hero-banner':
+                return <HeroBannerManager />;
             case 'gallery':
                 return <GalleryManager />;
             default:

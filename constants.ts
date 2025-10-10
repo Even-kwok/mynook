@@ -642,6 +642,23 @@ export const GALLERY_CATEGORIES = [
   { id: 'free-canvas', name: 'Free Canvas', page: 'Free Canvas' }
 ];
 
+// Hero Banner 过渡效果配置
+export const HERO_BANNER_TRANSITION_EFFECTS = [
+  { value: 'fade' as const, label: 'Fade', description: '淡入淡出效果' },
+  { value: 'slide' as const, label: 'Slide', description: '滑动切换效果' },
+  { value: 'zoom' as const, label: 'Zoom', description: '缩放过渡效果' }
+];
+
+// Hero Banner 默认配置
+export const DEFAULT_HERO_BANNER_CONFIG = {
+  autoplay: true,
+  defaultDuration: 5,
+  defaultTransition: 'fade' as const,
+  pauseOnHover: true,
+  showIndicators: true,
+  showControls: true
+};
+
 // Generate gallery items with categories for waterfall layout
 const generateGalleryItems = (): GalleryItem[] => {
   const ratios = [

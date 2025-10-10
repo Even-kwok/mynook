@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../config/supabase';
-import { GalleryItem } from '../types';
+import { GalleryItem, HeroBannerItem, TransitionEffect } from '../types';
 
 export interface GalleryItemData {
   storage_path: string;
@@ -18,6 +18,12 @@ export interface GalleryItemData {
   height: number;
   display_order?: number;
   is_active?: boolean;
+  banner_title?: string;
+  banner_subtitle?: string;
+  transition_effect?: TransitionEffect;
+  display_duration?: number;
+  is_autoplay?: boolean;
+  sort_order?: number;
 }
 
 export interface GalleryItemDB {
@@ -35,6 +41,12 @@ export interface GalleryItemDB {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  banner_title?: string;
+  banner_subtitle?: string;
+  transition_effect?: TransitionEffect;
+  display_duration?: number;
+  is_autoplay?: boolean;
+  sort_order?: number;
 }
 
 /**
@@ -63,6 +75,7 @@ const convertToGalleryItem = (dbItem: GalleryItemDB): GalleryItem => {
 
 /**
  * 获取所有激活的图片墙项目
+ * 注意：排除 hero-banner 类别，因为它只用于首页横幅显示
  */
 export const fetchGalleryItems = async (): Promise<GalleryItem[]> => {
   try {
@@ -70,6 +83,7 @@ export const fetchGalleryItems = async (): Promise<GalleryItem[]> => {
       .from('gallery_items')
       .select('*')
       .eq('is_active', true)
+      .neq('category', 'hero-banner') // 排除hero-banner类别
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });
     
@@ -260,6 +274,131 @@ export const reorderGalleryItems = async (
     return true;
   } catch (error) {
     console.error('Reorder gallery items error:', error);
+    return false;
+  }
+};
+
+// ==================== Hero Banner 专用方法 ====================
+
+/**
+ * 转换数据库记录为 HeroBannerItem 格式
+ */
+const convertToHeroBannerItem = (dbItem: GalleryItemDB): HeroBannerItem => {
+  const { data } = supabase.storage
+    .from('gallery-images')
+    .getPublicUrl(dbItem.storage_path);
+  
+  return {
+    id: dbItem.id,
+    type: dbItem.type,
+    src: data.publicUrl,
+    title: dbItem.title,
+    author: dbItem.author,
+    authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
+    width: dbItem.width,
+    height: dbItem.height,
+    category: dbItem.category,
+    categoryName: dbItem.category_name,
+    toolPage: dbItem.tool_page,
+    bannerTitle: dbItem.banner_title || dbItem.title,
+    bannerSubtitle: dbItem.banner_subtitle || 'Transform photos of your rooms with powerful AI',
+    transitionEffect: dbItem.transition_effect || 'fade',
+    displayDuration: dbItem.display_duration || 5,
+    isAutoplay: dbItem.is_autoplay !== undefined ? dbItem.is_autoplay : true,
+    sortOrder: dbItem.sort_order || dbItem.display_order || 0
+  };
+};
+
+/**
+ * 获取所有激活的 Hero Banners（按排序顺序）
+ */
+export const fetchHeroBanners = async (): Promise<HeroBannerItem[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('gallery_items')
+      .select('*')
+      .eq('category', 'hero-banner')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Fetch hero banners error:', error);
+      return [];
+    }
+    
+    return data.map(convertToHeroBannerItem);
+  } catch (error) {
+    console.error('Fetch hero banners error:', error);
+    return [];
+  }
+};
+
+/**
+ * 获取所有 Hero Banners（包括未激活的，管理员用）
+ */
+export const fetchAllHeroBanners = async (): Promise<GalleryItemDB[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('gallery_items')
+      .select('*')
+      .eq('category', 'hero-banner')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Fetch all hero banners error:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Fetch all hero banners error:', error);
+    return [];
+  }
+};
+
+/**
+ * 创建新的 Hero Banner
+ */
+export const createHeroBanner = async (
+  itemData: GalleryItemData
+): Promise<string | null> => {
+  return createGalleryItem(itemData);
+};
+
+/**
+ * 更新 Hero Banner
+ */
+export const updateHeroBanner = async (
+  id: string,
+  updates: Partial<GalleryItemData>
+): Promise<boolean> => {
+  return updateGalleryItem(id, updates);
+};
+
+/**
+ * 重新排序 Hero Banners
+ */
+export const reorderHeroBanners = async (
+  itemIds: string[]
+): Promise<boolean> => {
+  try {
+    for (let i = 0; i < itemIds.length; i++) {
+      const { error } = await supabase
+        .from('gallery_items')
+        .update({ sort_order: i })
+        .eq('id', itemIds[i]);
+      
+      if (error) {
+        console.error('Reorder hero banner error:', error);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Reorder hero banners error:', error);
     return false;
   }
 };
