@@ -673,16 +673,38 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 }
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
+    const [galleryItems, setGalleryItems] = useState<GeneratedImage[]>([]);
     const [displayedCount, setDisplayedCount] = useState(20);
     const [isLoading, setIsLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_LOAD = 20;
-    const TOTAL_ITEMS = EXPLORE_GALLERY_ITEMS.length;
+    const TOTAL_ITEMS = galleryItems.length;
+
+    // Load gallery items from Supabase
+    useEffect(() => {
+        const loadGalleryItems = async () => {
+            setIsInitialLoading(true);
+            try {
+                const { fetchGalleryItems } = await import('./services/galleryService');
+                const items = await fetchGalleryItems();
+                setGalleryItems(items as any);
+            } catch (error) {
+                console.error('Failed to load gallery items:', error);
+                // Fallback to static data if Supabase fails
+                setGalleryItems(EXPLORE_GALLERY_ITEMS as any);
+            } finally {
+                setIsInitialLoading(false);
+            }
+        };
+
+        loadGalleryItems();
+    }, []);
 
     // Infinite scroll with Intersection Observer
     useEffect(() => {
         const currentRef = loadMoreRef.current;
-        if (!currentRef) return;
+        if (!currentRef || isInitialLoading) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -707,9 +729,9 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 observer.unobserve(currentRef);
             }
         };
-    }, [displayedCount, isLoading, TOTAL_ITEMS]);
+    }, [displayedCount, isLoading, TOTAL_ITEMS, isInitialLoading]);
 
-    const displayedItems = EXPLORE_GALLERY_ITEMS.slice(0, displayedCount);
+    const displayedItems = galleryItems.slice(0, displayedCount);
     const hasMore = displayedCount < TOTAL_ITEMS;
 
     return (
@@ -741,8 +763,15 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </section>
             
             <section className="px-4 sm:px-6 lg:px-8 py-16">
-                <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
-                    {displayedItems.map((item) => (
+                {isInitialLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                        <p className="text-slate-600 text-lg">Loading gallery...</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
+                            {displayedItems.map((item) => (
                         <div 
                             key={item.id} 
                             onClick={() => onNavigate(item.toolPage)}
@@ -776,22 +805,24 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                             </div>
                         </div>
-                    ))}
-                </div>
+                            ))}
+                        </div>
 
-                {/* Loading indicator */}
-                <div ref={loadMoreRef} className="flex justify-center items-center py-12">
-                    {isLoading && hasMore && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex flex-col items-center gap-3"
-                        >
-                            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                            <p className="text-slate-500 text-sm">Loading more images...</p>
-                        </motion.div>
-                    )}
-                </div>
+                        {/* Loading indicator */}
+                        <div ref={loadMoreRef} className="flex justify-center items-center py-12">
+                            {isLoading && hasMore && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex flex-col items-center gap-3"
+                                >
+                                    <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                                    <p className="text-slate-500 text-sm">Loading more images...</p>
+                                </motion.div>
+                            )}
+                        </div>
+                    </>
+                )}
             </section>
         </main>
     );

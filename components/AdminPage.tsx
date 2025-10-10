@@ -6,6 +6,7 @@ import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
+import { GalleryManager } from './GalleryManager';
 
 // --- Component Props ---
 
@@ -527,6 +528,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
+        { id: 'gallery', name: 'Gallery', icon: IconPhoto },
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
 
@@ -540,6 +542,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} />;
+            case 'gallery':
+                return <GalleryManager />;
             default:
                 return <div className="bg-white p-6 rounded-2xl shadow-sm">Coming soon...</div>;
         }
