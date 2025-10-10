@@ -65,13 +65,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         // 错误消息本地化
         const errorMessage = getErrorMessage(result.error);
         setError(errorMessage);
+        setLoading(false);
       } else {
-        // 成功后关闭模态框
+        // 乐观UI更新：立即关闭模态框，不等待用户资料加载
+        // onAuthStateChange会在后台自动加载用户资料
         handleClose();
+        // 保持loading状态，直到模态框关闭动画完成
+        setTimeout(() => setLoading(false), 300);
       }
     } catch (err) {
       setError('发生未知错误，请稍后重试');
-    } finally {
       setLoading(false);
     }
   };
@@ -200,9 +203,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 type="submit"
                 primary
                 disabled={loading}
-                className="w-full py-3 text-base font-semibold"
+                className="w-full py-3 text-base font-semibold relative"
               >
-                {loading ? '处理中...' : mode === 'signin' ? '登录' : '注册'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    {mode === 'signin' ? '登录中...' : '注册中...'}
+                  </span>
+                ) : (
+                  mode === 'signin' ? '登录' : '注册'
+                )}
               </Button>
             </form>
 
@@ -222,8 +236,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               disabled={loading}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <IconGoogle className="w-5 h-5" />
-              使用 Google 账号{mode === 'signin' ? '登录' : '注册'}
+              {loading ? (
+                <>
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="inline-block w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full"
+                  />
+                  跳转中...
+                </>
+              ) : (
+                <>
+                  <IconGoogle className="w-5 h-5" />
+                  使用 Google 账号{mode === 'signin' ? '登录' : '注册'}
+                </>
+              )}
             </button>
 
             {/* 切换模式 */}
