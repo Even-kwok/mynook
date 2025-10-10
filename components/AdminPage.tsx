@@ -456,8 +456,9 @@ const TemplateManagement: React.FC<{
                     if (visibleSubCategories.length === 0) return null;
                     
                     const hasAnyEnabled = visibleSubCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
+                    
                     return (
-                    <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
+                        <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
                             <label className="inline-flex items-center cursor-pointer">
@@ -501,7 +502,7 @@ const TemplateManagement: React.FC<{
                                 </div>
                             ))}
                         </div>
-                    </div>
+                        </div>
                     );
                 })}
             </div>
