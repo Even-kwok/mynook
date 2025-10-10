@@ -448,7 +448,14 @@ const TemplateManagement: React.FC<{
             </div>
             <div className="mt-4 space-y-4">
                 {categoryOrder.map(mainCategory => {
-                    const hasAnyEnabled = templateData[mainCategory]?.some((sc: ManagedPromptTemplateCategory) => sc.enabled) ?? false;
+                    const subCategories = templateData[mainCategory] || [];
+                    // 过滤掉没有模板的子分类
+                    const visibleSubCategories = subCategories.filter((sc: ManagedPromptTemplateCategory) => sc.templates.length > 0);
+                    
+                    // 如果主分类下没有任何可见的子分类，不显示整个主分类
+                    if (visibleSubCategories.length === 0) return null;
+                    
+                    const hasAnyEnabled = visibleSubCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
                     return (
                     <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
                         <div className="flex items-center justify-between mb-3">
@@ -464,7 +471,7 @@ const TemplateManagement: React.FC<{
                             </label>
                         </div>
                         <div className="mt-3 space-y-3">
-                            {templateData[mainCategory].map(subCategory => (
+                            {visibleSubCategories.map((subCategory: ManagedPromptTemplateCategory) => (
                                 <div key={subCategory.name}>
                                     <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                                         <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
