@@ -628,7 +628,6 @@ export const ALL_PROMPT_TEMPLATES: PromptTemplate[] = [
 
 // Gallery categories mapping to tool pages
 export const GALLERY_CATEGORIES = [
-  { id: 'hero-banner', name: 'Hero Banner / 首页横幅', page: 'Homepage' },
   { id: 'interior-design', name: 'Interior Design', page: 'Interior Design' },
   { id: 'festive-decor', name: 'Festive Decor', page: 'Festive Decor' },
   { id: 'exterior-design', name: 'Exterior Design', page: 'Exterior Design' },
