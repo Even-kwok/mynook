@@ -7,7 +7,7 @@ import {
   refundCredits,
   CREDIT_COSTS,
   logGeneration 
-} from './lib/creditsService';
+} from './lib/creditsService.js';
 
 interface GenerateTextRequestBody {
   instruction?: unknown;
