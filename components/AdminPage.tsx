@@ -328,6 +328,19 @@ const TemplateManagement: React.FC<{
         try {
             const templatesToImport: any[] = [];
             
+            // 为 Interior Design 模板创建 room_type 映射
+            const { STYLES_BY_ROOM_TYPE } = await import('../constants');
+            const templateToRoomTypeMap = new Map<string, string>();
+            
+            // 遍历所有房间类型，建立模板ID到room_type的映射
+            Object.entries(STYLES_BY_ROOM_TYPE).forEach(([roomType, categories]) => {
+                categories.forEach(category => {
+                    category.templates.forEach(template => {
+                        templateToRoomTypeMap.set(template.id, roomType);
+                    });
+                });
+            });
+            
             // 遍历所有分类
             for (const [mainCategory, subCategories] of Object.entries(ADMIN_PAGE_CATEGORIES)) {
                 for (const subCategory of subCategories) {
@@ -338,6 +351,7 @@ const TemplateManagement: React.FC<{
                             prompt: template.prompt,
                             main_category: mainCategory,
                             sub_category: subCategory.name,
+                            room_type: templateToRoomTypeMap.get(template.id) || null, // 设置room_type
                             enabled: subCategory.enabled !== false,
                             sort_order: 0
                         });

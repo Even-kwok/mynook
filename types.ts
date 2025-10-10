@@ -73,6 +73,7 @@ export interface PromptTemplate {
   imageUrl: string;
   prompt: string;
   category?: string;
+  roomType?: string | null; // 房间类型，用于Interior Design
 }
 
 export interface PromptTemplateCategory {

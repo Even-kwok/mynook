@@ -13,6 +13,7 @@ export interface DesignTemplate {
   prompt: string;
   main_category: string;
   sub_category: string;
+  room_type?: string | null; // 房间类型，仅用于Interior Design
   enabled: boolean;
   sort_order: number;
   created_at: string;
@@ -29,6 +30,7 @@ export interface TemplateCategory {
 
 /**
  * 获取所有模板（按分类组织）
+ * 对于Interior Design，按room_type分组
  */
 export async function getAllTemplates(): Promise<ManagedTemplateData> {
   try {
@@ -54,11 +56,15 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
         grouped[mainCat] = [];
       }
 
+      // 对于Interior Design，使用room_type作为key
+      // 对于其他分类，使用sub_category
+      const categoryKey = template.room_type || subCat;
+
       // 查找或创建子分类
-      let subCategory = grouped[mainCat].find(sc => sc.name === subCat);
+      let subCategory = grouped[mainCat].find(sc => sc.name === categoryKey);
       if (!subCategory) {
         subCategory = {
-          name: subCat,
+          name: categoryKey,
           templates: [],
           enabled: true
         };
@@ -71,7 +77,8 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
         name: template.name,
         imageUrl: template.image_url,
         prompt: template.prompt,
-        category: template.main_category
+        category: template.main_category,
+        roomType: template.room_type
       });
     });
 
@@ -131,10 +138,9 @@ export async function getTemplatesByMainCategory(mainCategory: string): Promise<
  * 创建新模板
  */
 export async function createTemplate(
-  template: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>
+  template: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at'>
 ): Promise<DesignTemplate> {
   try {
-    // 不强制传递 created_by 和 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
       .insert([template])
@@ -154,10 +160,9 @@ export async function createTemplate(
  */
 export async function updateTemplate(
   id: string,
-  updates: Partial<Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>>
+  updates: Partial<Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at'>>
 ): Promise<DesignTemplate> {
   try {
-    // 不强制传递 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
       .update(updates)
@@ -194,10 +199,9 @@ export async function deleteTemplate(id: string): Promise<void> {
  * 批量导入模板
  */
 export async function batchImportTemplates(
-  templates: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>[]
+  templates: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at'>[]
 ): Promise<DesignTemplate[]> {
   try {
-    // 不强制传递 created_by 和 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
       .insert(templates)
@@ -257,12 +261,15 @@ export async function getCategories(): Promise<TemplateCategory[]> {
 /**
  * 获取所有模板（普通用户版本 - 不包含 prompt）
  * 使用公共视图，只返回图片、名字和分类信息
+ * 对于Interior Design，按room_type分组
  */
 export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
   try {
+    // 使用主表而不是视图，因为我们需要room_type字段
     const { data, error } = await supabase
-      .from('design_templates_public')  // 使用公共视图
-      .select('*')
+      .from('design_templates')
+      .select('id, name, image_url, main_category, sub_category, room_type, enabled, sort_order')
+      .eq('enabled', true)
       .order('sort_order')
       .order('name');
 
@@ -275,6 +282,7 @@ export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
       image_url: string;
       main_category: string;
       sub_category: string;
+      room_type?: string | null;
       enabled: boolean;
       sort_order: number;
     }>;
@@ -289,11 +297,15 @@ export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
         grouped[mainCat] = [];
       }
 
+      // 对于Interior Design，使用room_type作为key
+      // 对于其他分类，使用sub_category
+      const categoryKey = template.room_type || subCat;
+
       // 查找或创建子分类
-      let subCategory = grouped[mainCat].find(sc => sc.name === subCat);
+      let subCategory = grouped[mainCat].find(sc => sc.name === categoryKey);
       if (!subCategory) {
         subCategory = {
-          name: subCat,
+          name: categoryKey,
           templates: [],
           enabled: true
         };
@@ -306,7 +318,8 @@ export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
         name: template.name,
         imageUrl: template.image_url,
         prompt: '', // 前端不需要看到，将在生成时动态获取
-        category: template.main_category
+        category: template.main_category,
+        roomType: template.room_type
       });
     });
 
