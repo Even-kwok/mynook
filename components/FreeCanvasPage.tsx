@@ -1382,6 +1382,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     
     // 如果用户等级不够，显示升级提示
     if (!hasAccess) {
+        const tierName = currentUser?.membershipTier 
+            ? currentUser.membershipTier.charAt(0).toUpperCase() + currentUser.membershipTier.slice(1)
+            : 'Free';
+        
         return (
             <div className="flex-1 flex items-center justify-center bg-slate-50">
                 <div className="text-center max-w-md px-6">
@@ -1391,7 +1395,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         Free Canvas is a premium feature available for <span className="font-semibold text-purple-600">Premium</span> and <span className="font-semibold text-amber-600">Business</span> members.
                     </p>
                     <p className="text-sm text-slate-500 mb-6">
-                        Your current plan: <span className="font-semibold">{currentUser.membershipTier.charAt(0).toUpperCase() + currentUser.membershipTier.slice(1)}</span>
+                        Your current plan: <span className="font-semibold">{tierName}</span>
                     </p>
                     <div className="space-y-3 text-left bg-white rounded-2xl p-4 mb-6">
                         <p className="text-sm font-semibold text-slate-700">With Premium or Business, you can:</p>
