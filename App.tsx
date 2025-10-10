@@ -1177,6 +1177,10 @@ const App: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminLevel, setAdminLevel] = useState<string>('none');
     
+    // Admin users data state
+    const [users, setUsers] = useState<User[]>([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    
     // Check admin access on mount and user change
     useEffect(() => {
         const checkAdmin = async () => {
@@ -1194,6 +1198,60 @@ const App: React.FC = () => {
         
         checkAdmin();
     }, [currentUser]);
+    
+    // Load users data for Admin page
+    useEffect(() => {
+        const loadUsers = async () => {
+            if (!isAdmin) {
+                setUsers([]);
+                return;
+            }
+            
+            setIsLoadingUsers(true);
+            try {
+                const { supabase } = await import('./config/supabase');
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('Error loading users:', error);
+                    setUsers([]);
+                } else {
+                    // 转换 Supabase 用户数据为 App 的 User 类型
+                    const transformedUsers: User[] = (data || []).map(user => ({
+                        id: user.id,
+                        email: user.email,
+                        password: '', // 不存储密码
+                        status: 'Active',
+                        joined: user.created_at,
+                        lastIp: '',
+                        registrationIp: '',
+                        permissionLevel: (() => {
+                            switch (user.membership_tier) {
+                                case 'free': return 1;
+                                case 'pro': return 2;
+                                case 'premium': return 3;
+                                case 'business': return 4;
+                                default: return 1;
+                            }
+                        })(),
+                        credits: user.credits,
+                        membershipTier: user.membership_tier,
+                    }));
+                    setUsers(transformedUsers);
+                }
+            } catch (err) {
+                console.error('Failed to load users:', err);
+                setUsers([]);
+            } finally {
+                setIsLoadingUsers(false);
+            }
+        };
+        
+        loadUsers();
+    }, [isAdmin]);
     
     // Monitor URL hash for admin access
     useEffect(() => {
@@ -2086,8 +2144,54 @@ const App: React.FC = () => {
             case 'Terms':
                  return <ComingSoonPage pageName={activePage} />;
             case 'Admin':
-// FIX: Pass 'handleUpdateUser' to 'onUpdateUser' prop to fix 'Cannot find name' error.
-                return <AdminPage users={users} onUpdateUser={handleUpdateUser} onDeleteUser={handleDeleteUser} generationHistory={generationHistory} totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} onDeleteBatch={handleDeleteGenerationBatch} templateData={adminTemplateData} setTemplateData={setAdminTemplateData} categoryOrder={adminCategoryOrder} setCategoryOrder={setAdminCategoryOrder}/>
+                // Check admin permissions
+                if (!currentUser) {
+                    return (
+                        <div className="flex-1 flex items-center justify-center bg-white">
+                            <div className="text-center">
+                                <p className="text-xl text-slate-600 mb-4">请先登录</p>
+                                <Button onClick={() => setIsAuthModalOpen(true)}>登录</Button>
+                            </div>
+                        </div>
+                    );
+                }
+                
+                if (!isAdmin) {
+                    return (
+                        <div className="flex-1 flex items-center justify-center bg-white">
+                            <div className="text-center">
+                                <p className="text-xl text-slate-600 mb-2">访问被拒绝</p>
+                                <p className="text-sm text-slate-500">您没有管理员权限</p>
+                            </div>
+                        </div>
+                    );
+                }
+                
+                // Show loading state while fetching users
+                if (isLoadingUsers) {
+                    return (
+                        <div className="flex-1 flex items-center justify-center bg-white">
+                            <div className="text-center">
+                                <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4 mx-auto"></div>
+                                <p className="text-slate-600">加载管理后台...</p>
+                            </div>
+                        </div>
+                    );
+                }
+                
+                // Render AdminPage with data
+                return <AdminPage 
+                    users={users} 
+                    onUpdateUser={handleUpdateUser} 
+                    onDeleteUser={handleDeleteUser} 
+                    generationHistory={generationHistory} 
+                    totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
+                    onDeleteBatch={handleDeleteGenerationBatch} 
+                    templateData={adminTemplateData} 
+                    setTemplateData={setAdminTemplateData} 
+                    categoryOrder={adminCategoryOrder} 
+                    setCategoryOrder={setAdminCategoryOrder}
+                />
             default: return renderMainGenerator();
         }
     };
