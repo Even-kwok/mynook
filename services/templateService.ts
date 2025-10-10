@@ -131,19 +131,13 @@ export async function getTemplatesByMainCategory(mainCategory: string): Promise<
  * 创建新模板
  */
 export async function createTemplate(
-  template: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at'>
+  template: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>
 ): Promise<DesignTemplate> {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-
+    // 不强制传递 created_by 和 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
-      .insert([{
-        ...template,
-        created_by: userData.user.id,
-        updated_by: userData.user.id
-      }])
+      .insert([template])
       .select()
       .single();
 
@@ -160,18 +154,13 @@ export async function createTemplate(
  */
 export async function updateTemplate(
   id: string,
-  updates: Partial<Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by'>>
+  updates: Partial<Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>>
 ): Promise<DesignTemplate> {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-
+    // 不强制传递 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
-      .update({
-        ...updates,
-        updated_by: userData.user.id
-      })
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -208,18 +197,10 @@ export async function batchImportTemplates(
   templates: Omit<DesignTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>[]
 ): Promise<DesignTemplate[]> {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-
-    const templatesWithUser = templates.map(t => ({
-      ...t,
-      created_by: userData.user.id,
-      updated_by: userData.user.id
-    }));
-
+    // 不强制传递 created_by 和 updated_by，让数据库自动处理
     const { data, error } = await supabase
       .from('design_templates')
-      .insert(templatesWithUser)
+      .insert(templates)
       .select();
 
     if (error) throw error;
