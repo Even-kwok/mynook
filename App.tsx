@@ -1069,6 +1069,7 @@ const App: React.FC = () => {
             }
         })(),
         credits: auth.profile.credits,
+        membershipTier: auth.profile.membership_tier, // 添加 membershipTier 字段
     } : null;
 
     // Navigation state

@@ -103,6 +103,7 @@ export interface User {
     registrationIp: string;
     permissionLevel: 1 | 2 | 3 | 4; // 1: Normal, 2: Pro, 3: Premium, 4: Business
     credits: number;
+    membershipTier?: 'free' | 'pro' | 'premium' | 'business'; // 会员等级
 }
 // --- Admin Panel Specific Types ---
 
