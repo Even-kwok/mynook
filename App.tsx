@@ -8,7 +8,7 @@ import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
 import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark } from './components/Icons';
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
-import { getAllTemplates } from './services/templateService';
+import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
 import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
@@ -1484,10 +1484,44 @@ const App: React.FC = () => {
         const loadTemplates = async () => {
             try {
                 setTemplatesLoading(true);
-                const templates = await getAllTemplates();
+                // 使用公共API（不包含 prompt）
+                // 对于普通用户：只能看到模板的图片和名字
+                // 对于管理员：在 AdminPage 中会使用 getAllTemplates 获取完整数据
+                const templates = await getAllTemplatesPublic();
+                
+                // FIX: 合并数据库模板和硬编码模板，而不是完全替换
+                // 这样即使数据库中只有部分模板，用户仍然可以看到所有默认模板
                 if (Object.keys(templates).length > 0) {
-                    setAdminTemplateData(templates);
-                    setAdminCategoryOrder(Object.keys(templates));
+                    // 创建合并后的模板数据
+                    const mergedTemplates: ManagedTemplateData = { ...ADMIN_PAGE_CATEGORIES };
+                    
+                    // 将数据库模板合并到对应的分类中
+                    for (const [mainCategory, subCategories] of Object.entries(templates)) {
+                        if (!mergedTemplates[mainCategory]) {
+                            mergedTemplates[mainCategory] = [];
+                        }
+                        
+                        // 合并子分类
+                        for (const dbSubCategory of subCategories) {
+                            const existingSubCategoryIndex = mergedTemplates[mainCategory].findIndex(
+                                sc => sc.name === dbSubCategory.name
+                            );
+                            
+                            if (existingSubCategoryIndex >= 0) {
+                                // 如果子分类已存在，替换该子分类的模板
+                                mergedTemplates[mainCategory][existingSubCategoryIndex] = dbSubCategory;
+                            } else {
+                                // 如果子分类不存在，添加新的子分类
+                                mergedTemplates[mainCategory].push(dbSubCategory);
+                            }
+                        }
+                    }
+                    
+                    setAdminTemplateData(mergedTemplates);
+                    setAdminCategoryOrder(Object.keys(mergedTemplates));
+                    console.log('✅ Templates loaded and merged from database');
+                } else {
+                    console.log('ℹ️ No templates in database, using default templates');
                 }
             } catch (error) {
                 console.error('Failed to load templates from database:', error);
@@ -1705,16 +1739,24 @@ const App: React.FC = () => {
         const roomTypeName = ROOM_TYPES.find(r => r.id === selectedRoomType)?.name || selectedRoomType;
         const buildingTypeName = BUILDING_TYPES.find(b => b.id === selectedBuildingType)?.name || selectedBuildingType;
 
-        const placeholders: GeneratedImage[] = selectedTemplates.map(template => ({
-            id: template.name,
-            status: 'pending',
-            imageUrl: null,
-            promptBase: isWallPaint || isGardenBackyard || isFloorStyle
-                ? template.prompt
-                : isExteriorDesign
-                    ? `A ${buildingTypeName}, ${template.prompt}`
-                    : `A ${roomTypeName}, ${template.prompt}`,
-        }));
+        // 动态获取所有选中模板的 prompt（批量获取以提高性能）
+        const templatePrompts = await getTemplatePrompts(selectedTemplateIds);
+
+        const placeholders: GeneratedImage[] = selectedTemplates.map(template => {
+            // 从服务器获取的 prompt，而不是从前端模板对象
+            const templatePrompt = templatePrompts.get(template.id) || template.prompt || '';
+            
+            return {
+                id: template.name,
+                status: 'pending',
+                imageUrl: null,
+                promptBase: isWallPaint || isGardenBackyard || isFloorStyle
+                    ? templatePrompt
+                    : isExteriorDesign
+                        ? `A ${buildingTypeName}, ${templatePrompt}`
+                        : `A ${roomTypeName}, ${templatePrompt}`,
+            };
+        });
         
         setGeneratedImages(placeholders);
     

@@ -47,6 +47,8 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      // 延长session过期时间，避免频繁登出
+      flowType: 'pkce', // 使用更安全的PKCE流程
       ...(storage ? { storage } : {}),
     },
     global: {
