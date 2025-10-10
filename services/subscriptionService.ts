@@ -27,6 +27,26 @@ interface UpdateMembershipParams {
   subscriptionEndDate?: string;
 }
 
+// Database subscription record type
+interface DbSubscription {
+  id: string;
+  user_id: string;
+  plan_type: string;
+  billing_cycle: string;
+  status: string;
+  creem_subscription_id: string | null;
+  creem_customer_id: string | null;
+  amount: number;
+  currency: string;
+  start_date: string | null;
+  end_date: string;
+  next_billing_date: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
+
 /**
  * Create a new subscription record in the database
  */
@@ -138,12 +158,14 @@ export async function handleSubscriptionActivated(
       .single();
 
     if (subscription) {
+      // Type assertion for database record
+      const sub = subscription as DbSubscription;
       // Update user membership
       await updateUserMembership({
-        userId: subscription.user_id,
-        membershipTier: subscription.plan_type,
-        subscriptionId: subscription.id,
-        subscriptionEndDate: subscription.end_date,
+        userId: sub.user_id,
+        membershipTier: sub.plan_type as 'pro' | 'premium' | 'business',
+        subscriptionId: sub.id,
+        subscriptionEndDate: sub.end_date,
       });
     }
 
@@ -179,13 +201,14 @@ export async function handleSubscriptionCancelled(subscriptionId: string) {
 
     // Update user subscription status
     if (subscription) {
+      const sub = subscription as DbSubscription;
       await supabase
         .from('users')
         .update({
           subscription_status: 'cancelled',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', subscription.user_id);
+        .eq('id', sub.user_id);
     }
 
     console.log(`Subscription ${subscriptionId} cancelled`);
@@ -219,6 +242,7 @@ export async function handleSubscriptionExpired(subscriptionId: string) {
 
     // Downgrade user to free tier
     if (subscription) {
+      const sub = subscription as DbSubscription;
       await supabase
         .from('users')
         .update({
@@ -227,9 +251,9 @@ export async function handleSubscriptionExpired(subscriptionId: string) {
           credits: 0,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', subscription.user_id);
+        .eq('id', sub.user_id);
 
-      console.log(`User ${subscription.user_id} downgraded to free tier`);
+      console.log(`User ${sub.user_id} downgraded to free tier`);
     }
 
     console.log(`Subscription ${subscriptionId} expired`);
@@ -243,7 +267,7 @@ export async function handleSubscriptionExpired(subscriptionId: string) {
 /**
  * Get user's active subscription
  */
-export async function getUserActiveSubscription(userId: string) {
+export async function getUserActiveSubscription(userId: string): Promise<DbSubscription | null> {
   try {
     const { data: subscription, error } = await supabase
       .from('subscriptions')
@@ -260,7 +284,7 @@ export async function getUserActiveSubscription(userId: string) {
       throw error;
     }
 
-    return subscription;
+    return subscription as DbSubscription | null;
   } catch (error) {
     console.error('Error in getUserActiveSubscription:', error);
     return null;
@@ -270,7 +294,7 @@ export async function getUserActiveSubscription(userId: string) {
 /**
  * Get user's subscription history
  */
-export async function getUserSubscriptionHistory(userId: string) {
+export async function getUserSubscriptionHistory(userId: string): Promise<DbSubscription[]> {
   try {
     const { data: subscriptions, error } = await supabase
       .from('subscriptions')
@@ -283,7 +307,7 @@ export async function getUserSubscriptionHistory(userId: string) {
       throw error;
     }
 
-    return subscriptions || [];
+    return (subscriptions as DbSubscription[]) || [];
   } catch (error) {
     console.error('Error in getUserSubscriptionHistory:', error);
     return [];
