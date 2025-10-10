@@ -1143,17 +1143,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             onLoginRequest();
             return;
         }
-        if (currentUser.credits < 1) {
-            onError("You have run out of credits. Please upgrade your plan to continue generating.");
+        if (currentUser.credits < 5) {
+            onError("You need at least 5 credits to generate an image. Please upgrade your plan to continue.");
             return;
         }
         if (!prompt || (images.length === 0 && paths.length === 0)) {
-            onError("Generation failed. Please try again.");
+            onError("Please add an image or drawing and provide a prompt.");
             return;
         }
     
-        // Deduct credit and start loading state
-        onUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
+        // Start loading state (don't deduct credits here - backend will handle it)
         setIsLoading(true);
         onError(null);
 
@@ -1191,6 +1190,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             const imageForApiData = imageForApi.split(',')[1];
             const generatedUrl = await generateImage(finalPrompt, [imageForApiData]);
     
+            // Note: Backend automatically deducted 5 credits after successful generation
+            // The parent component should refresh user data to show updated credits
+    
             // Save to history
             const resultImage: GeneratedImage = {
                 id: `canvas_${Date.now()}`,
@@ -1212,7 +1214,20 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     
         } catch (err) {
             console.error("Generation failed:", err);
-            onError(err instanceof Error ? err.message : String(err));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            
+            // Handle specific error cases
+            if (errorMessage.includes('logged in') || errorMessage.includes('Authentication')) {
+                onError("Please log in to use this feature.");
+                onLoginRequest();
+            } else if (errorMessage.includes('Insufficient credits')) {
+                onError("You don't have enough credits. Please upgrade your plan.");
+            } else if (errorMessage.includes('Auth session missing')) {
+                onError("Your session has expired. Please log in again.");
+                onLoginRequest();
+            } else {
+                onError(`Generation failed: ${errorMessage}`);
+            }
         } finally {
             setIsLoading(false);
         }

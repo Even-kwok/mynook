@@ -46,6 +46,17 @@ export const generateTextResponse = async (
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            
+            // Handle specific HTTP status codes
+            if (response.status === 401) {
+                throw new Error('Authentication required. Please log in to use this feature.');
+            } else if (response.status === 402) {
+                throw new Error(`Insufficient credits. You need ${errorData.required || 1} credits but only have ${errorData.available || 0}.`);
+            } else if (response.status === 500) {
+                const detail = errorData.details ? `: ${errorData.details}` : '';
+                throw new Error(`Server error${detail}. Please try again later.`);
+            }
+            
             const detail = errorData.details ? ` Details: ${errorData.details}` : '';
             throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
@@ -54,7 +65,11 @@ export const generateTextResponse = async (
         return data.text;
     } catch (error) {
         console.error("Error generating text response:", error);
-        throw new Error("Failed to get a response from the advisor. Please try again.");
+        // Re-throw the error with the original message
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error("Failed to get a response. Please try again.");
     }
 };
 
@@ -88,6 +103,17 @@ export const generateDynamicPrompt = async (themeDescription: string): Promise<s
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            
+            // Handle specific HTTP status codes
+            if (response.status === 401) {
+                throw new Error('Authentication required. Please log in to use this feature.');
+            } else if (response.status === 402) {
+                throw new Error(`Insufficient credits. You need ${errorData.required || 1} credits but only have ${errorData.available || 0}.`);
+            } else if (response.status === 500) {
+                const detail = errorData.details ? `: ${errorData.details}` : '';
+                throw new Error(`Server error${detail}. Please try again later.`);
+            }
+            
             const detail = errorData.details ? ` Details: ${errorData.details}` : '';
             throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
@@ -96,6 +122,10 @@ export const generateDynamicPrompt = async (themeDescription: string): Promise<s
         return data.text;
     } catch (error) {
         console.error("Error generating dynamic prompt:", error);
+        // Re-throw the error with the original message
+        if (error instanceof Error) {
+            throw error;
+        }
         throw new Error("Failed to generate a creative style. Please try again.");
     }
 };
@@ -127,6 +157,17 @@ export const generateImage = async (instruction: string, base64Images: string[])
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            
+            // Handle specific HTTP status codes
+            if (response.status === 401) {
+                throw new Error('Authentication required. Please log in to use this feature.');
+            } else if (response.status === 402) {
+                throw new Error(`Insufficient credits. You need ${errorData.required || 5} credits but only have ${errorData.available || 0}.`);
+            } else if (response.status === 500) {
+                const detail = errorData.details ? `: ${errorData.details}` : '';
+                throw new Error(`Server error${detail}. Please try again later.`);
+            }
+            
             const detail = errorData.details ? ` Details: ${errorData.details}` : '';
             throw new Error((errorData.error || 'Failed to get response from server') + detail);
         }
@@ -135,6 +176,10 @@ export const generateImage = async (instruction: string, base64Images: string[])
         return data.imageUrl;
     } catch (error) {
         console.error("Error generating image with Gemini:", error);
-        throw new Error("Image generation failed. Please check the console for details.");
+        // Re-throw the error with the original message
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error("Image generation failed. Please try again.");
     }
 };
