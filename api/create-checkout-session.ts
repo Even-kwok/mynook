@@ -59,16 +59,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Get user's email
+    // Get user's email and subscription info
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('email, creem_customer_id')
+      .select('email, creem_customer_id, membership_tier, subscription_status')
       .eq('id', user.id)
       .single();
 
     if (userError || !userData) {
       console.error('Error fetching user:', userError);
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user already has an active subscription for this plan
+    if (userData.subscription_status === 'active') {
+      const currentTier = userData.membership_tier || 'free';
+      // Prevent same tier subscription
+      if (currentTier === planType) {
+        return res.status(400).json({ 
+          error: `You already have an active ${planType} subscription`,
+          currentPlan: currentTier,
+        });
+      }
     }
 
     // Create checkout session URLs
@@ -79,15 +91,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const successUrl = `${baseUrl}/?subscription=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/?subscription=cancelled`;
 
-    // Create CREEM checkout session
-    const checkoutSession = await createCheckoutSession({
-      planType,
-      billingCycle,
-      userId: user.id,
-      userEmail: userData.email,
-      successUrl,
-      cancelUrl,
-    });
+    // Create CREEM checkout session with error handling
+    let checkoutSession;
+    try {
+      checkoutSession = await createCheckoutSession({
+        planType,
+        billingCycle,
+        userId: user.id,
+        userEmail: userData.email,
+        successUrl,
+        cancelUrl,
+      });
+    } catch (creemError: any) {
+      console.error('CREEM API Error:', creemError);
+      return res.status(502).json({ 
+        error: 'Payment provider temporarily unavailable',
+        message: 'Unable to create payment session. Please try again later.',
+        details: creemError.message,
+      });
+    }
 
     // Create pending subscription record in database
     const amount = planType === 'pro' 
