@@ -445,7 +445,7 @@ const DesignToolsMenu: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-0 top-full mt-3 w-64 origin-top-left bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-black/5 text-slate-800 text-sm flex flex-col p-2"
+            className="absolute left-0 top-full mt-3 w-80 origin-top-left bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-black/5 text-slate-800 text-sm flex flex-col p-2"
         >
             {designTools.map(item => (
                 <button
