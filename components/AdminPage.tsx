@@ -328,21 +328,32 @@ const TemplateManagement: React.FC<{
         try {
             const templatesToImport: any[] = [];
             
-            // 为 Interior Design 模板创建 room_type 映射
+            // 导入 Interior Design 模板 - 为每个房间类型创建独立副本
             const { STYLES_BY_ROOM_TYPE } = await import('../constants');
-            const templateToRoomTypeMap = new Map<string, string>();
             
-            // 遍历所有房间类型，建立模板ID到room_type的映射
+            // 为每个房间类型创建独立的模板副本
             Object.entries(STYLES_BY_ROOM_TYPE).forEach(([roomType, categories]) => {
                 categories.forEach(category => {
                     category.templates.forEach(template => {
-                        templateToRoomTypeMap.set(template.id, roomType);
+                        templatesToImport.push({
+                            name: template.name,
+                            image_url: template.imageUrl,
+                            prompt: template.prompt,
+                            main_category: 'Interior Design',
+                            sub_category: 'All Interior Styles', // 保持原有的sub_category
+                            room_type: roomType, // 设置当前房间类型
+                            enabled: true,
+                            sort_order: 0
+                        });
                     });
                 });
             });
             
-            // 遍历所有分类
+            // 导入其他分类的模板（非 Interior Design）
             for (const [mainCategory, subCategories] of Object.entries(ADMIN_PAGE_CATEGORIES)) {
+                // 跳过 Interior Design，因为已经通过 STYLES_BY_ROOM_TYPE 导入
+                if (mainCategory === 'Interior Design') continue;
+                
                 for (const subCategory of subCategories) {
                     for (const template of subCategory.templates) {
                         templatesToImport.push({
@@ -351,7 +362,7 @@ const TemplateManagement: React.FC<{
                             prompt: template.prompt,
                             main_category: mainCategory,
                             sub_category: subCategory.name,
-                            room_type: templateToRoomTypeMap.get(template.id) || null, // 设置room_type
+                            room_type: null, // 其他分类不需要 room_type
                             enabled: subCategory.enabled !== false,
                             sort_order: 0
                         });

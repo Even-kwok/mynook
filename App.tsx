@@ -2269,8 +2269,20 @@ const App: React.FC = () => {
         const isMultiItem = activePage === 'Multi-Item Preview';
         
         let categories: PromptTemplateCategory[] = [];
-        if (activePage === 'Interior Design' && STYLES_BY_ROOM_TYPE[selectedRoomType]) {
-            categories = STYLES_BY_ROOM_TYPE[selectedRoomType];
+        if (activePage === 'Interior Design') {
+            // ✅ 从数据库加载 Interior Design 数据
+            const interiorData = adminTemplateData["Interior Design"];
+            if (interiorData) {
+                // 查找当前选择的房间类型
+                const roomCategory = interiorData.find(sc => sc.name === selectedRoomType);
+                if (roomCategory && roomCategory.templates.length > 0) {
+                    // 转换为前端需要的格式
+                    categories = [{
+                        name: "Design Aesthetics",
+                        templates: roomCategory.templates
+                    }];
+                }
+            }
         } else if (activePage === 'Wall Paint') {
              categories = adminTemplateData["Wall Paint"];
         } else if (activePage === 'Floor Style') {
