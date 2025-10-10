@@ -427,8 +427,18 @@ const MultiItemUploader: React.FC<{
 const DesignToolsMenu: React.FC<{
     onNavigate: (page: string) => void;
     activeItem: string;
-    designTools: { key: string; label: string; }[];
-}> = ({ onNavigate, activeItem, designTools }) => {
+    designTools: { key: string; label: string; requiresPremium?: boolean; }[];
+    user: User | null;
+}> = ({ onNavigate, activeItem, designTools, user }) => {
+    const handleNavigate = (item: { key: string; label: string; requiresPremium?: boolean; }) => {
+        // 检查是否需要 Premium 权限
+        if (item.requiresPremium && (!user || user.permissionLevel < 3)) {
+            alert('此功能仅限 Premium 和 Business 会员使用。请升级您的会员等级以解锁此功能！');
+            return;
+        }
+        onNavigate(item.label);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -440,11 +450,11 @@ const DesignToolsMenu: React.FC<{
             {designTools.map(item => (
                 <button
                     key={item.key}
-                    onClick={() => onNavigate(item.label)}
+                    onClick={() => handleNavigate(item)}
                     className={`w-full text-left px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${activeItem === item.label ? 'bg-indigo-500/10 text-indigo-600' : 'hover:bg-slate-500/10'}`}
                 >
                     <span>{item.label}</span>
-                    {item.label === 'Free Canvas' && (
+                    {item.requiresPremium && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500 to-amber-500 text-white">
                             👑 Premium
                         </span>
@@ -525,7 +535,7 @@ const Header: React.FC<{
                             {isDesignToolActive && <motion.div className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-500" layoutId="nav-underline" />}
                         </button>
                         <AnimatePresence>
-                            {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} />}
+                            {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
                         </AnimatePresence>
                     </div>
 
@@ -1205,17 +1215,17 @@ const App: React.FC = () => {
     const hasSelection = useMemo(() => selectedTemplateIds.length > 0, [selectedTemplateIds]);
 
     const designTools = [
-        { key: 'Interior Design', label: 'Interior Design' },
-        { key: 'Festive Decor', label: 'Festive Decor' },
-        { key: 'Exterior Design', label: 'Exterior Design' },
-        { key: 'Wall Paint', label: 'Wall Paint' },
-        { key: 'Floor Style', label: 'Floor Style' },
-        { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design' },
-        { key: 'Item Replace', label: 'Item Replace' },
-        { key: 'Reference Style Match', label: 'Reference Style Match' },
-        { key: 'AI Design Advisor', label: 'AI Design Advisor' },
-        { key: 'Multi-Item Preview', label: 'Multi-Item Preview' },
-        { key: 'Free Canvas', label: 'Free Canvas' },
+        { key: 'Interior Design', label: 'Interior Design', requiresPremium: false },
+        { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
+        { key: 'Exterior Design', label: 'Exterior Design', requiresPremium: false },
+        { key: 'Wall Paint', label: 'Wall Paint', requiresPremium: false },
+        { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
+        { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
+        { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
+        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true },
+        { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true },
+        { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true },
+        { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
     ];
     const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>(ADMIN_PAGE_CATEGORIES);
     const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>(Object.keys(ADMIN_PAGE_CATEGORIES));
