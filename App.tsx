@@ -1153,7 +1153,8 @@ interface FreeCanvasState {
 const App: React.FC = () => {
     // Auth - 使用新的Supabase认证系统
     const auth = useAuth();
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    // 注意：不再使用本地的 isAuthModalOpen，而是使用 AuthContext 中的 showLoginModal
+    // const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [upgradeFeatureName, setUpgradeFeatureName] = useState('');
     const [upgradeRequiredTier, setUpgradeRequiredTier] = useState<'premium' | 'business'>('premium');
@@ -1270,7 +1271,7 @@ const App: React.FC = () => {
                 if (!currentUser) {
                     alert('请先登录');
                     window.location.hash = '';
-                    setIsAuthModalOpen(true);
+                    auth.setShowLoginModal(true);
                 } else if (!isAdmin) {
                     alert('访问被拒绝：您没有管理员权限');
                     window.location.hash = '';
@@ -1295,7 +1296,7 @@ const App: React.FC = () => {
                 e.preventDefault();
                 if (!currentUser) {
                     alert('请先登录');
-                    setIsAuthModalOpen(true);
+                    auth.setShowLoginModal(true);
                 } else if (!isAdmin) {
                     alert('访问被拒绝：您没有管理员权限');
                 } else {
@@ -1693,7 +1694,7 @@ const App: React.FC = () => {
 
     const handleGenerateClick = async () => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         
@@ -1790,7 +1791,7 @@ const App: React.FC = () => {
 
     const handleItemReplaceClick = async () => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         
@@ -1858,7 +1859,7 @@ const App: React.FC = () => {
 
     const handleStyleMatchClick = async () => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         
@@ -1926,7 +1927,7 @@ const App: React.FC = () => {
 
     const handleMultiItemClick = async () => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         
@@ -1996,7 +1997,7 @@ const App: React.FC = () => {
 
     const handleAskAdvisor = async () => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         
@@ -2099,7 +2100,7 @@ const App: React.FC = () => {
     
     const handleRegenerate = async (image: GeneratedImage) => {
         if (!currentUser) {
-            setIsAuthModalOpen(true);
+            auth.setShowLoginModal(true);
             return;
         }
         if (currentUser.credits < 1) {
@@ -2218,7 +2219,7 @@ const App: React.FC = () => {
                     setFullScreenImage={setFullScreenImage} 
                     currentUser={currentUser} 
                     onUpdateUser={handleUpdateUser} 
-                    onLoginRequest={() => setIsAuthModalOpen(true)} 
+                    onLoginRequest={() => auth.setShowLoginModal(true)} 
                     onError={setError}
                     onUpgrade={() => setActivePage('Pricing')}
                     canvasState={freeCanvasState}
@@ -2233,7 +2234,7 @@ const App: React.FC = () => {
                         <div className="flex-1 flex items-center justify-center bg-white">
                             <div className="text-center">
                                 <p className="text-xl text-slate-600 mb-4">请先登录</p>
-                                <Button onClick={() => setIsAuthModalOpen(true)}>登录</Button>
+                                <Button onClick={() => auth.setShowLoginModal(true)}>登录</Button>
                             </div>
                         </div>
                     );
@@ -2572,8 +2573,8 @@ const App: React.FC = () => {
                 <ImageViewerModal imageUrl={fullScreenImage} onClose={() => setFullScreenImage(null)} />
             </AnimatePresence>
             <LoginModal 
-                isOpen={isAuthModalOpen} 
-                onClose={() => setIsAuthModalOpen(false)}
+                isOpen={auth.showLoginModal} 
+                onClose={() => auth.setShowLoginModal(false)}
             />
             <UpgradeModal
                 isOpen={isUpgradeModalOpen}
@@ -2590,7 +2591,7 @@ const App: React.FC = () => {
                 activeItem={activePage} 
                 onNavigate={setActivePage} 
                 user={currentUser} 
-                onLoginClick={() => setIsAuthModalOpen(true)}
+                onLoginClick={() => auth.setShowLoginModal(true)}
                 onLogout={handleLogout}
                 designTools={designTools}
             />
