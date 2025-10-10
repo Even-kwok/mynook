@@ -626,7 +626,22 @@ export const ALL_PROMPT_TEMPLATES: PromptTemplate[] = [
     ...Object.values(ALL_FLOOR_STYLES),
 ];
 
-// Generate 100 gallery items with random aspect ratios for waterfall layout
+// Gallery categories mapping to tool pages
+export const GALLERY_CATEGORIES = [
+  { id: 'interior-design', name: 'Interior Design', page: 'Interior Design' },
+  { id: 'festive-decor', name: 'Festive Decor', page: 'Festive Decor' },
+  { id: 'exterior-design', name: 'Exterior Design', page: 'Exterior Design' },
+  { id: 'wall-paint', name: 'Wall Paint', page: 'Wall Paint' },
+  { id: 'floor-style', name: 'Floor Style', page: 'Floor Style' },
+  { id: 'garden-design', name: 'Garden & Backyard Design', page: 'Garden & Backyard Design' },
+  { id: 'item-replace', name: 'Item Replace', page: 'Item Replace' },
+  { id: 'style-match', name: 'Reference Style Match', page: 'Reference Style Match' },
+  { id: 'ai-advisor', name: 'AI Design Advisor', page: 'AI Design Advisor' },
+  { id: 'multi-item', name: 'Multi-Item Preview', page: 'Multi-Item Preview' },
+  { id: 'free-canvas', name: 'Free Canvas', page: 'Free Canvas' }
+];
+
+// Generate gallery items with categories for waterfall layout
 const generateGalleryItems = (): GalleryItem[] => {
   const ratios = [
     { w: 600, h: 600 },   // 1:1 Square
@@ -638,13 +653,19 @@ const generateGalleryItems = (): GalleryItem[] => {
     { w: 600, h: 400 }    // 3:2 Landscape
   ];
 
-  const titles = [
-    'Modern Living Room', 'Cozy Bedroom', 'Minimalist Kitchen', 'Industrial Loft',
-    'Bohemian Patio', 'Scandinavian Interior', 'Art Deco Glamour', 'Zen Garden',
-    'Rustic Farmhouse', 'Contemporary Office', 'Luxury Bathroom', 'Urban Balcony',
-    'Victorian Library', 'Coastal Retreat', 'Mountain Cabin', 'Desert Oasis',
-    'Japanese Harmony', 'French Cottage', 'Mediterranean Villa', 'Nordic Simplicity'
-  ];
+  const titlesByCategory: Record<string, string[]> = {
+    'interior-design': ['Modern Living Room', 'Cozy Bedroom', 'Minimalist Kitchen', 'Scandinavian Interior', 'Industrial Loft'],
+    'festive-decor': ['Christmas Wonderland', 'Halloween Spooky', 'Easter Spring', 'Thanksgiving Warmth', 'New Year Glamour'],
+    'exterior-design': ['Modern Facade', 'Colonial Exterior', 'Contemporary Entry', 'Victorian Front', 'Craftsman Style'],
+    'wall-paint': ['Navy Blue Accent', 'Sage Green Wall', 'Warm Terracotta', 'Cool Gray Tone', 'Soft Blush Pink'],
+    'floor-style': ['Oak Hardwood', 'Marble Elegance', 'Ceramic Tile', 'Bamboo Natural', 'Concrete Modern'],
+    'garden-design': ['Zen Garden', 'English Garden', 'Desert Landscape', 'Tropical Paradise', 'Mediterranean Patio'],
+    'item-replace': ['New Sofa Style', 'Modern Chair', 'Designer Table', 'Statement Lamp', 'Artisan Vase'],
+    'style-match': ['Coastal Style', 'Bohemian Vibe', 'Art Deco Match', 'Mid-Century Look', 'Rustic Charm'],
+    'ai-advisor': ['Expert Advice', 'Design Tips', 'Color Consultation', 'Layout Suggestion', 'Style Guidance'],
+    'multi-item': ['Room Preview', 'Furniture Set', 'Decor Collection', 'Complete Look', 'Design Package'],
+    'free-canvas': ['Custom Design', 'Personal Touch', 'Creative Space', 'Unique Vision', 'Artistic Freedom']
+  };
 
   const authors = [
     'DesignInspo', 'ArchViz', 'SereneSpaces', 'UrbanDesigns', 'WanderlustHomes',
@@ -653,25 +674,43 @@ const generateGalleryItems = (): GalleryItem[] => {
   ];
 
   const items: GalleryItem[] = [];
+  let idCounter = 1;
   
-  for (let i = 1; i <= 100; i++) {
-    const ratio = ratios[Math.floor(Math.random() * ratios.length)];
-    const title = titles[Math.floor(Math.random() * titles.length)];
-    const author = authors[Math.floor(Math.random() * authors.length)];
+  // Generate 8-12 items per category
+  GALLERY_CATEGORIES.forEach((category) => {
+    const itemsCount = Math.floor(Math.random() * 5) + 8; // 8-12 items
+    const categoryTitles = titlesByCategory[category.id] || ['Design'];
     
-    items.push({
-      id: `gallery-${i}`,
-      type: 'image',
-      src: `https://picsum.photos/${ratio.w}/${ratio.h}?random=${i}`,
-      title: `${title} ${i}`,
-      author: author,
-      authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
-      width: ratio.w,
-      height: ratio.h,
-    });
-  }
+    for (let i = 0; i < itemsCount; i++) {
+      const ratio = ratios[Math.floor(Math.random() * ratios.length)];
+      const title = categoryTitles[Math.floor(Math.random() * categoryTitles.length)];
+      const author = authors[Math.floor(Math.random() * authors.length)];
+      
+      // Add 1-2 videos per category
+      const isVideo = i < 2 && Math.random() > 0.5;
+      
+      items.push({
+        id: `gallery-${idCounter}`,
+        type: isVideo ? 'video' : 'image',
+        src: isVideo 
+          ? `https://storage.googleapis.com/aistudio-hosting/gallery/vid_${(idCounter % 2) + 1}.mp4`
+          : `https://picsum.photos/${ratio.w}/${ratio.h}?random=${idCounter}`,
+        title: `${title} ${idCounter}`,
+        author: author,
+        authorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/blog/avatar.png',
+        width: ratio.w,
+        height: ratio.h,
+        category: category.id,
+        categoryName: category.name,
+        toolPage: category.page
+      });
+      
+      idCounter++;
+    }
+  });
   
-  return items;
+  // Shuffle items for mixed display
+  return items.sort(() => Math.random() - 0.5);
 };
 
 export const EXPLORE_GALLERY_ITEMS: GalleryItem[] = generateGalleryItems();

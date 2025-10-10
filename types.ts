@@ -166,4 +166,7 @@ export interface GalleryItem {
   authorAvatarUrl: string;
   width?: number;
   height?: number;
+  category: string;      // Category ID for grouping
+  categoryName: string;  // Display name for category
+  toolPage: string;      // Target page to navigate to
 }

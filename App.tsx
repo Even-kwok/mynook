@@ -746,7 +746,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                     {displayedItems.map((item) => (
                         <div 
                             key={item.id} 
-                            className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 bg-slate-200"
+                            onClick={() => onNavigate(item.toolPage)}
+                            className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
                             style={{
                                 aspectRatio: (item.width && item.height) ? `${item.width} / ${item.height}` : 'auto'
                             }}
@@ -768,18 +769,18 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     className="w-full h-full object-cover" 
                                 />
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="absolute top-0 right-0 p-3">
-                                    <button className="p-2 rounded-full bg-white/20 text-white hover:bg-white/40 backdrop-blur-sm transition-colors opacity-0 group-hover:opacity-100" aria-label="Save">
-                                        <IconBookmark className="w-5 h-5" />
-                                    </button>
+                            {/* Hover overlay with category info */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                    <p className="text-white font-semibold text-sm mb-1">{item.categoryName}</p>
+                                    <p className="text-white/80 text-xs">Click to use this tool</p>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Loading indicator / End message */}
+                {/* Loading indicator */}
                 <div ref={loadMoreRef} className="flex justify-center items-center py-12">
                     {isLoading && hasMore && (
                         <motion.div
@@ -789,18 +790,6 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         >
                             <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
                             <p className="text-slate-500 text-sm">Loading more images...</p>
-                        </motion.div>
-                    )}
-                    
-                    {!hasMore && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex flex-col items-center gap-2"
-                        >
-                            <IconCheck className="w-8 h-8 text-indigo-600" />
-                            <p className="text-slate-600 font-medium">All {TOTAL_ITEMS} images loaded</p>
-                            <p className="text-slate-400 text-sm">You've reached the end</p>
                         </motion.div>
                     )}
                 </div>
