@@ -248,7 +248,10 @@ const TemplateManagement: React.FC<{
         
         try {
             // Check if this is a new template (temporary ID) or existing template
-            const isNewTemplate = updatedTemplate.id.startsWith('template_');
+            const templateId = typeof updatedTemplate.id === 'string'
+                ? updatedTemplate.id
+                : String(updatedTemplate.id);
+            const isNewTemplate = templateId.startsWith('template_');
             
             if (isNewTemplate) {
                 // Create new template in database
@@ -263,7 +266,7 @@ const TemplateManagement: React.FC<{
                 });
             } else {
                 // Update existing template in database
-                await updateTemplate(updatedTemplate.id, {
+                await updateTemplate(templateId, {
                     name: updatedTemplate.name,
                     image_url: updatedTemplate.imageUrl,
                     prompt: updatedTemplate.prompt,
