@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toBase64 } from '../utils/imageUtils';
 import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
-import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle } from './Icons';
+import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath, Annotation, PromptPreset } from '../types';
 
 
@@ -327,8 +327,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     canvasState,
     setCanvasState
 }) => {
-    // 检查用户是否有权限访问 Free Canvas（只有 Premium 和 Business 可以访问）
-    const hasAccess = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
+    // 检查用户是否有权限使用生成功能（只有 Premium 和 Business 可以生成）
+    const hasGeneratePermission = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const workspaceRef = useRef<HTMLDivElement>(null);
@@ -398,6 +398,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [isRotationSnapped, setIsRotationSnapped] = useState<boolean>(false);
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const clearButtonRef = useRef<HTMLButtonElement>(null);
+    const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
 
 
     const getPathBoundingBox = (path: DrawablePath): { x: number; y: number; width: number; height: number } | null => {
@@ -1142,14 +1143,25 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     };
 
     const handleGenerate = async () => {
+        // 未登录用户
         if (!currentUser) {
             onLoginRequest();
             return;
         }
+        
+        // 权限检查：只有 Premium 和 Business 可以使用生成功能
+        if (!hasGeneratePermission) {
+            setIsPermissionModalOpen(true);
+            return;
+        }
+        
+        // 信用点检查
         if (currentUser.credits < 1) {
             onError("You need at least 1 credit to generate an image. Please upgrade your plan to continue.");
             return;
         }
+        
+        // 内容检查
         if (!prompt || (images.length === 0 && paths.length === 0)) {
             onError("Please add an image or drawing and provide a prompt.");
             return;
@@ -1362,61 +1374,60 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         );
     };
 
-    // 如果没有登录，显示登录提示
-    if (!currentUser) {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50">
-                <div className="text-center max-w-md px-6">
-                    <div className="text-6xl mb-4">👑</div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-4">Free Canvas - Premium Feature</h2>
-                    <p className="text-slate-600 mb-6">
-                        Please log in to access the Free Canvas feature.
-                    </p>
-                    <Button onClick={onLoginRequest} primary>
-                        Login to Continue
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-    
-    // 如果用户等级不够，显示升级提示
-    if (!hasAccess) {
+    const PermissionModal = () => {
+        if (!isPermissionModalOpen) return null;
+
         const tierName = currentUser?.membershipTier 
             ? currentUser.membershipTier.charAt(0).toUpperCase() + currentUser.membershipTier.slice(1)
             : 'Free';
-        
+
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50">
-                <div className="text-center max-w-md px-6">
-                    <div className="text-6xl mb-4">👑</div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-4">Free Canvas - Premium Feature</h2>
-                    <p className="text-slate-600 mb-4">
-                        Free Canvas is a premium feature available for <span className="font-semibold text-purple-600">Premium</span> and <span className="font-semibold text-amber-600">Business</span> members.
-                    </p>
-                    <p className="text-sm text-slate-500 mb-6">
-                        Your current plan: <span className="font-semibold">{tierName}</span>
-                    </p>
-                    <div className="space-y-3 text-left bg-white rounded-2xl p-4 mb-6">
-                        <p className="text-sm font-semibold text-slate-700">With Premium or Business, you can:</p>
-                        <ul className="text-sm text-slate-600 space-y-2">
-                            <li>✨ Combine multiple images on a canvas</li>
-                            <li>🎨 Draw and annotate freely</li>
-                            <li>🖼️ Generate custom designs with AI</li>
-                            <li>🔧 Advanced editing tools</li>
-                        </ul>
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setIsPermissionModalOpen(false)}>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white/90 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md shadow-2xl border border-slate-200"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">🔒</div>
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">Premium Feature</h3>
+                        <p className="text-slate-600 mb-4">
+                            Free Canvas generation is available for <span className="font-semibold text-purple-600">Premium</span> and <span className="font-semibold text-amber-600">Business</span> members.
+                        </p>
+                        <div className="bg-slate-50 rounded-xl p-4 mb-6">
+                            <p className="text-sm text-slate-500 mb-3">
+                                Your current plan: <span className="font-semibold text-slate-700">{tierName}</span>
+                            </p>
+                            <div className="space-y-2 text-left">
+                                <p className="text-sm font-semibold text-slate-700">Unlock with Premium:</p>
+                                <ul className="text-sm text-slate-600 space-y-1.5">
+                                    <li>✨ AI-powered canvas generation</li>
+                                    <li>🎨 Combine multiple images freely</li>
+                                    <li>🖼️ Advanced drawing and annotation</li>
+                                    <li>⚡ Priority queue processing</li>
+                                    <li>💎 5,000 generation credits</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button onClick={() => setIsPermissionModalOpen(false)} className="flex-1">
+                                Maybe Later
+                            </Button>
+                            <Button primary className="flex-1">
+                                Upgrade to Premium
+                            </Button>
+                        </div>
                     </div>
-                    <Button primary>
-                        Upgrade to Premium
-                    </Button>
-                </div>
+                </motion.div>
             </div>
         );
-    }
+    };
 
     return (
         <>
             <PresetModal />
+            <PermissionModal />
             <div className="flex flex-1 overflow-hidden">
                 <aside className="w-[380px] bg-white flex flex-col overflow-hidden flex-shrink-0 border-r border-slate-200">
                     <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
@@ -1552,7 +1563,15 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     </div>
 
                     <div className="p-6 pt-4 border-t border-slate-200">
-                        <Button onClick={handleGenerate} disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0 && annotations.length === 0)} primary className="w-full text-base py-3">
+                        <Button 
+                            onClick={handleGenerate} 
+                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0 && annotations.length === 0)} 
+                            primary 
+                            className="w-full text-base py-3 relative"
+                        >
+                            {!hasGeneratePermission && (
+                                <IconLock className="w-4 h-4 absolute left-4" />
+                            )}
                             <IconSparkles className="w-5 h-5" />
                             {isLoading ? "Generating your vision..." : "Generate (1 Credit)"}
                         </Button>
