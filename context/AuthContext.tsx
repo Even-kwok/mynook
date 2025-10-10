@@ -38,6 +38,10 @@ interface AuthContextType {
   refreshProfile: (userId?: string) => Promise<void>;
   deductCredits: (amount?: number) => Promise<{ success: boolean; remainingCredits: number }>;
   
+  // UI状态
+  showLoginModal: boolean;
+  setShowLoginModal: (show: boolean) => void;
+  
   // 便捷访问
   isAuthenticated: boolean;
   credits: number;
@@ -54,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // 刷新用户资料
   const refreshProfile = useCallback(async (userId?: string) => {
@@ -215,6 +220,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle: handleSignInWithGoogle,
     refreshProfile,
     deductCredits: handleDeductCredits,
+    showLoginModal,
+    setShowLoginModal,
     isAuthenticated: !!user,
     credits: profile?.credits || 0,
     membershipTier: profile?.membership_tier || 'free',
@@ -234,3 +241,5 @@ export const useAuth = () => {
   return context;
 };
 
+// 导出 Context 以便在不使用 Hook 的地方使用
+export { AuthContext };
