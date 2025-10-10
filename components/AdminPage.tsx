@@ -7,7 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
@@ -310,15 +310,33 @@ const TemplateManagement: React.FC<{
         }
     };
 
-    const toggleSubCategory = (mainCategory: string, subCategoryName: string) => {
-        setTemplateData(prevData => {
-            const newData = JSON.parse(JSON.stringify(prevData));
-            const subCategory = newData[mainCategory].find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
-            if (subCategory) {
-                subCategory.enabled = !subCategory.enabled;
-            }
-            return newData;
-        });
+    const toggleSubCategory = async (mainCategory: string, subCategoryName: string) => {
+        // 先获取当前状态
+        const currentData = templateData[mainCategory];
+        const subCategory = currentData?.find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
+        if (!subCategory) return;
+        
+        const newEnabledState = !subCategory.enabled;
+        
+        try {
+            // 同步到数据库
+            await toggleCategoryEnabled(mainCategory, subCategoryName, newEnabledState);
+            
+            // 更新本地状态
+            setTemplateData(prevData => {
+                const newData = JSON.parse(JSON.stringify(prevData));
+                const subCat = newData[mainCategory].find((c: ManagedPromptTemplateCategory) => c.name === subCategoryName);
+                if (subCat) {
+                    subCat.enabled = newEnabledState;
+                }
+                return newData;
+            });
+            
+            console.log(`✅ Category ${mainCategory} > ${subCategoryName} toggled to ${newEnabledState}`);
+        } catch (error) {
+            console.error('Failed to toggle category:', error);
+            alert('Failed to update category status. Please try again.');
+        }
     };
 
     const handleImportTemplates = async () => {

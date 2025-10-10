@@ -240,6 +240,44 @@ export async function updateTemplateSortOrder(id: string, sortOrder: number): Pr
 }
 
 /**
+ * 批量更新某个分类下所有模板的 enabled 状态
+ * @param mainCategory - 主分类名称
+ * @param subCategoryOrRoomType - 子分类名称或房间类型
+ * @param enabled - 启用/禁用状态
+ */
+export async function toggleCategoryEnabled(
+  mainCategory: string,
+  subCategoryOrRoomType: string,
+  enabled: boolean
+): Promise<void> {
+  try {
+    // 对于 Interior Design，使用 room_type 过滤
+    // 对于其他分类，使用 sub_category 过滤
+    const isInteriorDesign = mainCategory === 'Interior Design';
+    
+    let query = supabase
+      .from('design_templates')
+      .update({ enabled })
+      .eq('main_category', mainCategory);
+    
+    if (isInteriorDesign) {
+      query = query.eq('room_type', subCategoryOrRoomType);
+    } else {
+      query = query.eq('sub_category', subCategoryOrRoomType);
+    }
+    
+    const { error } = await query;
+    
+    if (error) throw error;
+    
+    console.log(`✅ Toggled ${mainCategory} > ${subCategoryOrRoomType} to ${enabled}`);
+  } catch (error) {
+    console.error('Error toggling category enabled:', error);
+    throw error;
+  }
+}
+
+/**
  * 获取分类列表
  */
 export async function getCategories(): Promise<TemplateCategory[]> {
