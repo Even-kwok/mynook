@@ -1179,6 +1179,25 @@ const App: React.FC = () => {
     }, [freeCanvasState.presets]);
 
 
+    // 辅助函数：获取用户会员等级
+    const getUserMembershipTier = (): 'free' | 'pro' | 'premium' | 'business' => {
+        if (!currentUser) return 'free';
+        
+        if (currentUser.membershipTier) {
+            // 确保是小写
+            return currentUser.membershipTier.toLowerCase() as 'free' | 'pro' | 'premium' | 'business';
+        }
+        
+        // 从 permissionLevel 映射
+        switch (currentUser.permissionLevel) {
+            case 1: return 'free';
+            case 2: return 'pro';
+            case 3: return 'premium';
+            case 4: return 'business';
+            default: return 'free';
+        }
+    };
+
     const hasModule1Image = useMemo(() => module1Images.some(img => img !== null), [module1Images]);
     const hasItemReplaceImage = useMemo(() => itemReplaceImage !== null, [itemReplaceImage]);
     const hasStyleMatchImage = useMemo(() => styleMatchImage !== null, [styleMatchImage]);
@@ -1285,8 +1304,10 @@ const App: React.FC = () => {
             }
             
             // 根据会员等级限制可选择的模板数量
-            const membershipTier = currentUser?.membership_tier || 'free';
+            const membershipTier = getUserMembershipTier();
             const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
+            
+            console.log('[Template Selection] User:', currentUser?.email, 'Tier:', membershipTier, 'Level:', currentUser?.permissionLevel, 'MaxTemplates:', maxTemplates, 'CurrentSelected:', prev.length);
             
             if (prev.length < maxTemplates) {
                 return [...prev, templateId];
