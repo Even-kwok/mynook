@@ -1515,6 +1515,38 @@ const App: React.FC = () => {
         loadTemplates();
     }, [currentUser?.permissionLevel]);
 
+    // 动态生成可用的房间类型列表（只显示有启用模板的房间类型）
+    const availableRoomTypes = useMemo(() => {
+        const interiorData = adminTemplateData["Interior Design"];
+        if (!interiorData || interiorData.length === 0) {
+            return ROOM_TYPES; // fallback 到硬编码列表
+        }
+        
+        // 从数据库数据生成房间类型选项（只包含有模板的房间类型）
+        const roomTypeOptions = interiorData
+            .filter(sc => sc.templates.length > 0) // 只显示有模板的房间类型
+            .map(sc => {
+                // 从 ROOM_TYPES 中查找对应的显示名称
+                const existingType = ROOM_TYPES.find(rt => rt.id === sc.name);
+                return {
+                    id: sc.name,
+                    name: existingType?.name || sc.name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                };
+            });
+        
+        return roomTypeOptions.length > 0 ? roomTypeOptions : ROOM_TYPES;
+    }, [adminTemplateData]);
+    
+    // 确保当前选择的房间类型在可用列表中，否则选择第一个
+    useEffect(() => {
+        if ((activePage === 'Interior Design' || activePage === 'Festive Decor') && availableRoomTypes.length > 0) {
+            const isCurrentRoomTypeAvailable = availableRoomTypes.some(rt => rt.id === selectedRoomType);
+            if (!isCurrentRoomTypeAvailable) {
+                setSelectedRoomType(availableRoomTypes[0].id);
+            }
+        }
+    }, [availableRoomTypes, selectedRoomType, activePage]);
+
     // --- Image Handling ---
     
     const handleFileSelect = (module: 'm1' | 'item' | 'sm' | 'multi', index: number) => {
@@ -2373,7 +2405,7 @@ const App: React.FC = () => {
                             {['Interior Design', 'Festive Decor'].includes(activePage) && (
                                 <CustomSelect
                                     label="Choose a Room Type"
-                                    options={ROOM_TYPES}
+                                    options={availableRoomTypes}
                                     value={selectedRoomType}
                                     onChange={setSelectedRoomType}
                                 />
