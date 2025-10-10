@@ -224,6 +224,9 @@ const TemplateManagement: React.FC<{
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [targetCategory, setTargetCategory] = useState<{ main: string, sub: string } | null>(null);
     const [isImporting, setIsImporting] = useState(false);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
+    const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -340,6 +343,43 @@ const TemplateManagement: React.FC<{
         }
     };
 
+    const handleAddMainCategory = () => {
+        setCategoryModalType('main');
+        setCategoryModalContext(null);
+        setIsCategoryModalOpen(true);
+    };
+
+    const handleDeleteMainCategory = async (mainCategory: string) => {
+        if (!confirm(`Are you sure you want to delete the entire "${mainCategory}" category? This will delete ALL templates under it.`)) return;
+        
+        try {
+            // TODO: 实现删除API
+            alert('Delete Main Category API not implemented yet');
+        } catch (error) {
+            console.error('Failed to delete main category:', error);
+            alert('Failed to delete category. Please try again.');
+        }
+    };
+
+    const handleAddSubCategory = (mainCategory: string) => {
+        const type = mainCategory === 'Interior Design' ? 'room' : 'sub';
+        setCategoryModalType(type);
+        setCategoryModalContext({ mainCategory });
+        setIsCategoryModalOpen(true);
+    };
+
+    const handleDeleteSubCategory = async (mainCategory: string, subCategoryName: string) => {
+        if (!confirm(`Are you sure you want to delete "${subCategoryName}"? This will delete ALL templates under it.`)) return;
+        
+        try {
+            // TODO: 实现删除API
+            alert('Delete Sub Category API not implemented yet');
+        } catch (error) {
+            console.error('Failed to delete sub category:', error);
+            alert('Failed to delete category. Please try again.');
+        }
+    };
+
     const toggleSubCategory = async (mainCategory: string, subCategoryName: string) => {
         // 先获取当前状态
         const currentData = templateData[mainCategory];
@@ -438,13 +478,22 @@ const TemplateManagement: React.FC<{
         <div className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-800">Template Management</h3>
-                <Button 
-                    onClick={handleImportTemplates} 
-                    disabled={isImporting}
-                    className="!bg-green-50 hover:!bg-green-100 !text-green-600 !border-green-200"
-                >
-                    {isImporting ? 'Importing...' : 'Import Default Templates'}
-                </Button>
+                <div className="flex gap-2">
+                    <Button 
+                        onClick={handleAddMainCategory}
+                        className="!bg-indigo-50 hover:!bg-indigo-100 !text-indigo-600 !border-indigo-200"
+                    >
+                        <IconPlus className="w-4 h-4 mr-1" />
+                        Add Category
+                    </Button>
+                    <Button 
+                        onClick={handleImportTemplates} 
+                        disabled={isImporting}
+                        className="!bg-green-50 hover:!bg-green-100 !text-green-600 !border-green-200"
+                    >
+                        {isImporting ? 'Importing...' : 'Import Default Templates'}
+                    </Button>
+                </div>
             </div>
             <div className="mt-4 space-y-4">
                 {categoryOrder.map(mainCategory => {
@@ -458,7 +507,16 @@ const TemplateManagement: React.FC<{
                     return (
                         <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
+                            <div className="flex items-center gap-3">
+                                <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
+                                <button 
+                                    onClick={() => handleDeleteMainCategory(mainCategory)}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete Category"
+                                >
+                                    <IconTrash className="w-4 h-4" />
+                                </button>
+                            </div>
                             <label className="inline-flex items-center cursor-pointer">
                                 <input 
                                     type="checkbox" 
@@ -473,7 +531,16 @@ const TemplateManagement: React.FC<{
                             {subCategories.map((subCategory: ManagedPromptTemplateCategory) => (
                                 <div key={subCategory.name}>
                                     <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                                        <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
+                                        <div className="flex items-center gap-2">
+                                            <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
+                                            <button 
+                                                onClick={() => handleDeleteSubCategory(mainCategory, subCategory.name)}
+                                                className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+                                                title="Delete Sub-Category"
+                                            >
+                                                <IconTrash className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                         <label className="inline-flex items-center cursor-pointer">
                                             <input type="checkbox" checked={subCategory.enabled} onChange={() => toggleSubCategory(mainCategory, subCategory.name)} className="sr-only peer" />
                                             <div className="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -499,6 +566,13 @@ const TemplateManagement: React.FC<{
                                     </div>
                                 </div>
                             ))}
+                            <button
+                                onClick={() => handleAddSubCategory(mainCategory)}
+                                className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-500 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <IconPlus className="w-4 h-4" />
+                                <span className="text-sm font-medium">Add {mainCategory === 'Interior Design' ? 'Room Type' : 'Sub-Category'}</span>
+                            </button>
                         </div>
                         </div>
                     );
@@ -509,6 +583,18 @@ const TemplateManagement: React.FC<{
                 template={editingTemplate}
                 onClose={() => setIsTemplateModalOpen(false)}
                 onSave={handleSaveTemplate}
+            />
+            <CategoryModal
+                isOpen={isCategoryModalOpen}
+                type={categoryModalType}
+                context={categoryModalContext}
+                onClose={() => setIsCategoryModalOpen(false)}
+                onSave={(categoryName) => {
+                    // TODO: 实现保存逻辑
+                    console.log('Save category:', categoryName, categoryModalType, categoryModalContext);
+                    alert(`Add ${categoryModalType} category API not implemented yet`);
+                    setIsCategoryModalOpen(false);
+                }}
             />
         </div>
     );
@@ -684,6 +770,94 @@ const TemplateModal: React.FC<{
                             <Button onClick={() => onSave(editingTemplate)} primary>Save Template</Button>
                         </div>
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"><IconX /></button>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+const CategoryModal: React.FC<{
+    isOpen: boolean;
+    type: 'main' | 'sub' | 'room';
+    context: { mainCategory?: string } | null;
+    onClose: () => void;
+    onSave: (categoryName: string) => void;
+}> = ({ isOpen, type, context, onClose, onSave }) => {
+    const [categoryName, setCategoryName] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setCategoryName('');
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    const getTitle = () => {
+        if (type === 'main') return 'Add Main Category';
+        if (type === 'room') return 'Add Room Type';
+        return 'Add Sub-Category';
+    };
+
+    const getPlaceholder = () => {
+        if (type === 'main') return 'e.g., Interior Design';
+        if (type === 'room') return 'e.g., living-room';
+        return 'e.g., Design Aesthetics';
+    };
+
+    const handleSubmit = () => {
+        if (!categoryName.trim()) {
+            alert('Please enter a category name');
+            return;
+        }
+        onSave(categoryName.trim());
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/80 shadow-2xl w-full max-w-md relative"
+                    >
+                        <h3 className="text-lg font-semibold text-slate-800">{getTitle()}</h3>
+                        {context?.mainCategory && (
+                            <p className="text-sm text-slate-500 mt-1">
+                                under <span className="font-medium">{context.mainCategory}</span>
+                            </p>
+                        )}
+                        
+                        <div className="mt-6">
+                            <label className="text-sm font-medium text-slate-700">Category Name</label>
+                            <input
+                                type="text"
+                                value={categoryName}
+                                onChange={(e) => setCategoryName(e.target.value)}
+                                placeholder={getPlaceholder()}
+                                className="w-full p-3 mt-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                autoFocus
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') handleSubmit();
+                                }}
+                            />
+                            {type === 'room' && (
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Use lowercase with hyphens (e.g., living-room, dining-room)
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="mt-8 flex justify-end gap-3">
+                            <Button onClick={onClose}>Cancel</Button>
+                            <Button onClick={handleSubmit} primary>Add Category</Button>
+                        </div>
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+                            <IconX />
+                        </button>
                     </motion.div>
                 </div>
             )}
