@@ -108,12 +108,34 @@ export const PricingPage: React.FC = () => {
                 }),
             });
 
+            // Handle non-OK responses
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create checkout session');
+                let errorMessage = 'Failed to create checkout session';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (parseError) {
+                    // If response is not JSON, try to read as text
+                    const textError = await response.text();
+                    errorMessage = textError || `Server error: ${response.status}`;
+                    console.error('Non-JSON error response:', textError);
+                }
+                throw new Error(errorMessage);
             }
 
-            const { checkoutUrl } = await response.json();
+            // Parse success response
+            let checkoutUrl;
+            try {
+                const data = await response.json();
+                checkoutUrl = data.checkoutUrl;
+            } catch (parseError) {
+                console.error('Failed to parse success response:', parseError);
+                throw new Error('Invalid response from server');
+            }
+
+            if (!checkoutUrl) {
+                throw new Error('No checkout URL received from server');
+            }
 
             // Redirect to CREEM checkout page
             window.location.href = checkoutUrl;
