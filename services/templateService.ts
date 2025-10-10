@@ -254,3 +254,109 @@ export async function getCategories(): Promise<TemplateCategory[]> {
   }
 }
 
+/**
+ * 获取所有模板（普通用户版本 - 不包含 prompt）
+ * 使用公共视图，只返回图片、名字和分类信息
+ */
+export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
+  try {
+    const { data, error } = await supabase
+      .from('design_templates_public')  // 使用公共视图
+      .select('*')
+      .order('sort_order')
+      .order('name');
+
+    if (error) throw error;
+
+    // 将数据库数据转换为前端需要的格式
+    const templates = data as Array<{
+      id: string;
+      name: string;
+      image_url: string;
+      main_category: string;
+      sub_category: string;
+      enabled: boolean;
+      sort_order: number;
+    }>;
+    const grouped: ManagedTemplateData = {};
+
+    templates.forEach(template => {
+      const mainCat = template.main_category;
+      const subCat = template.sub_category;
+
+      // 初始化主分类
+      if (!grouped[mainCat]) {
+        grouped[mainCat] = [];
+      }
+
+      // 查找或创建子分类
+      let subCategory = grouped[mainCat].find(sc => sc.name === subCat);
+      if (!subCategory) {
+        subCategory = {
+          name: subCat,
+          templates: [],
+          enabled: true
+        };
+        grouped[mainCat].push(subCategory);
+      }
+
+      // 添加模板（注意：不包含 prompt 字段）
+      subCategory.templates.push({
+        id: template.id,
+        name: template.name,
+        imageUrl: template.image_url,
+        prompt: '', // 前端不需要看到，将在生成时动态获取
+        category: template.main_category
+      });
+    });
+
+    return grouped;
+  } catch (error) {
+    console.error('Error fetching public templates:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取模板的完整提示词（用于后端生成）
+ * 注意：此函数通过 SECURITY DEFINER 函数获取 prompt
+ * 前端不应该直接显示此内容
+ */
+export async function getTemplatePrompt(templateId: string): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_template_prompt', { template_id: templateId });
+    
+    if (error) throw error;
+    return data as string;
+  } catch (error) {
+    console.error('Error fetching template prompt:', error);
+    throw error;
+  }
+}
+
+/**
+ * 批量获取多个模板的提示词（性能优化）
+ */
+export async function getTemplatePrompts(templateIds: string[]): Promise<Map<string, string>> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_template_prompts', { template_ids: templateIds });
+    
+    if (error) throw error;
+    
+    // 转换为 Map 方便查找
+    const promptMap = new Map<string, string>();
+    if (data && Array.isArray(data)) {
+      data.forEach((item: { id: string; prompt: string }) => {
+        promptMap.set(item.id, item.prompt);
+      });
+    }
+    
+    return promptMap;
+  } catch (error) {
+    console.error('Error fetching template prompts:', error);
+    throw error;
+  }
+}
+
