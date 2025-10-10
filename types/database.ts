@@ -71,6 +71,7 @@ export const MEMBERSHIP_CONFIG = {
   free: {
     name: 'Free',
     credits: 0, // Free 用户没有信用点额度
+    maxTemplates: 0, // Free 用户不能生成图片
     color: 'text-slate-600',
     bgColor: 'bg-slate-100',
     icon: '🆓',
@@ -79,26 +80,29 @@ export const MEMBERSHIP_CONFIG = {
   pro: {
     name: 'Pro',
     credits: 1000, // Pro 用户 1000 点
+    maxTemplates: 1, // Pro 可以选择1个模板，生成1张图片
     color: 'text-blue-600',
     bgColor: 'bg-blue-100',
     icon: '⭐',
-    features: ['设计生图功能', '1000 信用点'],
+    features: ['设计生图功能', '1000 信用点', '每次生成1张图片'],
   },
   premium: {
     name: 'Premium',
     credits: 5000, // Premium 用户 5000 点
+    maxTemplates: 9, // Premium 可以选择9个模板，生成9张图片
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
     icon: '👑',
-    features: ['优先队列', '解锁 Free Canvas 功能', '5000 信用点'],
+    features: ['优先队列', '解锁 Free Canvas 功能', '5000 信用点', '每次生成最多9张图片'],
   },
   business: {
     name: 'Business',
     credits: 25000, // Business 用户 25000 点
+    maxTemplates: 18, // Business 可以选择18个模板，生成18张图片
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
     icon: '💼',
-    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低'],
+    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低', '每次生成最多18张图片'],
   },
 } as const;
 

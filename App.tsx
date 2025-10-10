@@ -1283,9 +1283,19 @@ const App: React.FC = () => {
             if (prev.includes(templateId)) {
                 return prev.filter(id => id !== templateId);
             }
-            if (prev.length < 9) {
+            
+            // 根据会员等级限制可选择的模板数量
+            const membershipTier = currentUser?.membership_tier || 'free';
+            const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
+            
+            if (prev.length < maxTemplates) {
                 return [...prev, templateId];
             }
+            
+            // 达到上限时显示提示
+            setError(`Your ${MEMBERSHIP_CONFIG[membershipTier].name} plan allows selecting up to ${maxTemplates} template${maxTemplates > 1 ? 's' : ''} at a time. Please upgrade for more.`);
+            setTimeout(() => setError(null), 3000);
+            
             return prev;
         });
     };
@@ -1352,10 +1362,6 @@ const App: React.FC = () => {
             setIsAuthModalOpen(true);
             return;
         }
-        if (currentUser.credits < 1) {
-            setError("You have run out of credits. Please upgrade your plan to continue generating.");
-            return;
-        }
         
         const cleanModule1 = module1Images.filter((img): img is string => !!img);
         if (cleanModule1.length === 0) {
@@ -1366,8 +1372,15 @@ const App: React.FC = () => {
             setError("Please select a design style.");
             return;
         }
+        
+        // 根据选中的模板数量计算所需信用点（每个模板1个信用点）
+        const creditsNeeded = selectedTemplateIds.length;
+        if (currentUser.credits < creditsNeeded) {
+            setError(`You need ${creditsNeeded} credits to generate ${selectedTemplateIds.length} image${selectedTemplateIds.length > 1 ? 's' : ''}. You have ${currentUser.credits} credit${currentUser.credits !== 1 ? 's' : ''} remaining. Please upgrade your plan.`);
+            return;
+        }
     
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
+        handleUpdateUser(currentUser.id, { credits: currentUser.credits - creditsNeeded });
         setIsLoading(true);
         setError(null);
         setCurrentAdvisorResponse(null);
@@ -2036,7 +2049,7 @@ const App: React.FC = () => {
                                 ) : (
                                     <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Generating..." : `Generate ${selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Design(s)` : ''} (1 Credit)`}
+                                        {isLoading ? "Generating..." : `Generate ${selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Design(s)` : ''} (${selectedTemplateIds.length > 0 ? selectedTemplateIds.length : 1} Credit${selectedTemplateIds.length > 1 ? 's' : ''})`}
                                     </Button>
                                 )}
                             </div>
