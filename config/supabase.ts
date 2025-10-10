@@ -3,23 +3,12 @@
  * 用于用户认证、数据库操作等
  */
 
+import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
-import type { createClient as CreateClient } from '@supabase/supabase-js';
-
-type SupabaseModule = {
-  createClient: CreateClient;
-};
-
-const loadSupabaseClient = async (): Promise<SupabaseModule> => {
-  const module = await import(
-    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2.75.0?bundle'
-  );
-  return module as SupabaseModule;
-};
 
 // 从环境变量获取配置
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
 // 验证环境变量
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -34,10 +23,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-const { createClient } = await loadSupabaseClient();
-
-const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
-
 // 创建 Supabase 客户端实例
 export const supabase = createClient<Database>(
   supabaseUrl || '',
@@ -47,9 +32,7 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      // 延长session过期时间，避免频繁登出
-      flowType: 'pkce', // 使用更安全的PKCE流程
-      ...(storage ? { storage } : {}),
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     },
     global: {
       headers: {

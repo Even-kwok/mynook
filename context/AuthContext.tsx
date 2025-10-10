@@ -126,18 +126,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
       
-      setUser(authUser);
-      setSession(authSession);
+      // 不在这里设置user和session，让onAuthStateChange统一处理
+      // 这样避免重复查询getUserProfile
+      // setUser(authUser);
+      // setSession(authSession);
       
-      if (authUser) {
-        try {
-          await refreshProfile(authUser.id);
-        } catch (profileError) {
-          console.error('Failed to load profile after sign in:', profileError);
-          // 即使profile加载失败，也让用户登录成功
-          // 可以稍后重试或提示用户
-        }
-      }
+      // 移除这里的refreshProfile调用，由onAuthStateChange统一处理
+      // onAuthStateChange会自动触发，无需手动调用
       
       return { error: null };
     } catch (error) {
@@ -155,18 +150,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
       
-      setUser(authUser);
-      setSession(authSession);
+      // 不在这里设置user和session，让onAuthStateChange统一处理
+      // 这样避免重复查询getUserProfile
+      // setUser(authUser);
+      // setSession(authSession);
       
-      if (authUser) {
-        try {
-          await refreshProfile(authUser.id);
-        } catch (profileError) {
-          console.error('Failed to load profile after sign up:', profileError);
-          // 即使profile加载失败，也让用户注册成功
-          // 触发器可能需要几秒钟创建记录，稍后会自动重试
-        }
-      }
+      // 移除这里的refreshProfile调用，由onAuthStateChange统一处理
+      // 注册后触发器会创建user记录，onAuthStateChange会自动获取
       
       return { error: null };
     } catch (error) {
