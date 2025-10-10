@@ -16,7 +16,6 @@ import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
 import { MEMBERSHIP_CONFIG } from './types/database';
-import { DebugSupabase } from './components/DebugSupabase';
 
 // --- Re-styled Helper Components ---
 
@@ -794,11 +793,6 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                     )}
                 </div>
             </section>
-
-             {/* Footer */}
-            <footer className="text-center p-4 border-t border-slate-200 text-slate-500 mt-auto flex justify-center items-center text-sm px-8">
-                <span>© 2024 MyNook.AI. All Rights Reserved.</span>
-            </footer>
         </main>
     );
 };
@@ -2293,9 +2287,6 @@ const App: React.FC = () => {
                     setActivePage('Pricing');
                 }}
             />
-            
-            {/* 开发调试工具 - 部署后可以删除 */}
-            <DebugSupabase />
 
             <Header 
                 activeItem={activePage} 
