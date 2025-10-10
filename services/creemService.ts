@@ -4,7 +4,7 @@
  */
 
 const CREEM_API_KEY = process.env.CREEM_API_KEY;
-const CREEM_API_BASE_URL = 'https://api.creem.io/v1'; // Update with actual CREEM API URL
+const CREEM_API_BASE_URL = 'https://api.creem.io'; // Update with actual CREEM API URL
 
 interface CheckoutSessionParams {
   planType: 'pro' | 'premium' | 'business';
@@ -105,11 +105,11 @@ export async function createCheckoutSession(
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as { message?: string };
       throw new Error(`CREEM API error: ${error.message || response.statusText}`);
     }
 
-    const session = await response.json();
+    const session = await response.json() as CreemCheckoutSession;
     return session;
   } catch (error) {
     console.error('Error creating checkout session:', error);
@@ -135,11 +135,11 @@ export async function getSubscription(subscriptionId: string): Promise<CreemSubs
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as { message?: string };
       throw new Error(`CREEM API error: ${error.message || response.statusText}`);
     }
 
-    return await response.json();
+    return await response.json() as CreemSubscription;
   } catch (error) {
     console.error('Error fetching subscription:', error);
     throw error;
@@ -164,11 +164,11 @@ export async function cancelSubscription(subscriptionId: string): Promise<CreemS
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as { message?: string };
       throw new Error(`CREEM API error: ${error.message || response.statusText}`);
     }
 
-    return await response.json();
+    return await response.json() as CreemSubscription;
   } catch (error) {
     console.error('Error cancelling subscription:', error);
     throw error;
@@ -223,11 +223,11 @@ export async function getCustomerSubscriptions(customerId: string): Promise<Cree
     );
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as { message?: string };
       throw new Error(`CREEM API error: ${error.message || response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { subscriptions?: CreemSubscription[] };
     return data.subscriptions || [];
   } catch (error) {
     console.error('Error fetching customer subscriptions:', error);
