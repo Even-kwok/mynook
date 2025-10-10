@@ -677,6 +677,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     const [displayedCount, setDisplayedCount] = useState(20);
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [heroBanner, setHeroBanner] = useState<string>('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png');
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_LOAD = 20;
     const TOTAL_ITEMS = galleryItems.length;
@@ -699,6 +700,24 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
         };
 
         loadGalleryItems();
+    }, []);
+
+    // Load Hero Banner from Supabase (separate from gallery items)
+    useEffect(() => {
+        const loadHeroBanner = async () => {
+            try {
+                const { fetchGalleryItemsByCategory } = await import('./services/galleryService');
+                const heroBanners = await fetchGalleryItemsByCategory('hero-banner');
+                if (heroBanners.length > 0) {
+                    setHeroBanner(heroBanners[0].src);
+                }
+            } catch (error) {
+                console.error('Failed to load hero banner:', error);
+                // Keep default banner on error
+            }
+        };
+
+        loadHeroBanner();
     }, []);
 
     // Infinite scroll with Intersection Observer
@@ -739,7 +758,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             {/* Hero Section */}
             <section 
               className="relative bg-cover bg-center text-white pt-[168px] pb-24 sm:pt-[200px] sm:pb-32 px-4 h-[50vh] flex items-center justify-center" 
-              style={{ backgroundImage: "url('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png')" }}
+              style={{ backgroundImage: `url('${heroBanner}')` }}
             >
                 <div className="absolute inset-0 bg-black/40"></div>
                 <div className="relative container mx-auto max-w-4xl text-center">
