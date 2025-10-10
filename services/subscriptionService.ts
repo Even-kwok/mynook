@@ -3,8 +3,29 @@
  * Manages user subscriptions and integrates with database
  */
 
-import { supabase } from '../config/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { MEMBERSHIP_CONFIG } from '../types/database';
+
+// Create Supabase client that works in both browser and Node.js
+const getSupabaseClient = () => {
+  // In Node.js environment (Vercel Functions)
+  if (typeof process !== 'undefined' && process.env) {
+    const url = process.env.VITE_SUPABASE_URL || '';
+    const key = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+    return createClient(url, key);
+  }
+  
+  // In browser environment
+  if (typeof window !== 'undefined' && (import.meta as any).env) {
+    const url = (import.meta as any).env.VITE_SUPABASE_URL || '';
+    const key = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
+    return createClient(url, key);
+  }
+  
+  throw new Error('Unable to initialize Supabase client');
+};
+
+const supabase = getSupabaseClient();
 
 interface SubscriptionData {
   userId: string;
