@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { getEnvVar } from './lib/env';
+import { getEnvVar } from './env';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 只允许 GET 请求
