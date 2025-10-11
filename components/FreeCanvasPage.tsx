@@ -1422,8 +1422,20 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 finalPrompt = `Generate a photorealistic image based on the user's drawings on a blank canvas and their text prompt. The drawings provide a rough sketch or composition. The text prompt is: "${prompt}"`;
             }
             
+            // Validate imageForApi
+            if (!imageForApi || typeof imageForApi !== 'string') {
+                console.error('❌ Image data is invalid:', typeof imageForApi);
+                throw new Error('Failed to prepare image for generation. Please try again.');
+            }
+            
             setGenerationProgress('Uploading to AI...');
             const imageForApiData = imageForApi.split(',')[1];
+            
+            if (!imageForApiData) {
+                console.error('❌ Image data format is invalid');
+                throw new Error('Invalid image data format. Please try uploading again.');
+            }
+            
             console.log(`📤 Sending to API: ${(imageForApiData.length / 1024).toFixed(0)}KB image`);
             
             const generatedUrl = await generateImage(
