@@ -234,11 +234,15 @@ export default async function handler(
   if (!apiKey) {
     // 回滚信用点
     await refundCredits(userId, requiredCredits);
-    console.error('GEMINI_API_KEY is not configured');
+    console.error('❌ GEMINI_API_KEY is not configured in environment variables');
+    console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
     return res.status(500).json({ 
-      error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.' 
+      error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.',
+      code: 'API_KEY_MISSING'
     });
   }
+
+  console.log('✅ GEMINI_API_KEY found, initializing AI client...');
 
   let ai: GoogleGenAI | null = null;
   let uploadedImageParts: UploadedImagePart[] = [];
@@ -255,9 +259,11 @@ export default async function handler(
       });
     }
 
+    console.log(`🔧 Initializing Google GenAI client for user ${userId}...`);
     const aiClient = new GoogleGenAI({ apiKey });
     ai = aiClient;
     const textPart = { text: instruction };
+    console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
     const normalizedImages = base64Images
       .map(normalizeBase64Image)
       .filter((value): value is string => typeof value === 'string' && value.length > 0);
@@ -280,13 +286,18 @@ export default async function handler(
       await cleanupUploadedFiles(aiClient, uploadedImageParts);
       // 回滚信用点
       await refundCredits(userId, requiredCredits);
+      console.error('❌ No valid images uploaded');
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
     }
 
+    console.log(`📤 Uploaded ${uploadedImageParts.length} images, calling Gemini API...`);
+    const modelName = 'gemini-2.5-flash-image';
+    console.log(`🤖 Using model: ${modelName}`);
+    
     const response = await aiClient.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: modelName,
       contents: [{
         role: 'user',
         parts: [
@@ -366,7 +377,14 @@ export default async function handler(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error generating image:', error);
+    const stack = error instanceof Error ? error.stack : '';
+    console.error('❌ Error generating image:', {
+      message,
+      stack,
+      userId,
+      errorType: error?.constructor?.name,
+      errorDetails: JSON.stringify(error, null, 2)
+    });
     
     // 清理上传的文件
     if (ai && uploadedImageParts.length > 0) {
@@ -376,6 +394,7 @@ export default async function handler(
     // 如果生成失败，回滚信用点
     if (!generationSuccess) {
       await refundCredits(userId, requiredCredits);
+      console.log(`💰 Refunded ${requiredCredits} credits to user ${userId}`);
       await logGeneration({
         userId,
         type: 'image',
@@ -388,6 +407,7 @@ export default async function handler(
     return res.status(500).json({
       error: 'Image generation failed. Please try again.',
       details: message,
+      code: 'GENERATION_FAILED'
     });
   }
 }
