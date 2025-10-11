@@ -14,6 +14,7 @@ import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
+import { TermsPage } from './components/TermsPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -2280,7 +2281,7 @@ const App: React.FC = () => {
                     setCanvasState={setFreeCanvasState}
                 />;
             case 'Terms':
-                 return <ComingSoonPage pageName={activePage} />;
+                return <TermsPage />;
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
