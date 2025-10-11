@@ -1032,9 +1032,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
         const rect = workspace.getBoundingClientRect();
         
-        // Limit canvas size to prevent memory issues (max 2048x2048 for stability)
-        // Reduced from 4096 to 2048 to prevent browser crashes on lower-end devices
-        const MAX_SIZE = 2048;
+        // Optimize canvas size for faster API upload and processing
+        // Smaller size = faster upload + faster AI processing
+        // 1024x1024 is optimal for Gemini API (good quality, fast processing)
+        const MAX_SIZE = 1024;
         let width = Math.min(rect.width, MAX_SIZE);
         let height = Math.min(rect.height, MAX_SIZE);
         const scale = Math.min(width / rect.width, height / rect.height);
@@ -1096,7 +1097,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         });
 
         try {
-            const dataUrl = canvas.toDataURL('image/png');
+            // Use JPEG with quality 0.85 for much faster upload (smaller file size)
+            // This significantly reduces API upload time (PNG can be 10x larger)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
             
             // Force garbage collection hint by clearing canvas
             canvas.width = 0;
@@ -1120,7 +1123,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (!ctx) throw new Error("Canvas context not available");
 
         const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
-        const MAX_CANVAS_SIZE = 2048; // Maximum dimension (reduced to prevent crashes)
+        const MAX_CANVAS_SIZE = 1024; // Optimal size for fast API processing (reduced for speed)
 
         // Load base image with timeout
         const baseImgEl = new Image();
@@ -1269,7 +1272,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         });
 
         try {
-            const dataUrl = canvas.toDataURL('image/png');
+            // Use JPEG with quality 0.85 for much faster upload (smaller file size)
+            // This significantly reduces API upload time (PNG can be 10x larger)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
             
             // Force garbage collection hint by clearing canvas
             canvas.width = 0;
@@ -1720,15 +1725,25 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
                      {isLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-                            {generationProgress && (
-                                <p className="mt-4 text-sm text-gray-700 font-medium animate-pulse">
-                                    {generationProgress}
-                                </p>
-                            )}
-                            <p className="mt-2 text-xs text-gray-500">
-                                This may take 10-30 seconds
-                            </p>
+                            <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
+                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
+                                {generationProgress && (
+                                    <p className="text-base text-gray-800 font-semibold animate-pulse">
+                                        {generationProgress}
+                                    </p>
+                                )}
+                                <div className="text-center space-y-1">
+                                    <p className="text-sm text-gray-600 font-medium">
+                                        ⚡ Optimizing image for faster processing...
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Usually takes 20-60 seconds
+                                    </p>
+                                    <p className="text-xs text-indigo-600 font-medium mt-2">
+                                        💡 Tip: Smaller images process faster!
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     )}
                     <AnimatePresence>
