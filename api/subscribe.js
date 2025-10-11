@@ -97,31 +97,104 @@ export default async function handler(req, res) {
       console.log('✅ User can upgrade from', currentTier, 'to', planType);
     }
 
-    // ========== Return mock response ==========
-    // TODO: Integrate CREEM payment API
-    console.log('⚠️ Returning mock checkout URL (CREEM integration pending)');
-    
+    // ========== Call CREEM API to create checkout session ==========
+    const creemApiKey = process.env.CREEM_API_KEY;
+    const creemApiUrl = process.env.CREEM_API_URL || 'https://api.creem.io';
+
+    if (!creemApiKey) {
+      console.error('❌ CREEM_API_KEY not configured');
+      return res.status(500).json({ 
+        error: 'Payment system not configured',
+        message: 'CREEM API key is missing'
+      });
+    }
+
+    console.log('✅ Calling CREEM API...');
+
+    // Define pricing
+    const PLAN_PRICING = {
+      pro: { monthly: 39, yearly: 199 },
+      premium: { monthly: 99, yearly: 499 },
+      business: { monthly: 299, yearly: 1699 },
+    };
+
+    const amount = PLAN_PRICING[planType][billingCycle];
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
       : 'http://localhost:3000';
-    
-    const mockResponse = {
-      success: true,
-      checkoutUrl: `${baseUrl}/pricing?message=subscription-pending&plan=${planType}&cycle=${billingCycle}`,
-      message: '✅ Subscription system validated. CREEM integration pending.',
-      debug: {
-        userId: userData.id,
-        email: userData.email,
-        requestedPlan: planType,
-        billingCycle: billingCycle,
-        currentTier: userData.membership_tier || 'free',
-        canProceed: true,
-        note: 'This is a mock response. Real payment integration coming soon.'
-      }
-    };
 
-    console.log('✅ Mock response prepared');
-    return res.status(200).json(mockResponse);
+    try {
+      const creemResponse = await fetch(`${creemApiUrl}/checkout/sessions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${creemApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mode: 'subscription',
+          customer_email: userData.email,
+          client_reference_id: userData.id,
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
+                  description: `MyNook ${planType} subscription - ${billingCycle}`,
+                },
+                recurring: {
+                  interval: billingCycle === 'monthly' ? 'month' : 'year',
+                },
+                unit_amount: amount * 100, // Convert to cents
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: `${baseUrl}/?message=subscription-success&plan=${planType}&cycle=${billingCycle}`,
+          cancel_url: `${baseUrl}/pricing?message=subscription-cancelled`,
+          metadata: {
+            plan_type: planType,
+            billing_cycle: billingCycle,
+            user_id: userData.id,
+          },
+        }),
+      });
+
+      if (!creemResponse.ok) {
+        const errorData = await creemResponse.json().catch(() => ({}));
+        console.error('❌ CREEM API error:', errorData);
+        throw new Error(errorData.message || `CREEM API returned ${creemResponse.status}`);
+      }
+
+      const session = await creemResponse.json();
+      console.log('✅ CREEM checkout session created:', session.id);
+
+      return res.status(200).json({
+        success: true,
+        checkoutUrl: session.url,
+        sessionId: session.id,
+        message: 'Checkout session created successfully'
+      });
+
+    } catch (creemError) {
+      console.error('❌ CREEM integration error:', creemError.message);
+      
+      // Fallback to mock response if CREEM fails
+      console.log('⚠️ Falling back to mock response...');
+      return res.status(200).json({
+        success: true,
+        checkoutUrl: `${baseUrl}/pricing?message=subscription-pending&plan=${planType}&cycle=${billingCycle}`,
+        message: '⚠️ Using mock checkout (CREEM error)',
+        error: creemError.message,
+        debug: {
+          userId: userData.id,
+          email: userData.email,
+          requestedPlan: planType,
+          billingCycle: billingCycle,
+          amount: amount,
+        }
+      });
+    }
 
   } catch (error) {
     console.error('========== UNEXPECTED ERROR ==========');
