@@ -1,5 +1,15 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "functions": {
+    "api/generate-image.ts": {
+      "maxDuration": 60,
+      "memory": 3008
+    },
+    "api/generate-text.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
 }
 

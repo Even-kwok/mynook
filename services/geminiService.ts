@@ -143,8 +143,8 @@ export const generateImage = async (
     onProgress?: (message: string) => void
 ): Promise<string> => {
     const MAX_RETRIES = 2;
-    const TIMEOUT = 45000; // 45 seconds timeout
-    const RETRY_DELAY = 2000; // 2 seconds delay between retries
+    const TIMEOUT = 70000; // 70 seconds timeout (Vercel Pro allows 60s + buffer)
+    const RETRY_DELAY = 3000; // 3 seconds delay between retries
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
