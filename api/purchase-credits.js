@@ -58,11 +58,26 @@ export default async function handler(req, res) {
       });
     }
 
-    // Define credit packs
+    // Define credit packs with CREEM Product IDs
     const CREDIT_PACKS = {
-      '100': { credits: 100, price: 9.90, name: '100 Credits Pack' },
-      '300': { credits: 300, price: 24.99, name: '300 Credits Pack' },
-      '1000': { credits: 1000, price: 69.99, name: '1000 Credits Pack' },
+      '100': { 
+        credits: 100, 
+        price: 9.90, 
+        name: '100 Credits Pack',
+        productId: 'prod_22tEVFxJtOQU8cm5H10bZc'
+      },
+      '300': { 
+        credits: 300, 
+        price: 24.99, 
+        name: '300 Credits Pack',
+        productId: 'prod_3E171a5TGDhmBhtYM0Gbk3'
+      },
+      '1000': { 
+        credits: 1000, 
+        price: 69.99, 
+        name: '1000 Credits Pack',
+        productId: 'prod_MmthQ5RlRKNalU3rEsowB'
+      },
     };
 
     const pack = CREDIT_PACKS[packType];
@@ -71,6 +86,8 @@ export default async function handler(req, res) {
         error: 'Invalid pack type. Must be: 100, 300, or 1000' 
       });
     }
+
+    console.log(`✅ Using Product ID: ${pack.productId} for ${pack.credits} credits`);
 
     // Get user data
     const { data: userData, error: userError } = await supabase
@@ -116,14 +133,7 @@ export default async function handler(req, res) {
           client_reference_id: userData.id,
           line_items: [
             {
-              price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: pack.name,
-                  description: `${pack.credits} credits for MyNook AI generation`,
-                },
-                unit_amount: Math.round(pack.price * 100), // Convert to cents
-              },
+              price: pack.productId, // Use the Product ID from CREEM
               quantity: 1,
             },
           ],

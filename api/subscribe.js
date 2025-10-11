@@ -111,17 +111,33 @@ export default async function handler(req, res) {
 
     console.log('✅ Calling CREEM API...');
 
-    // Define pricing
-    const PLAN_PRICING = {
-      pro: { monthly: 39, yearly: 199 },
-      premium: { monthly: 99, yearly: 499 },
-      business: { monthly: 299, yearly: 1699 },
+    // CREEM Product ID mapping
+    const PRODUCT_IDS = {
+      pro: {
+        monthly: 'prod_2JlRhCPx3dJVaQUNLRgo6D',
+        yearly: 'prod_43bA82tdR38NzQksz6fHxH',
+      },
+      premium: {
+        monthly: 'prod_3wRnKHJa6LSF5afsd1QjEG',
+        yearly: 'prod_18rfRuIGJVtWPeIIfZpLWA',
+      },
+      business: {
+        monthly: 'prod_wMGy2WQe6Kv5PmTZLjcsn',
+        yearly: 'prod_6065m1QjyimGZ8lg15pqB5',
+      },
     };
 
-    const amount = PLAN_PRICING[planType][billingCycle];
+    const productId = PRODUCT_IDS[planType][billingCycle];
+    if (!productId) {
+      console.error('❌ Product ID not found for:', planType, billingCycle);
+      throw new Error('Invalid plan configuration');
+    }
+
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
       : 'http://localhost:3000';
+
+    console.log(`✅ Using Product ID: ${productId} for ${planType} ${billingCycle}`);
 
     try {
       const creemResponse = await fetch(`${creemApiUrl}/checkout/sessions`, {
@@ -136,17 +152,7 @@ export default async function handler(req, res) {
           client_reference_id: userData.id,
           line_items: [
             {
-              price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
-                  description: `MyNook ${planType} subscription - ${billingCycle}`,
-                },
-                recurring: {
-                  interval: billingCycle === 'monthly' ? 'month' : 'year',
-                },
-                unit_amount: amount * 100, // Convert to cents
-              },
+              price: productId, // Use the Product ID from CREEM
               quantity: 1,
             },
           ],
