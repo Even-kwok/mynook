@@ -1,17 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Modality } from '@google/genai';
-import { promises as fs } from 'fs';
+import { GoogleGenAI, RawReferenceImage } from '@google/genai';
 import { Buffer } from 'node:buffer';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { 
-  verifyUserToken, 
-  checkCreditsAvailable, 
+import {
+  verifyUserToken,
   checkAndDeductCredits,
-  deductCredits, 
   refundCredits,
   CREDIT_COSTS,
-  logGeneration 
+  logGeneration
 } from './lib/creditsService.js';
 
 interface GenerateImageRequestBody {
@@ -45,16 +40,6 @@ const parseRequestBody = (body: VercelRequest['body']): GenerateImageRequestBody
   return body as GenerateImageRequestBody;
 };
 
-const extractInlineImage = (part: any): { data: string; mimeType: string | undefined } | null => {
-  if (part?.inlineData?.data) {
-    return {
-      data: part.inlineData.data,
-      mimeType: part.inlineData.mimeType,
-    };
-  }
-  return null;
-};
-
 const normalizeBase64Image = (value: unknown): string | null => {
   if (typeof value !== 'string') {
     return null;
@@ -68,8 +53,6 @@ const normalizeBase64Image = (value: unknown): string | null => {
   const commaIndex = trimmed.indexOf(',');
   return commaIndex >= 0 ? trimmed.slice(commaIndex + 1) : trimmed;
 };
-
-type UploadedImagePart = { part: { fileData: { fileUri: string; mimeType: string } }; fileName?: string };
 
 const detectImageType = (
   buffer: Buffer
@@ -111,93 +94,28 @@ const detectImageType = (
   return { mimeType: 'image/png', extension: 'png' };
 };
 
-const uploadBase64Image = async (
-  ai: GoogleGenAI,
-  base64Image: string,
-  index: number
-): Promise<UploadedImagePart | null> => {
-  try {
-    const imageBuffer = Buffer.from(base64Image, 'base64');
-    if (imageBuffer.length === 0) {
-      return null;
-    }
-
-    const { mimeType, extension } = detectImageType(imageBuffer);
-    const blob = new Blob([imageBuffer], { type: mimeType });
-    const displayName = `source-image-${Date.now()}-${index}.${extension}`;
-
-    const uploadedFile = await ai.files.upload({
-      file: blob,
-      config: {
-        mimeType,
-        displayName,
-      },
-    });
-
-    const fileUri = uploadedFile.uri ?? uploadedFile.name;
-    if (!fileUri) {
-      console.error('Uploaded file is missing a URI and name.');
-      return null;
-    }
-
-    return {
-      part: {
-        fileData: {
-          fileUri,
-          mimeType: uploadedFile.mimeType ?? mimeType,
-        },
-      },
-      fileName: uploadedFile.name,
-    };
-  } catch (error) {
-    console.error('Failed to upload base64 image to Gemini Files API:', error);
-    return null;
-  }
-};
-
-const cleanupUploadedFiles = async (ai: GoogleGenAI, uploadedFiles: UploadedImagePart[]) => {
-  await Promise.all(
-    uploadedFiles
-      .map((file) => file.fileName)
-      .filter((name): name is string => typeof name === 'string' && name.length > 0)
-      .map(async (name) => {
-        try {
-          await ai.files.delete({ name });
-        } catch (cleanupError) {
-          console.warn('Failed to delete uploaded source image:', cleanupError);
-        }
-      })
-  );
-};
-
-const downloadFilePart = async (
-  ai: GoogleGenAI,
-  part: any
-): Promise<{ data: string; mimeType: string | undefined } | null> => {
-  const fileUri: unknown = part?.fileData?.fileUri;
-  if (typeof fileUri !== 'string' || !fileUri) {
-    return null;
-  }
-
-  const mimeType: string | undefined = part?.fileData?.mimeType;
-  const extension = mimeType?.split('/')?.[1] ?? 'png';
-  const tempPath = join(tmpdir(), `gemini-image-${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`);
-
-  try {
-    await ai.files.download({ file: fileUri, downloadPath: tempPath });
-    const fileBuffer = await fs.readFile(tempPath);
-    return {
-      data: fileBuffer.toString('base64'),
-      mimeType,
-    };
-  } finally {
+const buildReferenceImages = (normalizedImages: string[]): RawReferenceImage[] => {
+  return normalizedImages.map((imgData, index) => {
     try {
-      await fs.unlink(tempPath);
-    } catch (cleanupError) {
-      // Ignore cleanup errors but log for visibility
-      console.warn('Failed to remove temporary image file:', cleanupError);
+      const buffer = Buffer.from(imgData, 'base64');
+      if (buffer.length === 0) {
+        return null;
+      }
+
+      const { mimeType } = detectImageType(buffer);
+      const reference = new RawReferenceImage();
+      reference.referenceId = index;
+      reference.referenceImage = {
+        imageBytes: imgData,
+        mimeType,
+      };
+
+      return reference;
+    } catch (error) {
+      console.error('Failed to build reference image for editing:', error);
+      return null;
     }
-  }
+  }).filter((value): value is RawReferenceImage => value !== null);
 };
 
 export default async function handler(
@@ -223,31 +141,27 @@ export default async function handler(
   const { userId, error: authError } = await verifyUserToken(authHeader);
   if (authError || !userId) {
     return res.status(401).json({ 
-      error: authError || 'Invalid authentication',
-      code: 'AUTH_INVALID'
+      error: 'Invalid or expired token',
+      code: 'INVALID_TOKEN'
     });
   }
+  
+  console.log(`✅ User ${userId} authenticated successfully`);
 
   // ========================================
-  // 2. 检查并扣除信用点（优化：一次操作）
+  // 2. 检查并扣除信用点
   // ========================================
   const requiredCredits = CREDIT_COSTS.IMAGE_GENERATION;
-  const { success: deductSuccess, remainingCredits, membershipTier, error: deductError } = await checkAndDeductCredits(userId, requiredCredits);
-  
-  if (!deductSuccess) {
-    // 检查是否是信用点不足错误
-    if (deductError && deductError.includes('Insufficient')) {
-      return res.status(402).json({ 
-        error: `Insufficient credits. Required: ${requiredCredits}`,
-        code: 'INSUFFICIENT_CREDITS',
-        required: requiredCredits,
-        membershipTier
-      });
-    }
-    
-    return res.status(500).json({ 
-      error: deductError || 'Failed to check and deduct credits',
-      code: 'CREDITS_CHECK_FAILED'
+  const { 
+    success: creditsDeducted, 
+    remainingCredits,
+    error: creditsError 
+  } = await checkAndDeductCredits(userId, requiredCredits);
+
+  if (!creditsDeducted) {
+    return res.status(402).json({ 
+      error: creditsError || 'Insufficient credits',
+      code: 'INSUFFICIENT_CREDITS'
     });
   }
 
@@ -273,8 +187,6 @@ export default async function handler(
 
   console.log('✅ GEMINI_API_KEY found, initializing AI client...');
 
-  let ai: GoogleGenAI | null = null;
-  let uploadedImageParts: UploadedImagePart[] = [];
   let generationSuccess = false;
 
   try {
@@ -290,8 +202,6 @@ export default async function handler(
 
     console.log(`🔧 Initializing Google GenAI client for user ${userId}...`);
     const aiClient = new GoogleGenAI({ apiKey });
-    ai = aiClient;
-    const textPart = { text: instruction };
     console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
     const normalizedImages = base64Images
       .map(normalizeBase64Image)
@@ -305,75 +215,37 @@ export default async function handler(
       });
     }
 
-    uploadedImageParts = (
-      await Promise.all(
-        normalizedImages.map((imgData, index) => uploadBase64Image(aiClient, imgData, index))
-      )
-    ).filter((value): value is UploadedImagePart => value !== null);
+    const referenceImages = buildReferenceImages(normalizedImages);
 
-    if (uploadedImageParts.length === 0) {
-      await cleanupUploadedFiles(aiClient, uploadedImageParts);
+    if (referenceImages.length === 0) {
       // 回滚信用点
       await refundCredits(userId, requiredCredits);
-      console.error('❌ No valid images uploaded');
+      console.error('❌ No valid reference images could be built');
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
     }
 
-    console.log(`📤 Uploaded ${uploadedImageParts.length} images, calling Gemini API...`);
+    console.log(`📤 Prepared ${referenceImages.length} reference images, calling Gemini API...`);
     const modelName = 'gemini-2.5-flash-image';
     console.log(`🤖 Using model: ${modelName}`);
-    
-    const response = await aiClient.models.generateContent({
+
+    const response = await aiClient.models.editImage({
       model: modelName,
-      contents: [{
-        role: 'user',
-        parts: [
-          ...uploadedImageParts.map((item) => item.part),
-          textPart,
-        ],
-      }],
+      prompt: instruction,
+      referenceImages,
       config: {
-        responseModalities: [Modality.IMAGE],
+        numberOfImages: 1,
+        outputMimeType: 'image/png',
+        includeRaiReason: true,
       },
     });
 
-    const candidates = response.candidates ?? [];
-    let generatedImage: { data: string; mimeType: string } | null = null;
+    const generatedImage = response.generatedImages?.find((image) => image.image?.imageBytes);
 
-    for (const candidate of candidates) {
-      const parts = candidate?.content?.parts ?? [];
-      for (const part of parts) {
-        const inlineImage = extractInlineImage(part);
-        if (inlineImage) {
-          generatedImage = {
-            data: inlineImage.data,
-            mimeType: inlineImage.mimeType ?? 'image/png',
-          };
-          break;
-        }
-
-        const downloaded = await downloadFilePart(aiClient, part);
-        if (downloaded) {
-          generatedImage = {
-            data: downloaded.data,
-            mimeType: downloaded.mimeType ?? 'image/png',
-          };
-          break;
-        }
-      }
-
-      if (generatedImage) {
-        break;
-      }
-    }
-
-    await cleanupUploadedFiles(aiClient, uploadedImageParts);
-
-    if (generatedImage) {
+    if (generatedImage?.image?.imageBytes) {
       generationSuccess = true;
-      
+
       // 记录生成日志
       await logGeneration({
         userId,
@@ -383,8 +255,9 @@ export default async function handler(
         timestamp: new Date().toISOString(),
       });
 
+      const mimeType = generatedImage.image.mimeType ?? 'image/png';
       return res.status(200).json({
-        imageUrl: `data:${generatedImage.mimeType};base64,${generatedImage.data}`,
+        imageUrl: `data:${mimeType};base64,${generatedImage.image.imageBytes}`,
         creditsUsed: requiredCredits,
         creditsRemaining: remainingCredits,
       });
@@ -400,7 +273,7 @@ export default async function handler(
       timestamp: new Date().toISOString(),
     });
 
-    console.error('API response did not contain inline or file-based image data:', JSON.stringify(response, null, 2));
+    console.error('API response did not contain generated image data:', JSON.stringify(response, null, 2));
     return res.status(500).json({
       error: 'API response did not contain image data.'
     });
@@ -415,11 +288,6 @@ export default async function handler(
       errorDetails: JSON.stringify(error, null, 2)
     });
     
-    // 清理上传的文件
-    if (ai && uploadedImageParts.length > 0) {
-      await cleanupUploadedFiles(ai, uploadedImageParts);
-    }
-
     // 如果生成失败，回滚信用点
     if (!generationSuccess) {
       await refundCredits(userId, requiredCredits);

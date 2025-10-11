@@ -269,152 +269,33 @@ export async function compressInWorker(
 ): Promise<CompressionResult> {
     const startTime = Date.now();
     const originalSize = file.size;
-    
-    // Select strategy
-    const strategy = getCompressionStrategy(originalSize);
-    
-    if (onProgress) {
-        onProgress(`Processing image in background...`);
-    }
-    
-    console.log(`🔧 Starting worker compression: ${(originalSize / 1024).toFixed(0)}KB`);
-    
-    // Check if Web Workers are supported
-    if (!supportsWebWorkers()) {
-        console.log('⚠️ Web Workers not supported, falling back to main thread');
-        return smartCompress(file, onProgress);
-    }
-    
-    try {
-        // Read file to base64
-        const base64 = await readFileAsDataURL(file);
-        
-        // Create worker
-        const workerCode = `
-            self.onmessage = async (e) => {
-                const { base64, maxSize, quality, format } = e.data;
-                
-                try {
-                    const img = new Image();
-                    img.onload = () => {
-                        try {
-                            let width = img.width;
-                            let height = img.height;
-                            
-                            if (width > maxSize || height > maxSize) {
-                                const scale = Math.min(maxSize / width, maxSize / height);
-                                width = Math.floor(width * scale);
-                                height = Math.floor(height * scale);
-                            }
-                            
-                            const canvas = new OffscreenCanvas ? new OffscreenCanvas(width, height) : document.createElement('canvas');
-                            if (!canvas.width) canvas.width = width;
-                            if (!canvas.height) canvas.height = height;
-                            
-                            const ctx = canvas.getContext('2d', {
-                                alpha: format === 'png',
-                                willReadFrequently: false
-                            });
-                            
-                            if (!ctx) {
-                                self.postMessage({ type: 'error', error: 'Failed to get context' });
-                                return;
-                            }
-                            
-                            ctx.imageSmoothingEnabled = true;
-                            ctx.imageSmoothingQuality = 'high';
-                            ctx.drawImage(img, 0, 0, width, height);
-                            
-                            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                            
-                            if (canvas.convertToBlob) {
-                                canvas.convertToBlob({ type: mimeType, quality }).then(blob => {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                        self.postMessage({ type: 'success', base64: reader.result });
-                                    };
-                                    reader.readAsDataURL(blob);
-                                });
-                            } else {
-                                const dataUrl = canvas.toDataURL(mimeType, quality);
-                                self.postMessage({ type: 'success', base64: dataUrl });
-                            }
-                        } catch (error) {
-                            self.postMessage({ type: 'error', error: error.message });
-                        }
-                    };
-                    img.onerror = () => {
-                        self.postMessage({ type: 'error', error: 'Failed to load image' });
-                    };
-                    img.src = base64;
-                } catch (error) {
-                    self.postMessage({ type: 'error', error: error.message });
-                }
-            };
-        `;
-        
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(blob);
-        const worker = new Worker(workerUrl);
-        
-        // Send compression job to worker
-        const compressed = await new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                worker.terminate();
-                reject(new Error('Worker timeout'));
-            }, 30000); // 30 second timeout
-            
-            worker.onmessage = (e) => {
-                clearTimeout(timeout);
-                worker.terminate();
-                URL.revokeObjectURL(workerUrl);
-                
-                if (e.data.type === 'success') {
-                    resolve(e.data.base64);
-                } else {
-                    reject(new Error(e.data.error));
-                }
-            };
-            
-            worker.onerror = (error) => {
-                clearTimeout(timeout);
-                worker.terminate();
-                URL.revokeObjectURL(workerUrl);
-                reject(error);
-            };
-            
-            // Send message to worker
-            worker.postMessage({
-                base64,
-                maxSize: strategy.maxSize,
-                quality: strategy.quality,
-                format: strategy.format
-            });
-        });
-        
-        const compressedSize = getBase64Size(compressed);
-        const reduction = ((1 - compressedSize / originalSize) * 100);
-        const timeTaken = Date.now() - startTime;
-        
-        console.log(`✅ Worker compression complete: ${reduction.toFixed(0)}% smaller in ${timeTaken}ms`);
-        
+
+    // 对于小文件直接跳过压缩以避免不必要的失败
+    const SMALL_FILE_THRESHOLD = 300 * 1024; // 300KB
+    if (originalSize <= SMALL_FILE_THRESHOLD) {
         if (onProgress) {
-            onProgress(`Optimized! ${reduction.toFixed(0)}% smaller`);
+            onProgress('Image is small, skipping compression...');
         }
-        
+
+        const base64 = await readFileAsDataURL(file);
         return {
-            base64: compressed,
+            base64,
             originalSize,
-            compressedSize,
-            reduction,
-            timeTaken,
-            strategy: strategy.label + ' (worker)'
+            compressedSize: originalSize,
+            reduction: 0,
+            timeTaken: Date.now() - startTime,
+            strategy: 'skipped (small file)'
         };
-        
-    } catch (error) {
-        console.warn('Worker compression failed, falling back to main thread:', error);
-        // Fallback to main thread
+    }
+
+    // Web Worker + OffscreenCanvas 在部分浏览器/iframe 中经常失败，直接回退主线程压缩更稳定
+    if (!supportsWebWorkers() || typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap === 'undefined') {
+        console.log('⚠️ Background compression not fully supported, using main thread compression');
         return smartCompress(file, onProgress);
     }
+
+    // 即便环境支持，也暂时禁用 Worker 压缩以保证上传成功率
+    console.log('ℹ️ Worker compression disabled for reliability, using main thread compression');
+    return smartCompress(file, onProgress);
 }
 
