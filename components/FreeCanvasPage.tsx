@@ -404,6 +404,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const clearButtonRef = useRef<HTMLButtonElement>(null);
     const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+    
+    // Track component mount state to prevent state updates after unmount
+    const isMountedRef = useRef<boolean>(true);
+    
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
 
     const getPathBoundingBox = (path: DrawablePath): { x: number; y: number; width: number; height: number } | null => {
@@ -1017,43 +1027,77 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (!workspace) throw new Error("Workspace not found");
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
         if (!ctx) throw new Error("Canvas context not available");
 
         const rect = workspace.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        
+        // Limit canvas size to prevent memory issues (max 4096x4096)
+        const MAX_SIZE = 4096;
+        let width = Math.min(rect.width, MAX_SIZE);
+        let height = Math.min(rect.height, MAX_SIZE);
+        const scale = Math.min(width / rect.width, height / rect.height);
+        
+        canvas.width = width;
+        canvas.height = height;
         
         ctx.fillStyle = '#F9FAFB'; // Match BG color
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw images
-        const imagePromises = images.map(imgData => new Promise<void>(resolve => {
+        // Draw images with timeout
+        const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
+        const imagePromises = images.map(imgData => new Promise<void>((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = "anonymous";
+            
+            const timeout = setTimeout(() => {
+                reject(new Error(`Image load timeout: ${imgData.src.substring(0, 50)}...`));
+            }, IMAGE_LOAD_TIMEOUT);
+            
             img.onload = () => {
-                ctx.drawImage(img, imgData.x, imgData.y, imgData.width, imgData.height);
-                resolve();
+                clearTimeout(timeout);
+                try {
+                    ctx.drawImage(img, imgData.x * scale, imgData.y * scale, imgData.width * scale, imgData.height * scale);
+                    resolve();
+                } catch (err) {
+                    console.error("Error drawing image:", err);
+                    resolve(); // Don't block on error
+                }
             };
-            img.onerror = () => resolve(); // Don't block on error
+            img.onerror = () => {
+                clearTimeout(timeout);
+                console.warn("Failed to load image:", imgData.src.substring(0, 50));
+                resolve(); // Don't block on error
+            };
             img.src = imgData.src;
         }));
-        await Promise.all(imagePromises);
+        
+        try {
+            await Promise.all(imagePromises);
+        } catch (err) {
+            console.error("Some images failed to load:", err);
+            // Continue anyway with the images that did load
+        }
 
-        // Draw paths
+        // Draw paths with scaling
         paths.forEach(path => {
             if (path.points.length < 2) return;
             ctx.beginPath();
-            ctx.moveTo(path.points[0].x, path.points[0].y);
-            path.points.forEach(point => ctx.lineTo(point.x, point.y));
+            ctx.moveTo(path.points[0].x * scale, path.points[0].y * scale);
+            path.points.slice(1).forEach(point => ctx.lineTo(point.x * scale, point.y * scale));
             ctx.strokeStyle = path.color;
-            ctx.lineWidth = path.size;
+            ctx.lineWidth = path.size * scale;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
         });
 
-        return canvas.toDataURL('image/png');
+        try {
+            return canvas.toDataURL('image/png');
+        } catch (err) {
+            console.error("Error converting canvas to data URL:", err);
+            throw new Error("Failed to process canvas image. The image may be too large.");
+        }
     };
     
     const createCompositeForGeneration = async (
@@ -1063,41 +1107,100 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         annotations: Annotation[]
     ): Promise<string> => {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
         if (!ctx) throw new Error("Canvas context not available");
 
+        const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
+        const MAX_CANVAS_SIZE = 4096; // Maximum dimension
+
+        // Load base image with timeout
         const baseImgEl = new Image();
         baseImgEl.crossOrigin = "anonymous";
         const baseImgPromise = new Promise<void>((resolve, reject) => {
-            baseImgEl.onload = () => resolve();
-            baseImgEl.onerror = reject;
+            const timeout = setTimeout(() => {
+                reject(new Error("Base image load timeout"));
+            }, IMAGE_LOAD_TIMEOUT);
+            
+            baseImgEl.onload = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+            baseImgEl.onerror = () => {
+                clearTimeout(timeout);
+                reject(new Error("Failed to load base image"));
+            };
         });
         baseImgEl.src = baseImage.src;
-        await baseImgPromise;
         
-        canvas.width = baseImgEl.naturalWidth;
-        canvas.height = baseImgEl.naturalHeight;
+        try {
+            await baseImgPromise;
+        } catch (err) {
+            console.error("Base image load error:", err);
+            throw new Error("Failed to load base image. Please try again.");
+        }
+        
+        // Limit canvas size to prevent memory issues
+        let canvasWidth = baseImgEl.naturalWidth;
+        let canvasHeight = baseImgEl.naturalHeight;
+        
+        if (canvasWidth > MAX_CANVAS_SIZE || canvasHeight > MAX_CANVAS_SIZE) {
+            const scale = Math.min(MAX_CANVAS_SIZE / canvasWidth, MAX_CANVAS_SIZE / canvasHeight);
+            canvasWidth = Math.floor(canvasWidth * scale);
+            canvasHeight = Math.floor(canvasHeight * scale);
+        }
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
 
         const scaleX = canvas.width / baseImage.width;
         const scaleY = canvas.height / baseImage.height;
 
-        ctx.drawImage(baseImgEl, 0, 0);
+        // Draw base image
+        try {
+            ctx.drawImage(baseImgEl, 0, 0, canvas.width, canvas.height);
+        } catch (err) {
+            console.error("Error drawing base image:", err);
+            throw new Error("Failed to process base image");
+        }
 
-        const overlayPromises = overlayImages.map(overlay => new Promise<void>(resolve => {
+        // Load and draw overlay images with timeout
+        const overlayPromises = overlayImages.map(overlay => new Promise<void>((resolve, reject) => {
             const overlayImgEl = new Image();
             overlayImgEl.crossOrigin = "anonymous";
+            
+            const timeout = setTimeout(() => {
+                console.warn("Overlay image load timeout, skipping");
+                resolve(); // Don't block on timeout
+            }, IMAGE_LOAD_TIMEOUT);
+            
             overlayImgEl.onload = () => {
-                const relX = (overlay.x - baseImage.x) * scaleX;
-                const relY = (overlay.y - baseImage.y) * scaleY;
-                const scaledWidth = overlay.width * scaleX;
-                const scaledHeight = overlay.height * scaleY;
-                ctx.drawImage(overlayImgEl, relX, relY, scaledWidth, scaledHeight);
-                resolve();
+                clearTimeout(timeout);
+                try {
+                    const relX = (overlay.x - baseImage.x) * scaleX;
+                    const relY = (overlay.y - baseImage.y) * scaleY;
+                    const scaledWidth = overlay.width * scaleX;
+                    const scaledHeight = overlay.height * scaleY;
+                    ctx.drawImage(overlayImgEl, relX, relY, scaledWidth, scaledHeight);
+                    resolve();
+                } catch (err) {
+                    console.error("Error drawing overlay:", err);
+                    resolve(); // Don't block on error
+                }
             };
-            overlayImgEl.onerror = () => resolve();
+            overlayImgEl.onerror = () => {
+                clearTimeout(timeout);
+                console.warn("Failed to load overlay image, skipping");
+                resolve(); // Don't block on error
+            };
             overlayImgEl.src = overlay.src;
         }));
-        await Promise.all(overlayPromises);
+        
+        try {
+            await Promise.all(overlayPromises);
+        } catch (err) {
+            console.error("Some overlay images failed to load:", err);
+            // Continue anyway
+        }
 
         paths.forEach(path => {
             if (path.points.length < 2) return;
@@ -1144,7 +1247,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             ctx.fillText(ann.label, boxX, boxY - (5 * scaleY));
         });
 
-        return canvas.toDataURL('image/png');
+        try {
+            return canvas.toDataURL('image/png');
+        } catch (err) {
+            console.error("Error converting canvas to data URL:", err);
+            throw new Error("Failed to process composite image. The image may be too large.");
+        }
     };
 
     const handleGenerate = async () => {
@@ -1211,8 +1319,18 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             const generatedUrl = await generateImage(
                 finalPrompt, 
                 [imageForApiData],
-                (progress) => setGenerationProgress(progress)
+                (progress) => {
+                    if (isMountedRef.current) {
+                        setGenerationProgress(progress);
+                    }
+                }
             );
+    
+            // Check if component is still mounted before updating state
+            if (!isMountedRef.current) {
+                console.log("Component unmounted, skipping state updates");
+                return;
+            }
     
             // Note: Backend automatically deducted 1 credit after successful generation
             // The parent component should refresh user data to show updated credits
@@ -1240,6 +1358,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             console.error("Generation failed:", err);
             const errorMessage = err instanceof Error ? err.message : String(err);
             
+            // Check if component is still mounted before updating state
+            if (!isMountedRef.current) {
+                console.log("Component unmounted, skipping error handling");
+                return;
+            }
+            
             // Handle specific error cases
             if (errorMessage.includes('logged in') || errorMessage.includes('Authentication')) {
                 onError("Please log in to use this feature.");
@@ -1253,8 +1377,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 onError(`Generation failed: ${errorMessage}`);
             }
         } finally {
-            setIsLoading(false);
-            setGenerationProgress('');
+            if (isMountedRef.current) {
+                setIsLoading(false);
+                setGenerationProgress('');
+            }
         }
     };
 
