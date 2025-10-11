@@ -259,6 +259,18 @@ export default async function handler(
       });
     }
 
+    // 验证图像数量（Vertex AI 限制：最多 3 张）
+    if (base64Images.length > 3) {
+      await refundCredits(userId, requiredCredits);
+      console.error(`❌ Too many images: ${base64Images.length} (max: 3)`);
+      return res.status(400).json({
+        error: 'Too many images',
+        details: 'Maximum 3 reference images allowed',
+        limit: 3,
+        provided: base64Images.length
+      });
+    }
+
     console.log(`🔧 Initializing Google GenAI client for user ${userId}...`);
     const aiClient = new GoogleGenAI({ apiKey });
     ai = aiClient;
@@ -274,6 +286,26 @@ export default async function handler(
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
+    }
+
+    // 验证每张图像大小（最大 7MB）
+    for (const [index, imgData] of normalizedImages.entries()) {
+      const buffer = Buffer.from(imgData, 'base64');
+      const sizeInMB = buffer.length / (1024 * 1024);
+      
+      console.log(`📊 Image ${index + 1}: ${sizeInMB.toFixed(2)}MB`);
+      
+      if (sizeInMB > 7) {
+        await refundCredits(userId, requiredCredits);
+        console.error(`❌ Image ${index + 1} too large: ${sizeInMB.toFixed(2)}MB (max: 7MB)`);
+        return res.status(400).json({
+          error: 'Image too large',
+          details: `Image ${index + 1} is ${sizeInMB.toFixed(2)}MB (max: 7MB)`,
+          imageIndex: index + 1,
+          sizeMB: sizeInMB.toFixed(2),
+          maxMB: 7
+        });
+      }
     }
 
     uploadedImageParts = (
@@ -307,6 +339,10 @@ export default async function handler(
       }],
       config: {
         responseModalities: [Modality.IMAGE],
+        // Generation config for optimal results
+        temperature: 1.0,
+        topP: 0.95,
+        candidateCount: 1,
       },
     });
 
@@ -345,6 +381,11 @@ export default async function handler(
     if (generatedImage) {
       generationSuccess = true;
       
+      // Log response size
+      const responseSizeKB = (generatedImage.data.length / 1024).toFixed(0);
+      console.log(`📊 Response size: ${responseSizeKB}KB`);
+      console.log(`✅ Image generated successfully for user ${userId}`);
+      
       // 记录生成日志
       await logGeneration({
         userId,
@@ -363,6 +404,12 @@ export default async function handler(
 
     // 生成失败，回滚信用点
     await refundCredits(userId, requiredCredits);
+    console.error('❌ Response structure:', {
+      hasCandidates: candidates.length > 0,
+      candidateCount: candidates.length,
+      hasContent: candidates[0]?.content !== undefined,
+      partsCount: candidates[0]?.content?.parts?.length
+    });
     await logGeneration({
       userId,
       type: 'image',

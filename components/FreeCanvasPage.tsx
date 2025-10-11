@@ -1116,10 +1116,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             ctx.stroke();
         });
 
-        annotations.forEach(ann => {
+        console.log(`🏷️ [Composite] Drawing ${annotations.length} annotations...`);
+        const annotationStart = performance.now();
+        
+        annotations.forEach((ann, i) => {
+            console.log(`🏷️ [Composite] Ann ${i+1}/${annotations.length}: "${ann.label}" (${ann.shape}) at (${Math.round(ann.box.x)}, ${Math.round(ann.box.y)})`);
+            
             ctx.strokeStyle = '#f59e0b'; // amber-500
             ctx.lineWidth = 2 * scaleX;
-            ctx.setLineDash([6 * scaleX, 3 * scaleX]);
+            // Removed setLineDash for better performance (solid line instead of dashed)
+            // ctx.setLineDash([6 * scaleX, 3 * scaleX]);
     
             const boxX = (ann.box.x - baseImage.x) * scaleX;
             const boxY = (ann.box.y - baseImage.y) * scaleY;
@@ -1134,15 +1140,35 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 ctx.stroke();
             }
     
-            ctx.setLineDash([]);
+            // ctx.setLineDash([]); // No longer needed
     
+            // Use system font for better performance
             ctx.fillStyle = '#f59e0b';
-            const fontSize = 14 * scaleX;
-            ctx.font = `bold ${fontSize}px sans-serif`;
-            ctx.fillText(ann.label, boxX, boxY - (5 * scaleY));
+            const fontSize = Math.floor(14 * scaleX);
+            ctx.font = `bold ${fontSize}px Arial`;
+            
+            try {
+                ctx.fillText(ann.label, boxX, boxY - (5 * scaleY));
+            } catch (err) {
+                console.warn(`⚠️ [Composite] Failed to render text for annotation ${ann.label}:`, err);
+            }
         });
+        
+        const annotationTime = performance.now() - annotationStart;
+        console.log(`✅ [Composite] Annotations drawn in ${annotationTime.toFixed(0)}ms`);
 
-        return canvas.toDataURL('image/png');
+        // Convert to data URL with performance monitoring
+        console.log('🔄 [Canvas] Converting to data URL...');
+        const convertStart = performance.now();
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // Use JPEG for faster performance
+        const convertTime = performance.now() - convertStart;
+        console.log(`✅ [Canvas] Converted in ${convertTime.toFixed(0)}ms: ${(dataUrl.length / 1024).toFixed(0)}KB`);
+        
+        if (convertTime > 5000) {
+            console.warn(`⚠️ [Canvas] Slow conversion: ${(convertTime/1000).toFixed(1)}s`);
+        }
+        
+        return dataUrl;
     };
 
     const handleGenerate = async () => {
@@ -1178,6 +1204,17 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         dragInfo.current = null;
         resizeInfo.current = null;
         setIsDrawing(false);
+        
+        console.log('🚀 [Generate] Starting generation process');
+        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}, Annotations: ${annotations.length}`);
+        
+        // Log annotations details
+        if (annotations.length > 0) {
+            console.log(`🏷️ [Generate] ${annotations.length} annotations detected:`);
+            annotations.forEach((ann, i) => {
+                console.log(`  ${i+1}. "${ann.label}" - ${ann.shape} (${Math.round(ann.box.width)}x${Math.round(ann.box.height)})`);
+            });
+        }
     
         try {
             let imageForApi: string;
@@ -1187,26 +1224,56 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 // The first image in the array (bottom layer) is the base for generation.
                 const baseImage = images[0];
                 const overlayImages = images.slice(1);
-    
+                
+                console.log('🔍 [Generate] Step 1: Creating composite');
                 imageForApi = await createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                console.log('✅ [Generate] Step 1: Complete');
     
-                if (annotations.length > 0) {
-                     finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image marked with numbered boxes. These boxes are instructional overlays and indicate specific areas for editing. Your task is to perform the edits described in the user's prompt, which are mapped to these numbered boxes. After applying the edits, you MUST completely remove the boxes and their labels. The final output must be a clean, photorealistic image with no trace of any instructional markings (no boxes, no dashed lines, no numbers, no labels). It should look like a real photograph. The user's instructions are: "${prompt}"`;
+                // Log prompt strategy
+                console.log(`📝 [Prompt] Paths: ${paths.length}, Annotations: ${annotations.length}, Overlays: ${overlayImages.length}`);
+                const strategy = annotations.length > 0 && paths.length > 0 ? 'Combined' : annotations.length > 0 ? 'Annotations' : paths.length > 0 ? 'Drawings' : 'Text-only';
+                console.log(`📝 [Prompt] Strategy: ${strategy}`);
+                
+                // Improved prompt strategy - handle combinations
+                if (annotations.length > 0 && paths.length > 0) {
+                    // Both annotations and drawings
+                    finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image with:
+1) ${annotations.length} numbered boxes (solid outlines with labels) that mark specific areas for editing
+2) Additional freehand drawings/marks that provide visual guidance
+Both the numbered boxes and the drawings are instructional overlays. Your task is to perform the edits described in the user's prompt, which are mapped to these visual guides. After applying the edits, you MUST completely remove ALL markers (boxes, labels, drawings, any visual guides). The final output must be a clean, photorealistic image with no trace of any instructional markings. User's instructions: "${prompt}"`;
+                } else if (annotations.length > 0) {
+                    // Only annotations
+                    finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image marked with ${annotations.length} numbered boxes (solid outlines with labels). These boxes indicate specific areas for editing. Your task is to perform the edits described in the user's prompt, which are mapped to these numbered boxes. After applying the edits, you MUST completely remove the boxes and their labels. The final output must be a clean, photorealistic image with no trace of any instructional markings (no boxes, no lines, no numbers, no labels). User's instructions: "${prompt}"`;
                 } else if (overlayImages.length > 0 || paths.length > 0) {
-                     finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
+                    // Only drawings/overlays
+                    finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
                 } else {
-                    // Just one image and a text prompt, treat as a general transformation.
+                    // Only text
                     finalPrompt = `You are an expert photo editor. Your task is to transform the provided image based on the user's prompt. Produce a new, photorealistic version of the original image with the requested changes seamlessly integrated. User's prompt: "${prompt}"`;
                 }
     
             } else {
                 // No images, only drawings. Generate from scratch on the whole canvas.
+                console.log('🔍 [Generate] Step 1: Capturing canvas');
                 imageForApi = await captureCanvasAsImage();
+                console.log('✅ [Generate] Step 1: Complete');
                 finalPrompt = `Generate a photorealistic image based on the user's drawings on a blank canvas and their text prompt. The drawings provide a rough sketch or composition. The text prompt is: "${prompt}"`;
             }
             
+            console.log('🔍 [Generate] Step 2: Validating image data');
             const imageForApiData = imageForApi.split(',')[1];
+            
+            if (!imageForApiData) {
+                console.error('❌ [Generate] Invalid image data format');
+                throw new Error('Invalid image data format');
+            }
+            
+            console.log('✅ [Generate] Step 2: Complete');
+            console.log(`📊 [Generate] Image size: ${(imageForApiData.length / 1024).toFixed(0)}KB`);
+            
+            console.log('🔍 [Generate] Step 3: Sending to API...');
             const generatedUrl = await generateImage(finalPrompt, [imageForApiData]);
+            console.log('✅ [Generate] Step 3: Complete');
     
             // Note: Backend automatically deducted 5 credits after successful generation
             // The parent component should refresh user data to show updated credits
