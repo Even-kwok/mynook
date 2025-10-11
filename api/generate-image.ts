@@ -293,7 +293,7 @@ export default async function handler(
     }
 
     console.log(`📤 Uploaded ${uploadedImageParts.length} images, calling Gemini API...`);
-    const modelName = 'gemini-2.5-flash-image';
+    const modelName = 'gemini-2.5-flash-image-preview';
     console.log(`🤖 Using model: ${modelName}`);
     
     const response = await aiClient.models.generateContent({
