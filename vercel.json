@@ -1,7 +1,16 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
   "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@3.0.0"
+    },
     "api/generate-image.ts": {
       "maxDuration": 60,
       "memory": 3008
