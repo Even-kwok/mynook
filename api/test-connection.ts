@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { getEnvVar } from './lib/env';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 只允许 GET 请求
@@ -9,40 +10,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const checks: Record<string, string> = {};
   const errors: string[] = [];
+  const envStatus: Record<string, string> = {};
 
   try {
     // ========== 检查 1: API 基础响应 ==========
     checks.api = '✅ API responding';
 
     // ========== 检查 2: 环境变量 ==========
-    const requiredEnvVars = [
-      'VITE_SUPABASE_URL',
-      'VITE_SUPABASE_ANON_KEY',
-      'SUPABASE_SERVICE_KEY',
-      'CREEM_API_KEY',
-      'CREEM_WEBHOOK_SECRET'
-    ];
-
-    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    // 检查 Supabase URL
+    const supabaseUrl = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+    envStatus.SUPABASE_URL = supabaseUrl ? '✅ Found' : '❌ Missing';
     
-    if (missingVars.length > 0) {
-      checks.env = `❌ Missing: ${missingVars.join(', ')}`;
-      errors.push(`Missing environment variables: ${missingVars.join(', ')}`);
+    // 检查 Supabase Service Key
+    const supabaseServiceKey = getEnvVar('SUPABASE_SERVICE_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY');
+    envStatus.SUPABASE_SERVICE_KEY = supabaseServiceKey ? '✅ Found' : '❌ Missing';
+    
+    // 检查 Supabase Anon Key (可选)
+    const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
+    envStatus.SUPABASE_ANON_KEY = supabaseAnonKey ? '✅ Found' : '⚠️ Missing (optional)';
+    
+    // 检查 CREEM (可选)
+    const creemApiKey = getEnvVar('CREEM_API_KEY');
+    envStatus.CREEM_API_KEY = creemApiKey ? '✅ Found' : '⚠️ Missing (needed for payments)';
+
+    const missingCritical = [];
+    if (!supabaseUrl) missingCritical.push('SUPABASE_URL');
+    if (!supabaseServiceKey) missingCritical.push('SUPABASE_SERVICE_KEY');
+    
+    if (missingCritical.length > 0) {
+      checks.env = `❌ Missing critical vars: ${missingCritical.join(', ')}`;
+      errors.push(`Missing environment variables: ${missingCritical.join(', ')}`);
     } else {
-      checks.env = '✅ All env vars present';
+      checks.env = '✅ Critical env vars present';
     }
 
     // ========== 检查 3: Supabase 连接 ==========
     let supabaseClient;
     try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-      if (!supabaseUrl || !supabaseKey) {
+      if (!supabaseUrl || !supabaseServiceKey) {
         throw new Error('Supabase credentials not found');
       }
 
-      supabaseClient = createClient(supabaseUrl, supabaseKey);
+      supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
       
       // 尝试执行简单查询
       const { data, error } = await supabaseClient
@@ -104,6 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(allChecksPassed ? 200 : 500).json({
       status: allChecksPassed ? 'ok' : 'error',
       checks,
+      envStatus,
       errors: errors.length > 0 ? errors : undefined,
       user: userData,
       timestamp: new Date().toISOString(),
