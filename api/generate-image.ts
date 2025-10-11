@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, RawReferenceImage } from '@google/genai';
+import { GoogleGenAI, Part } from '@google/genai';
 import { Buffer } from 'node:buffer';
 import {
   verifyUserToken,
@@ -94,8 +94,8 @@ const detectImageType = (
   return { mimeType: 'image/png', extension: 'png' };
 };
 
-const buildReferenceImages = (normalizedImages: string[]): RawReferenceImage[] => {
-  return normalizedImages.map((imgData, index) => {
+const buildImageParts = (normalizedImages: string[]): Part[] => {
+  return normalizedImages.map((imgData) => {
     try {
       const buffer = Buffer.from(imgData, 'base64');
       if (buffer.length === 0) {
@@ -103,19 +103,18 @@ const buildReferenceImages = (normalizedImages: string[]): RawReferenceImage[] =
       }
 
       const { mimeType } = detectImageType(buffer);
-      const reference = new RawReferenceImage();
-      reference.referenceId = index;
-      reference.referenceImage = {
-        imageBytes: imgData,
-        mimeType,
-      };
-
-      return reference;
+      
+      return {
+        inlineData: {
+          data: imgData,
+          mimeType,
+        },
+      } as Part;
     } catch (error) {
-      console.error('Failed to build reference image for editing:', error);
+      console.error('Failed to build image part:', error);
       return null;
     }
-  }).filter((value): value is RawReferenceImage => value !== null);
+  }).filter((value): value is Part => value !== null);
 };
 
 export default async function handler(
@@ -215,35 +214,35 @@ export default async function handler(
       });
     }
 
-    const referenceImages = buildReferenceImages(normalizedImages);
+    const imageParts = buildImageParts(normalizedImages);
 
-    if (referenceImages.length === 0) {
+    if (imageParts.length === 0) {
       // 回滚信用点
       await refundCredits(userId, requiredCredits);
-      console.error('❌ No valid reference images could be built');
+      console.error('❌ No valid image parts could be built');
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
     }
 
-    console.log(`📤 Prepared ${referenceImages.length} reference images, calling Gemini API...`);
+    console.log(`📤 Prepared ${imageParts.length} image parts, calling Gemini API...`);
     const modelName = 'gemini-2.5-flash-image';
     console.log(`🤖 Using model: ${modelName}`);
 
-    const response = await aiClient.models.editImage({
+    // Build contents array: first all image parts, then the text prompt
+    const contents = [...imageParts, instruction];
+
+    const response = await aiClient.models.generateContent({
       model: modelName,
-      prompt: instruction,
-      referenceImages,
-      config: {
-        numberOfImages: 1,
-        outputMimeType: 'image/png',
-        includeRaiReason: true,
-      },
+      contents,
     });
 
-    const generatedImage = response.generatedImages?.find((image) => image.image?.imageBytes);
+    // Extract the generated image from the response
+    const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(
+      (part: any) => part.inlineData
+    );
 
-    if (generatedImage?.image?.imageBytes) {
+    if (generatedImagePart?.inlineData?.data) {
       generationSuccess = true;
 
       // 记录生成日志
@@ -255,9 +254,11 @@ export default async function handler(
         timestamp: new Date().toISOString(),
       });
 
-      const mimeType = generatedImage.image.mimeType ?? 'image/png';
+      const mimeType = generatedImagePart.inlineData.mimeType ?? 'image/png';
+      const base64ImageBytes = generatedImagePart.inlineData.data;
+      
       return res.status(200).json({
-        imageUrl: `data:${mimeType};base64,${generatedImage.image.imageBytes}`,
+        imageUrl: `data:${mimeType};base64,${base64ImageBytes}`,
         creditsUsed: requiredCredits,
         creditsRemaining: remainingCredits,
       });
