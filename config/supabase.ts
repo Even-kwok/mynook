@@ -5,10 +5,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
+import { getEnvVar } from '../utils/env';
 
 // 从环境变量获取配置
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL');
+const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
 
 // 验证环境变量
 if (!supabaseUrl || !supabaseAnonKey) {

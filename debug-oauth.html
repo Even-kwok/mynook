@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth 诊断工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #60a5fa;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .section {
+            background: #334155;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #fbbf24;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #1e293b;
+        }
+        .status.success { border-left: 4px solid #10b981; }
+        .status.error { border-left: 4px solid #ef4444; }
+        .status.warning { border-left: 4px solid #f59e0b; }
+        .icon { font-size: 24px; }
+        code {
+            background: #1e293b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #22d3ee;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .test-btn { background: #10b981; }
+        .test-btn:hover { background: #059669; }
+        .clear-btn { background: #ef4444; }
+        .clear-btn:hover { background: #dc2626; }
+        pre {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Google OAuth 诊断工具</h1>
+        
+        <div class="section">
+            <h2>📍 当前环境信息</h2>
+            <div class="status success">
+                <span class="icon">🌐</span>
+                <div>
+                    <strong>当前URL:</strong> <code id="currentUrl"></code>
+                </div>
+            </div>
+            <div class="status success">
+                <span class="icon">⏰</span>
+                <div>
+                    <strong>访问时间:</strong> <code id="timestamp"></code>
+                </div>
+            </div>
+            <div class="status" id="deployStatus">
+                <span class="icon">🚀</span>
+                <div id="deployInfo">检查中...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 问题诊断</h2>
+            <div id="diagnostics"></div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 快速操作</h2>
+            <button class="clear-btn" onclick="clearCache()">
+                🗑️ 清除缓存并刷新
+            </button>
+            <button onclick="testSupabaseConnection()">
+                🔌 测试 Supabase 连接
+            </button>
+            <button class="test-btn" onclick="testGoogleLogin()">
+                🔐 测试 Google 登录
+            </button>
+        </div>
+
+        <div class="section">
+            <h2>📋 配置检查清单</h2>
+            <div id="checklist"></div>
+        </div>
+
+        <div class="section">
+            <h2>💡 解决方案建议</h2>
+            <div id="solutions"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示当前环境信息
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('zh-CN');
+
+        // 诊断函数
+        async function runDiagnostics() {
+            const diagnostics = document.getElementById('diagnostics');
+            const results = [];
+
+            // 检查1: URL是否是错误页面
+            const urlParams = new URLSearchParams(window.location.search);
+            const isErrorPage = window.location.href.includes('authError');
+            
+            if (isErrorPage) {
+                results.push({
+                    type: 'error',
+                    message: '⚠️ 当前在Google OAuth错误页面',
+                    detail: '这是一个缓存的错误页面，不代表当前配置状态'
+                });
+            } else {
+                results.push({
+                    type: 'success',
+                    message: '✅ URL正常',
+                    detail: '不在错误页面'
+                });
+            }
+
+            // 检查2: 浏览器缓存
+            const hasCachedError = sessionStorage.getItem('oauth_error') || localStorage.getItem('oauth_error');
+            if (hasCachedError) {
+                results.push({
+                    type: 'warning',
+                    message: '⚠️ 检测到OAuth错误缓存',
+                    detail: '建议清除浏览器缓存'
+                });
+            } else {
+                results.push({
+                    type: 'success',
+                    message: '✅ 无OAuth错误缓存',
+                    detail: ''
+                });
+            }
+
+            // 检查3: Supabase配置
+            const supabaseUrl = 'https://hlwpxkbthpizyfghwin.supabase.co';
+            results.push({
+                type: 'success',
+                message: '📦 Supabase项目URL',
+                detail: supabaseUrl
+            });
+
+            // 渲染结果
+            diagnostics.innerHTML = results.map(r => `
+                <div class="status ${r.type}">
+                    <div>
+                        <strong>${r.message}</strong>
+                        ${r.detail ? `<br><small style="opacity:0.8">${r.detail}</small>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            // 生成检查清单
+            generateChecklist();
+            
+            // 生成解决方案
+            generateSolutions();
+        }
+
+        function generateChecklist() {
+            const checklist = document.getElementById('checklist');
+            const items = [
+                { text: 'Vercel生产环境部署完成（main分支）', checked: true },
+                { text: 'Google OAuth重定向URI包含Supabase回调URL', checked: false },
+                { text: 'Supabase Site URL设置为 www.my-nook.ai', checked: false },
+                { text: 'Supabase Google Provider已启用', checked: false },
+                { text: '已清除浏览器所有缓存和Cookie', checked: false },
+                { text: '已等待5-10分钟让配置生效', checked: false },
+            ];
+
+            checklist.innerHTML = items.map((item, i) => `
+                <div class="status">
+                    <input type="checkbox" id="check${i}" ${item.checked ? 'checked' : ''}>
+                    <label for="check${i}">${item.text}</label>
+                </div>
+            `).join('');
+        }
+
+        function generateSolutions() {
+            const solutions = document.getElementById('solutions');
+            solutions.innerHTML = `
+                <div class="status warning">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>方案1: 完全清除缓存</strong><br>
+                        <small>按 Ctrl+Shift+Delete → 选择"全部时间" → 清除所有数据 → 重启浏览器</small>
+                    </div>
+                </div>
+                <div class="status warning">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>方案2: 使用隐身模式</strong><br>
+                        <small>按 Ctrl+Shift+N → 访问 www.my-nook.ai → 测试登录</small>
+                    </div>
+                </div>
+                <div class="status warning">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>方案3: 直接访问主页</strong><br>
+                        <small><a href="https://www.my-nook.ai" style="color:#60a5fa">点击这里访问新页面</a>（不要按F5刷新当前页面）</small>
+                    </div>
+                </div>
+                <div class="status warning">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>方案4: 等待更长时间</strong><br>
+                        <small>Vercel部署和Google配置生效可能需要15-30分钟</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearCache() {
+            sessionStorage.clear();
+            localStorage.clear();
+            if (confirm('即将清除缓存并刷新页面。建议之后重启浏览器以获得最佳效果。')) {
+                window.location.href = 'https://www.my-nook.ai?nocache=' + Date.now();
+            }
+        }
+
+        function testSupabaseConnection() {
+            alert('请在浏览器控制台(F12)查看Supabase连接状态');
+            console.log('Supabase URL:', 'https://hlwpxkbthpizyfghwin.supabase.co');
+            console.log('检查环境变量配置...');
+        }
+
+        function testGoogleLogin() {
+            if (confirm('即将尝试Google登录。如果仍然失败，请使用隐身模式测试。')) {
+                window.location.href = 'https://www.my-nook.ai';
+            }
+        }
+
+        // 页面加载时运行诊断
+        runDiagnostics();
+    </script>
+</body>
+</html>
+

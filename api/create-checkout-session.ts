@@ -6,6 +6,7 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { getEnvVar } from '../utils/env';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('========== Step 1: Validating request ==========');
@@ -32,8 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Initialize Supabase client
     console.log('========== Step 3: Initializing Supabase ==========');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const supabaseUrl = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+    const supabaseKey = getEnvVar('SUPABASE_SERVICE_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ Missing Supabase credentials');

@@ -6,11 +6,23 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { getUserActiveSubscription } from '../services/subscriptionService';
+import { getEnvVar } from '../utils/env';
 
 // Initialize Supabase client with service role key
+const supabaseUrl = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+const supabaseServiceKey = getEnvVar(
+  'SUPABASE_SERVICE_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'VITE_SUPABASE_SERVICE_ROLE_KEY'
+);
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Supabase credentials are not configured');
+}
+
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  supabaseUrl,
+  supabaseServiceKey,
 );
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -65,9 +77,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     console.error('Error fetching subscription status:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Failed to fetch subscription status',
-      message: error.message 
+      message: error.message
     });
   }
 }
