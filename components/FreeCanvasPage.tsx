@@ -331,7 +331,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     setCanvasState
 }) => {
     // 检查用户是否有权限使用生成功能（只有 Premium 和 Business 可以生成）
-    const hasGeneratePermission = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
+    // 未登录用户不受此限制（登录时才检查权限）
+    const hasGeneratePermission = !currentUser || (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const workspaceRef = useRef<HTMLDivElement>(null);
