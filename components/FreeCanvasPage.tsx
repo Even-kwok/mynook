@@ -1032,11 +1032,14 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
         const rect = workspace.getBoundingClientRect();
         
-        // Limit canvas size to prevent memory issues (max 4096x4096)
-        const MAX_SIZE = 4096;
+        // Limit canvas size to prevent memory issues (max 2048x2048 for stability)
+        // Reduced from 4096 to 2048 to prevent browser crashes on lower-end devices
+        const MAX_SIZE = 2048;
         let width = Math.min(rect.width, MAX_SIZE);
         let height = Math.min(rect.height, MAX_SIZE);
         const scale = Math.min(width / rect.width, height / rect.height);
+        
+        console.log(`Canvas capture: Original ${rect.width}x${rect.height}, Scaled to ${width}x${height}`);
         
         canvas.width = width;
         canvas.height = height;
@@ -1093,7 +1096,13 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         });
 
         try {
-            return canvas.toDataURL('image/png');
+            const dataUrl = canvas.toDataURL('image/png');
+            
+            // Force garbage collection hint by clearing canvas
+            canvas.width = 0;
+            canvas.height = 0;
+            
+            return dataUrl;
         } catch (err) {
             console.error("Error converting canvas to data URL:", err);
             throw new Error("Failed to process canvas image. The image may be too large.");
@@ -1111,7 +1120,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (!ctx) throw new Error("Canvas context not available");
 
         const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
-        const MAX_CANVAS_SIZE = 4096; // Maximum dimension
+        const MAX_CANVAS_SIZE = 2048; // Maximum dimension (reduced to prevent crashes)
 
         // Load base image with timeout
         const baseImgEl = new Image();
@@ -1148,6 +1157,18 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             canvasWidth = Math.floor(canvasWidth * scale);
             canvasHeight = Math.floor(canvasHeight * scale);
         }
+        
+        // Additional safety check: ensure total pixels don't exceed safe limit
+        const MAX_PIXELS = 2048 * 2048; // 4 megapixels max
+        const totalPixels = canvasWidth * canvasHeight;
+        if (totalPixels > MAX_PIXELS) {
+            const pixelScale = Math.sqrt(MAX_PIXELS / totalPixels);
+            canvasWidth = Math.floor(canvasWidth * pixelScale);
+            canvasHeight = Math.floor(canvasHeight * pixelScale);
+            console.warn(`Canvas size reduced to ${canvasWidth}x${canvasHeight} to stay within safe memory limits`);
+        }
+        
+        console.log(`Composite canvas: ${baseImgEl.naturalWidth}x${baseImgEl.naturalHeight} -> ${canvasWidth}x${canvasHeight}`);
         
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
@@ -1248,7 +1269,13 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         });
 
         try {
-            return canvas.toDataURL('image/png');
+            const dataUrl = canvas.toDataURL('image/png');
+            
+            // Force garbage collection hint by clearing canvas
+            canvas.width = 0;
+            canvas.height = 0;
+            
+            return dataUrl;
         } catch (err) {
             console.error("Error converting canvas to data URL:", err);
             throw new Error("Failed to process composite image. The image may be too large.");
@@ -1278,6 +1305,27 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (!prompt || (images.length === 0 && paths.length === 0)) {
             onError("Please add an image or drawing and provide a prompt.");
             return;
+        }
+        
+        // 图片数量限制 - 防止内存溢出
+        const MAX_IMAGES = 5;
+        if (images.length > MAX_IMAGES) {
+            onError(`Too many images! Please use ${MAX_IMAGES} or fewer images to prevent browser crashes.`);
+            return;
+        }
+        
+        // 检查图片大小警告
+        const largeImages = images.filter(img => {
+            const imgElement = document.querySelector(`img[src="${img.src}"]`) as HTMLImageElement;
+            if (imgElement) {
+                const size = imgElement.naturalWidth * imgElement.naturalHeight;
+                return size > 2048 * 2048;
+            }
+            return false;
+        });
+        
+        if (largeImages.length > 0) {
+            console.warn(`${largeImages.length} large image(s) detected, will be automatically scaled down`);
         }
     
         // Start loading state (don't deduct credits here - backend will handle it)
