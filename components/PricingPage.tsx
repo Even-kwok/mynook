@@ -89,14 +89,18 @@ export const PricingPage: React.FC = () => {
 
         try {
             // Get user session token
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !session || !session.access_token) {
+                console.error('Session error:', sessionError);
                 setShowLoginModal(true);
                 return;
             }
 
-            // Call API to create checkout session
-            const response = await fetch('/api/create-checkout-session', {
+            console.log('✅ Session obtained, calling subscription API...');
+
+            // Call API to create checkout session (using new pure JS API)
+            const response = await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
