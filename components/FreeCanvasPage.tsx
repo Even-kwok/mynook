@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback, MouseEvent as ReactMouseEvent, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toBase64 } from '../utils/imageUtils';
+import { compressInWorker, CompressionResult } from '../utils/imageCompression';
 import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
@@ -331,7 +332,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     setCanvasState
 }) => {
     // 检查用户是否有权限使用生成功能（只有 Premium 和 Business 可以生成）
-    const hasGeneratePermission = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
+    // 未登录用户不受此限制（登录时才检查权限）
+    const hasGeneratePermission = !currentUser || (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const workspaceRef = useRef<HTMLDivElement>(null);
@@ -389,7 +391,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     // Local UI state, doesn't need to be persisted
     const [drawingAnnotation, setDrawingAnnotation] = useState<{ startX: number; startY: number; currentBox?: { x: number; y: number; width: number; height: number; } } | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [generationProgress, setGenerationProgress] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
+    const [uploadProgress, setUploadProgress] = useState<string>('');
+    const [compressionStats, setCompressionStats] = useState<CompressionResult | null>(null);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
     const [editingPreset, setEditingPreset] = useState<PromptPreset | { name: string; prompt: string } | null>(null);
@@ -402,6 +407,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const clearButtonRef = useRef<HTMLButtonElement>(null);
     const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+    
+    // Track component mount state to prevent state updates after unmount
+    const isMountedRef = useRef<boolean>(true);
+    
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
 
     const getPathBoundingBox = (path: DrawablePath): { x: number; y: number; width: number; height: number } | null => {
@@ -532,12 +547,55 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         const file = event.target.files?.[0];
         if (file) {
             try {
-                const base64 = await toBase64(file);
+                // Show upload progress
+                setUploadProgress('Loading image...');
+                
+                const startTime = Date.now();
+                const originalSizeKB = (file.size / 1024).toFixed(0);
+                console.log(`📤 Uploading image: ${originalSizeKB}KB`);
+                
+                let imageDataUrl: string;
+                let compressionInfo = '';
+                
+                // Try Web Worker compression first, fall back to direct load
+                try {
+                    setUploadProgress('Optimizing image...');
+                    const compressionResult = await compressInWorker(
+                        file,
+                        (progress) => setUploadProgress(progress)
+                    );
+                    
+                    if (compressionResult && compressionResult.base64) {
+                        imageDataUrl = compressionResult.base64;
+                        setCompressionStats(compressionResult);
+                        
+                        const processingTime = Date.now() - startTime;
+                        const compressedSizeKB = (compressionResult.compressedSize / 1024).toFixed(0);
+                        compressionInfo = `${compressionResult.reduction.toFixed(0)}% smaller`;
+                        
+                        console.log(`✅ Image optimized: ${originalSizeKB}KB → ${compressedSizeKB}KB (${compressionInfo}) in ${processingTime}ms`);
+                    } else {
+                        throw new Error('Compression returned invalid result');
+                    }
+                } catch (compressionError) {
+                    console.warn('⚠️ Compression failed, using original image:', compressionError);
+                    setUploadProgress('Using original image...');
+                    
+                    // Fallback: use original image without compression
+                    imageDataUrl = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target?.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                // Load image to canvas
                 const img = new Image();
                 img.onload = () => {
                     const newImage: CanvasImage = {
                         id: `img_${Date.now()}`,
-                        src: base64,
+                        src: imageDataUrl,
                         x: 50,
                         y: 50,
                         width: img.width > 400 ? 400 : img.width,
@@ -545,11 +603,22 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         rotation: 0,
                     };
                     setImages(prev => [...prev, newImage]);
+                    
+                    // Show success message briefly
+                    const successMsg = compressionInfo ? `✨ Optimized! ${compressionInfo}` : '✅ Image loaded';
+                    setUploadProgress(successMsg);
+                    setTimeout(() => setUploadProgress(''), 3000);
                 };
-                img.src = base64;
+                img.onerror = () => {
+                    console.error("Failed to load image");
+                    onError("Failed to load image.");
+                    setUploadProgress('');
+                };
+                img.src = imageDataUrl;
             } catch (err) {
                 console.error("Error processing image:", err);
                 onError("Failed to load image.");
+                setUploadProgress('');
             }
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1015,43 +1084,93 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (!workspace) throw new Error("Workspace not found");
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
         if (!ctx) throw new Error("Canvas context not available");
 
         const rect = workspace.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        
+        // Optimize canvas size for faster API upload and processing
+        // Smaller size = faster upload + faster AI processing
+        // 1024x1024 is optimal for Gemini API (good quality, fast processing)
+        const MAX_SIZE = 1024;
+        let width = Math.min(rect.width, MAX_SIZE);
+        let height = Math.min(rect.height, MAX_SIZE);
+        const scale = Math.min(width / rect.width, height / rect.height);
+        
+        console.log(`Canvas capture: Original ${rect.width}x${rect.height}, Scaled to ${width}x${height}`);
+        
+        canvas.width = width;
+        canvas.height = height;
         
         ctx.fillStyle = '#F9FAFB'; // Match BG color
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw images
-        const imagePromises = images.map(imgData => new Promise<void>(resolve => {
+        // Draw images with timeout
+        const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
+        const imagePromises = images.map(imgData => new Promise<void>((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "anonymous";
+            // Only set crossOrigin for external URLs, not for data URLs
+            if (!imgData.src.startsWith('data:')) {
+                img.crossOrigin = "anonymous";
+            }
+            
+            const timeout = setTimeout(() => {
+                console.warn(`Image load timeout: ${imgData.src.substring(0, 50)}...`);
+                resolve(); // Don't reject, just skip this image
+            }, IMAGE_LOAD_TIMEOUT);
+            
             img.onload = () => {
-                ctx.drawImage(img, imgData.x, imgData.y, imgData.width, imgData.height);
-                resolve();
+                clearTimeout(timeout);
+                try {
+                    ctx.drawImage(img, imgData.x * scale, imgData.y * scale, imgData.width * scale, imgData.height * scale);
+                    resolve();
+                } catch (err) {
+                    console.error("Error drawing image:", err);
+                    resolve(); // Don't block on error
+                }
             };
-            img.onerror = () => resolve(); // Don't block on error
+            img.onerror = () => {
+                clearTimeout(timeout);
+                console.warn("Failed to load image:", imgData.src.substring(0, 50));
+                resolve(); // Don't block on error
+            };
             img.src = imgData.src;
         }));
-        await Promise.all(imagePromises);
+        
+        try {
+            await Promise.all(imagePromises);
+        } catch (err) {
+            console.error("Some images failed to load:", err);
+            // Continue anyway with the images that did load
+        }
 
-        // Draw paths
+        // Draw paths with scaling
         paths.forEach(path => {
             if (path.points.length < 2) return;
             ctx.beginPath();
-            ctx.moveTo(path.points[0].x, path.points[0].y);
-            path.points.forEach(point => ctx.lineTo(point.x, point.y));
+            ctx.moveTo(path.points[0].x * scale, path.points[0].y * scale);
+            path.points.slice(1).forEach(point => ctx.lineTo(point.x * scale, point.y * scale));
             ctx.strokeStyle = path.color;
-            ctx.lineWidth = path.size;
+            ctx.lineWidth = path.size * scale;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
         });
 
-        return canvas.toDataURL('image/png');
+        try {
+            // Use JPEG with quality 0.85 for much faster upload (smaller file size)
+            // This significantly reduces API upload time (PNG can be 10x larger)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            
+            // Force garbage collection hint by clearing canvas
+            canvas.width = 0;
+            canvas.height = 0;
+            
+            return dataUrl;
+        } catch (err) {
+            console.error("Error converting canvas to data URL:", err);
+            throw new Error("Failed to process canvas image. The image may be too large.");
+        }
     };
     
     const createCompositeForGeneration = async (
@@ -1060,42 +1179,125 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         paths: DrawablePath[],
         annotations: Annotation[]
     ): Promise<string> => {
+        console.log('🖼️ [Composite] Start');
+        console.log(`📏 [Composite] Base: ${baseImage.width}x${baseImage.height}`);
+        
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
         if (!ctx) throw new Error("Canvas context not available");
 
+        const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
+        const MAX_CANVAS_SIZE = 1024; // Optimal size for fast API processing (reduced for speed)
+
+        // Load base image with timeout
+        console.log('🔄 [Composite] Loading base image...');
         const baseImgEl = new Image();
-        baseImgEl.crossOrigin = "anonymous";
+        // Only set crossOrigin for external URLs, not for data URLs
+        if (!baseImage.src.startsWith('data:')) {
+            baseImgEl.crossOrigin = "anonymous";
+        }
         const baseImgPromise = new Promise<void>((resolve, reject) => {
-            baseImgEl.onload = () => resolve();
-            baseImgEl.onerror = reject;
+            const timeout = setTimeout(() => {
+                reject(new Error("Base image load timeout"));
+            }, IMAGE_LOAD_TIMEOUT);
+            
+            baseImgEl.onload = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+            baseImgEl.onerror = () => {
+                clearTimeout(timeout);
+                reject(new Error("Failed to load base image"));
+            };
         });
         baseImgEl.src = baseImage.src;
-        await baseImgPromise;
         
-        canvas.width = baseImgEl.naturalWidth;
-        canvas.height = baseImgEl.naturalHeight;
+        try {
+            await baseImgPromise;
+            console.log('✅ [Composite] Base image loaded');
+        } catch (err) {
+            console.error("❌ [Composite] Base image load error:", err);
+            throw new Error("Failed to load base image. Please try again.");
+        }
+        
+        // Limit canvas size to prevent memory issues
+        let canvasWidth = baseImgEl.naturalWidth;
+        let canvasHeight = baseImgEl.naturalHeight;
+        
+        if (canvasWidth > MAX_CANVAS_SIZE || canvasHeight > MAX_CANVAS_SIZE) {
+            const scale = Math.min(MAX_CANVAS_SIZE / canvasWidth, MAX_CANVAS_SIZE / canvasHeight);
+            canvasWidth = Math.floor(canvasWidth * scale);
+            canvasHeight = Math.floor(canvasHeight * scale);
+        }
+        
+        // Additional safety check: ensure total pixels don't exceed safe limit
+        const MAX_PIXELS = 2048 * 2048; // 4 megapixels max
+        const totalPixels = canvasWidth * canvasHeight;
+        if (totalPixels > MAX_PIXELS) {
+            const pixelScale = Math.sqrt(MAX_PIXELS / totalPixels);
+            canvasWidth = Math.floor(canvasWidth * pixelScale);
+            canvasHeight = Math.floor(canvasHeight * pixelScale);
+            console.warn(`Canvas size reduced to ${canvasWidth}x${canvasHeight} to stay within safe memory limits`);
+        }
+        
+        console.log(`Composite canvas: ${baseImgEl.naturalWidth}x${baseImgEl.naturalHeight} -> ${canvasWidth}x${canvasHeight}`);
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
 
         const scaleX = canvas.width / baseImage.width;
         const scaleY = canvas.height / baseImage.height;
 
-        ctx.drawImage(baseImgEl, 0, 0);
+        // Draw base image
+        try {
+            ctx.drawImage(baseImgEl, 0, 0, canvas.width, canvas.height);
+        } catch (err) {
+            console.error("Error drawing base image:", err);
+            throw new Error("Failed to process base image");
+        }
 
-        const overlayPromises = overlayImages.map(overlay => new Promise<void>(resolve => {
+        // Load and draw overlay images with timeout
+        const overlayPromises = overlayImages.map(overlay => new Promise<void>((resolve, reject) => {
             const overlayImgEl = new Image();
-            overlayImgEl.crossOrigin = "anonymous";
+            // Only set crossOrigin for external URLs, not for data URLs
+            if (!overlay.src.startsWith('data:')) {
+                overlayImgEl.crossOrigin = "anonymous";
+            }
+            
+            const timeout = setTimeout(() => {
+                console.warn("Overlay image load timeout, skipping");
+                resolve(); // Don't block on timeout
+            }, IMAGE_LOAD_TIMEOUT);
+            
             overlayImgEl.onload = () => {
-                const relX = (overlay.x - baseImage.x) * scaleX;
-                const relY = (overlay.y - baseImage.y) * scaleY;
-                const scaledWidth = overlay.width * scaleX;
-                const scaledHeight = overlay.height * scaleY;
-                ctx.drawImage(overlayImgEl, relX, relY, scaledWidth, scaledHeight);
-                resolve();
+                clearTimeout(timeout);
+                try {
+                    const relX = (overlay.x - baseImage.x) * scaleX;
+                    const relY = (overlay.y - baseImage.y) * scaleY;
+                    const scaledWidth = overlay.width * scaleX;
+                    const scaledHeight = overlay.height * scaleY;
+                    ctx.drawImage(overlayImgEl, relX, relY, scaledWidth, scaledHeight);
+                    resolve();
+                } catch (err) {
+                    console.error("Error drawing overlay:", err);
+                    resolve(); // Don't block on error
+                }
             };
-            overlayImgEl.onerror = () => resolve();
+            overlayImgEl.onerror = () => {
+                clearTimeout(timeout);
+                console.warn("Failed to load overlay image, skipping");
+                resolve(); // Don't block on error
+            };
             overlayImgEl.src = overlay.src;
         }));
-        await Promise.all(overlayPromises);
+        
+        try {
+            await Promise.all(overlayPromises);
+            console.log(`✅ [Composite] ${overlayImages.length} overlay images loaded`);
+        } catch (err) {
+            console.error("⚠️ [Composite] Some overlay images failed to load:", err);
+            // Continue anyway
+        }
 
         paths.forEach(path => {
             if (path.points.length < 2) return;
@@ -1157,18 +1359,22 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         const annotationTime = performance.now() - annotationStart;
         console.log(`✅ [Composite] Annotations drawn in ${annotationTime.toFixed(0)}ms`);
 
-        // Convert to data URL with performance monitoring
-        console.log('🔄 [Canvas] Converting to data URL...');
-        const convertStart = performance.now();
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // Use JPEG for faster performance
-        const convertTime = performance.now() - convertStart;
-        console.log(`✅ [Canvas] Converted in ${convertTime.toFixed(0)}ms: ${(dataUrl.length / 1024).toFixed(0)}KB`);
-        
-        if (convertTime > 5000) {
-            console.warn(`⚠️ [Canvas] Slow conversion: ${(convertTime/1000).toFixed(1)}s`);
+        try {
+            // Use JPEG with quality 0.85 for much faster upload (smaller file size)
+            // This significantly reduces API upload time (PNG can be 10x larger)
+            console.log('🔄 [Composite] Converting canvas to data URL...');
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            console.log(`✅ [Composite] Conversion complete: ${(dataUrl.length / 1024).toFixed(0)}KB`);
+            
+            // Force garbage collection hint by clearing canvas
+            canvas.width = 0;
+            canvas.height = 0;
+            
+            return dataUrl;
+        } catch (err) {
+            console.error("❌ [Composite] Error converting canvas to data URL:", err);
+            throw new Error("Failed to process composite image. The image may be too large.");
         }
-        
-        return dataUrl;
     };
 
     const handleGenerate = async () => {
@@ -1195,6 +1401,27 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             onError("Please add an image or drawing and provide a prompt.");
             return;
         }
+        
+        // 图片数量限制 - 防止内存溢出
+        const MAX_IMAGES = 5;
+        if (images.length > MAX_IMAGES) {
+            onError(`Too many images! Please use ${MAX_IMAGES} or fewer images to prevent browser crashes.`);
+            return;
+        }
+        
+        // 检查图片大小警告
+        const largeImages = images.filter(img => {
+            const imgElement = document.querySelector(`img[src="${img.src}"]`) as HTMLImageElement;
+            if (imgElement) {
+                const size = imgElement.naturalWidth * imgElement.naturalHeight;
+                return size > 2048 * 2048;
+            }
+            return false;
+        });
+        
+        if (largeImages.length > 0) {
+            console.warn(`${largeImages.length} large image(s) detected, will be automatically scaled down`);
+        }
     
         // Start loading state (don't deduct credits here - backend will handle it)
         setIsLoading(true);
@@ -1207,14 +1434,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         
         console.log('🚀 [Generate] Starting generation process');
         console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}, Annotations: ${annotations.length}`);
-        
-        // Log annotations details
-        if (annotations.length > 0) {
-            console.log(`🏷️ [Generate] ${annotations.length} annotations detected:`);
-            annotations.forEach((ann, i) => {
-                console.log(`  ${i+1}. "${ann.label}" - ${ann.shape} (${Math.round(ann.box.width)}x${Math.round(ann.box.height)})`);
-            });
-        }
     
         try {
             let imageForApi: string;
@@ -1225,9 +1444,35 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 const baseImage = images[0];
                 const overlayImages = images.slice(1);
                 
+                // Check if image is very large
+                const estimatedPixels = baseImage.width * baseImage.height;
+                console.log(`📊 [Generate] Estimated pixels: ${estimatedPixels.toLocaleString()}`);
+                if (estimatedPixels > 4 * 1024 * 1024) {
+                    console.warn('⚠️ [Generate] Very large image detected');
+                    setGenerationProgress('Processing large image, this may take a while...');
+                }
+    
+                setGenerationProgress('Step 1: Preparing image...');
                 console.log('🔍 [Generate] Step 1: Creating composite');
-                imageForApi = await createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
-                console.log('✅ [Generate] Step 1: Complete');
+                
+                // Add timeout protection for composite creation
+                const COMPOSITE_TIMEOUT = 30000; // 30 seconds
+                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('Image processing timeout after 30s')), COMPOSITE_TIMEOUT)
+                );
+                
+                try {
+                    imageForApi = await Promise.race([compositePromise, timeoutPromise]);
+                    console.log('✅ [Generate] Step 1: Complete');
+                } catch (err) {
+                    if (err instanceof Error && err.message.includes('timeout')) {
+                        throw new Error('Image processing is taking too long. Try using a smaller image or fewer overlays.');
+                    }
+                    throw err;
+                }
+                
+                console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
                 // Log prompt strategy
                 console.log(`📝 [Prompt] Paths: ${paths.length}, Annotations: ${annotations.length}, Overlays: ${overlayImages.length}`);
@@ -1254,28 +1499,55 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
     
             } else {
                 // No images, only drawings. Generate from scratch on the whole canvas.
+                setGenerationProgress('Step 1: Capturing canvas...');
                 console.log('🔍 [Generate] Step 1: Capturing canvas');
+                console.log(`🎨 [Generate] Paths: ${paths.length}`);
+                
                 imageForApi = await captureCanvasAsImage();
-                console.log('✅ [Generate] Step 1: Complete');
+                
+                console.log(`✅ [Generate] Step 1: Complete - ${(imageForApi.length / 1024).toFixed(0)}KB`);
                 finalPrompt = `Generate a photorealistic image based on the user's drawings on a blank canvas and their text prompt. The drawings provide a rough sketch or composition. The text prompt is: "${prompt}"`;
             }
             
+            // Validate imageForApi
+            setGenerationProgress('Step 2: Validating...');
             console.log('🔍 [Generate] Step 2: Validating image data');
+            
+            if (!imageForApi || typeof imageForApi !== 'string') {
+                console.error('❌ [Generate] Image data is invalid:', typeof imageForApi);
+                throw new Error('Failed to prepare image for generation. Please try again.');
+            }
+            
             const imageForApiData = imageForApi.split(',')[1];
             
             if (!imageForApiData) {
-                console.error('❌ [Generate] Invalid image data format');
-                throw new Error('Invalid image data format');
+                console.error('❌ [Generate] Image data format is invalid');
+                throw new Error('Invalid image data format. Please try uploading again.');
             }
             
             console.log('✅ [Generate] Step 2: Complete');
             console.log(`📊 [Generate] Image size: ${(imageForApiData.length / 1024).toFixed(0)}KB`);
             
-            console.log('🔍 [Generate] Step 3: Sending to API...');
-            const generatedUrl = await generateImage(finalPrompt, [imageForApiData]);
-            console.log('✅ [Generate] Step 3: Complete');
+            setGenerationProgress('Step 3: Sending to AI...');
+            console.log('🔍 [Generate] Step 3: Calling API...');
+            
+            const generatedUrl = await generateImage(
+                finalPrompt, 
+                [imageForApiData],
+                (progress) => {
+                    if (isMountedRef.current) {
+                        setGenerationProgress(progress);
+                    }
+                }
+            );
     
-            // Note: Backend automatically deducted 5 credits after successful generation
+            // Check if component is still mounted before updating state
+            if (!isMountedRef.current) {
+                console.log("Component unmounted, skipping state updates");
+                return;
+            }
+    
+            // Note: Backend automatically deducted 1 credit after successful generation
             // The parent component should refresh user data to show updated credits
     
             // Save to history
@@ -1301,6 +1573,12 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
             console.error("Generation failed:", err);
             const errorMessage = err instanceof Error ? err.message : String(err);
             
+            // Check if component is still mounted before updating state
+            if (!isMountedRef.current) {
+                console.log("Component unmounted, skipping error handling");
+                return;
+            }
+            
             // Handle specific error cases
             if (errorMessage.includes('logged in') || errorMessage.includes('Authentication')) {
                 onError("Please log in to use this feature.");
@@ -1314,7 +1592,10 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                 onError(`Generation failed: ${errorMessage}`);
             }
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) {
+                setIsLoading(false);
+                setGenerationProgress('');
+            }
         }
     };
 
@@ -1464,11 +1745,17 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                 <p className="text-sm text-slate-500">Combine images, draw annotations, and use a prompt to generate a new creation.</p>
                             </div>
 
-                            <Button onClick={() => fileInputRef.current?.click()}>
+                            <Button onClick={() => fileInputRef.current?.click()} disabled={!!uploadProgress && !uploadProgress.includes('✨')}>
                                 <IconUpload />
                                 Upload Image
                             </Button>
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
+                            
+                            {uploadProgress && (
+                                <div className={`text-xs px-3 py-2 rounded-lg ${uploadProgress.includes('✨') ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'} animate-fade-in`}>
+                                    {uploadProgress}
+                                </div>
+                            )}
                             
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-4">
                                 <h3 className="text-base font-semibold text-slate-800">Tools</h3>
@@ -1605,8 +1892,26 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                 </aside>
                 <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
                      {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-20">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
+                            <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
+                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
+                                {generationProgress && (
+                                    <p className="text-base text-gray-800 font-semibold animate-pulse">
+                                        {generationProgress}
+                                    </p>
+                                )}
+                                <div className="text-center space-y-1">
+                                    <p className="text-sm text-gray-600 font-medium">
+                                        ⚡ Optimizing image for faster processing...
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Usually takes 20-60 seconds
+                                    </p>
+                                    <p className="text-xs text-indigo-600 font-medium mt-2">
+                                        💡 Tip: Smaller images process faster!
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     )}
                     <AnimatePresence>

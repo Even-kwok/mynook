@@ -7,37 +7,29 @@ import { createClient } from '@supabase/supabase-js';
 import { MEMBERSHIP_CONFIG } from '../types/database';
 import { getEnvVar } from '../utils/env';
 
-// Create Supabase client that works in both browser and Node.js
+// Create Supabase client for server-side use
 const getSupabaseClient = () => {
-  // In Node.js environment (Vercel Functions)
-  if (typeof process !== 'undefined' && process.env) {
-    const url = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') || '';
-    const key =
-      getEnvVar(
-        'SUPABASE_SERVICE_KEY',
-        'SUPABASE_SERVICE_ROLE_KEY',
-        'VITE_SUPABASE_SERVICE_ROLE_KEY',
-        'VITE_SUPABASE_ANON_KEY',
-        'SUPABASE_ANON_KEY',
-        'NEXT_PUBLIC_SUPABASE_ANON_KEY'
-      ) || '';
-    return createClient(url, key);
+  // Get environment variables
+  const url = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') || '';
+  const key = getEnvVar(
+    'SUPABASE_SERVICE_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'VITE_SUPABASE_SERVICE_ROLE_KEY',
+    'VITE_SUPABASE_ANON_KEY',
+    'SUPABASE_ANON_KEY',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  ) || '';
+  
+  if (!url || !key) {
+    throw new Error('Unable to initialize Supabase client: missing URL or key');
   }
   
-  // In browser environment
-  if (typeof window !== 'undefined') {
-    try {
-      const url = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL') || '';
-      const key = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY') || '';
-      if (url && key) {
-        return createClient(url, key);
-      }
-    } catch (e) {
-      // Fallback if import.meta is not available
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-  }
-  
-  throw new Error('Unable to initialize Supabase client');
+  });
 };
 
 const supabase = getSupabaseClient();

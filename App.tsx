@@ -14,6 +14,7 @@ import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
+import { TermsPage } from './components/TermsPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -1069,7 +1070,8 @@ const CustomSelect: React.FC<{
     value: string;
     onChange: (value: string) => void;
     label: string;
-}> = ({ options, value, onChange, label }) => {
+    disabled?: boolean;
+}> = ({ options, value, onChange, label, disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const selectRef = useRef<HTMLDivElement>(null);
     const selectedOption = useMemo(() => options.find(opt => opt.id === value), [options, value]);
@@ -1085,8 +1087,10 @@ const CustomSelect: React.FC<{
     }, []);
 
     const handleSelect = (optionId: string) => {
-        onChange(optionId);
-        setIsOpen(false);
+        if (!disabled) {
+            onChange(optionId);
+            setIsOpen(false);
+        }
     };
 
     return (
@@ -1095,14 +1099,19 @@ const CustomSelect: React.FC<{
             <div className="relative" ref={selectRef}>
                 <button
                     type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center justify-between p-4 bg-white/50 backdrop-blur-xl border border-slate-300 rounded-2xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    onClick={() => !disabled && setIsOpen(!isOpen)}
+                    disabled={disabled}
+                    className={`w-full flex items-center justify-between p-4 backdrop-blur-xl border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                        disabled 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-white/50 border-slate-300 text-slate-800'
+                    }`}
                 >
                     <span className="truncate">{selectedOption?.name || 'Select...'}</span>
-                    <IconChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <IconChevronDown className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${disabled ? 'text-slate-300' : 'text-slate-500'} ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
-                    {isOpen && (
+                    {isOpen && !disabled && (
                         <motion.ul
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -1481,8 +1490,9 @@ const App: React.FC = () => {
         { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true },
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
     ];
-    const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>(ADMIN_PAGE_CATEGORIES);
-    const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>(Object.keys(ADMIN_PAGE_CATEGORIES));
+    // ⚠️ 修复：初始状态设为空对象，避免显示硬编码的残留数据
+    const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>({});
+    const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>([]);
     const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
 
     // Load templates from database on mount
@@ -1521,9 +1531,14 @@ const App: React.FC = () => {
 
     // 动态生成可用的房间类型列表（只显示有启用模板的房间类型）
     const availableRoomTypes = useMemo(() => {
+        // ⚠️ 修复：数据加载期间返回空数组，不显示硬编码数据
+        if (templatesLoading) {
+            return [];
+        }
+        
         const interiorData = adminTemplateData["Interior Design"];
         if (!interiorData || interiorData.length === 0) {
-            return ROOM_TYPES; // fallback 到硬编码列表
+            return []; // 数据库为空时也返回空数组，不使用硬编码fallback
         }
         
         // 从数据库数据生成房间类型选项（只包含有模板的房间类型）
@@ -1538,8 +1553,8 @@ const App: React.FC = () => {
                 };
             });
         
-        return roomTypeOptions.length > 0 ? roomTypeOptions : ROOM_TYPES;
-    }, [adminTemplateData]);
+        return roomTypeOptions;
+    }, [adminTemplateData, templatesLoading]);
     
     // 确保当前选择的房间类型在可用列表中，否则选择第一个
     useEffect(() => {
@@ -1634,7 +1649,18 @@ const App: React.FC = () => {
                 return prev.filter(id => id !== templateId);
             }
             
-            // 根据会员等级限制可选择的模板数量
+            // 未登录用户可以自由选择模板（最多9个），登录时才检查权限
+            if (!currentUser) {
+                const MAX_SELECTION = 9;
+                if (prev.length < MAX_SELECTION) {
+                    return [...prev, templateId];
+                }
+                setError(`You can select up to ${MAX_SELECTION} templates at a time.`);
+                setTimeout(() => setError(null), 3000);
+                return prev;
+            }
+            
+            // 已登录用户：根据会员等级限制可选择的模板数量
             const membershipTier = getUserMembershipTier();
             const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
             
@@ -1722,6 +1748,18 @@ const App: React.FC = () => {
         }
         if (selectedTemplateIds.length === 0) {
             setError("Please select a design style.");
+            return;
+        }
+        
+        // 检查会员等级的模板选择数量限制
+        const membershipTier = getUserMembershipTier();
+        const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
+        
+        if (selectedTemplateIds.length > maxTemplates) {
+            setError(`Your ${MEMBERSHIP_CONFIG[membershipTier].name} plan allows generating up to ${maxTemplates} template${maxTemplates > 1 ? 's' : ''} at a time. You have selected ${selectedTemplateIds.length}. Please upgrade or reduce your selection.`);
+            setIsUpgradeModalOpen(true);
+            setUpgradeFeatureName('Multiple Template Generation');
+            setUpgradeRequiredTier(membershipTier === 'free' ? 'pro' : 'premium');
             return;
         }
         
@@ -2243,7 +2281,7 @@ const App: React.FC = () => {
                     setCanvasState={setFreeCanvasState}
                 />;
             case 'Terms':
-                 return <ComingSoonPage pageName={activePage} />;
+                return <TermsPage />;
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
@@ -2407,12 +2445,15 @@ const App: React.FC = () => {
                             )}
 
                             {['Interior Design', 'Festive Decor'].includes(activePage) && (
-                                <CustomSelect
-                                    label="Choose a Room Type"
-                                    options={availableRoomTypes}
-                                    value={selectedRoomType}
-                                    onChange={setSelectedRoomType}
-                                />
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Room Type"
+                                        options={availableRoomTypes.length > 0 ? availableRoomTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No room types available'}]}
+                                        value={availableRoomTypes.length > 0 ? selectedRoomType : 'loading'}
+                                        onChange={setSelectedRoomType}
+                                        disabled={templatesLoading || availableRoomTypes.length === 0}
+                                    />
+                                </div>
                             )}
                             {activePage === 'Exterior Design' && (
                                 <CustomSelect
@@ -2492,7 +2533,7 @@ const App: React.FC = () => {
                                 ) : (
                                     <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Generating..." : `Generate ${selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Design(s)` : ''} (${selectedTemplateIds.length > 0 ? selectedTemplateIds.length : 1} Credit${selectedTemplateIds.length > 1 ? 's' : ''})`}
+                                        {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
                                     </Button>
                                 )}
                             </div>
