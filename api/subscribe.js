@@ -148,7 +148,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           product_id: productId,
-          request_id: `sub_${userId}_${Date.now()}`,
+          request_id: `sub_${userData.id}_${Date.now()}`,
           units: 1,
           customer: {
             email: userData.email,
@@ -194,7 +194,7 @@ export default async function handler(req, res) {
           email: userData.email,
           requestedPlan: planType,
           billingCycle: billingCycle,
-          amount: amount,
+          productId: productId,
         }
       });
     }

@@ -129,7 +129,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           product_id: pack.productId,
-          request_id: `credits_${userId}_${Date.now()}`,
+          request_id: `credits_${userData.id}_${Date.now()}`,
           units: 1,
           customer: {
             email: userData.email,
