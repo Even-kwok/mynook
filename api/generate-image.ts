@@ -170,21 +170,26 @@ export default async function handler(
   // 3. 执行图片生成
   // ========================================
 
-  // Get API key from environment variables (server-side only)
-  const apiKey = process.env.GEMINI_API_KEY;
+  // 检查是否配置了 Vertex AI（推荐用于 gemini-2.5-flash-image）
+  const useVertexAI = process.env.GOOGLE_GENAI_USE_VERTEXAI === 'true' || 
+                      process.env.GOOGLE_CLOUD_PROJECT;
   
-  if (!apiKey) {
+  if (!useVertexAI) {
     // 回滚信用点
     await refundCredits(userId, requiredCredits);
-    console.error('❌ GEMINI_API_KEY is not configured in environment variables');
-    console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
+    console.error('❌ Vertex AI is not configured');
+    console.error('Please set GOOGLE_GENAI_USE_VERTEXAI=true and GOOGLE_CLOUD_PROJECT in environment variables');
     return res.status(500).json({ 
-      error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.',
-      code: 'API_KEY_MISSING'
+      error: 'Vertex AI not configured. gemini-2.5-flash-image requires Vertex AI authentication.',
+      code: 'VERTEX_AI_NOT_CONFIGURED',
+      hint: 'Please follow the VERTEX_AI_配置指南.md to set up Vertex AI'
     });
   }
 
-  console.log('✅ GEMINI_API_KEY found, initializing AI client...');
+  const project = process.env.GOOGLE_CLOUD_PROJECT;
+  const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+  
+  console.log(`✅ Vertex AI configured: project=${project}, location=${location}`);
 
   let generationSuccess = false;
 
@@ -199,15 +204,20 @@ export default async function handler(
       });
     }
 
-    console.log(`🔧 Initializing Google GenAI client for user ${userId}...`);
-    const aiClient = new GoogleGenAI({ apiKey });
+    console.log(`🔧 Initializing Vertex AI client for user ${userId}...`);
+    const aiClient = new GoogleGenAI({ 
+      vertexai: true,
+      project,
+      location,
+    });
     console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
+    
+    // 准备参考图像
     const normalizedImages = base64Images
       .map(normalizeBase64Image)
       .filter((value): value is string => typeof value === 'string' && value.length > 0);
 
     if (normalizedImages.length === 0) {
-      // 回滚信用点
       await refundCredits(userId, requiredCredits);
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
@@ -215,9 +225,7 @@ export default async function handler(
     }
 
     const imageParts = buildImageParts(normalizedImages);
-
     if (imageParts.length === 0) {
-      // 回滚信用点
       await refundCredits(userId, requiredCredits);
       console.error('❌ No valid image parts could be built');
       return res.status(400).json({
@@ -225,11 +233,12 @@ export default async function handler(
       });
     }
 
-    console.log(`📤 Prepared ${imageParts.length} image parts, calling Gemini API...`);
+    // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
-    console.log(`🤖 Using model: ${modelName}`);
+    console.log(`🤖 Using model: ${modelName} (Vertex AI)`);
+    console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
 
-    // Build contents array: first all image parts, then the text prompt
+    // 构建内容：图像 + 文本提示
     const contents = [...imageParts, instruction];
 
     const response = await aiClient.models.generateContent({
@@ -237,7 +246,7 @@ export default async function handler(
       contents,
     });
 
-    // Extract the generated image from the response
+    // 从响应中提取生成的图像
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(
       (part: any) => part.inlineData
     );
@@ -256,6 +265,8 @@ export default async function handler(
 
       const mimeType = generatedImagePart.inlineData.mimeType ?? 'image/png';
       const base64ImageBytes = generatedImagePart.inlineData.data;
+      
+      console.log(`✅ Image generated successfully for user ${userId}`);
       
       return res.status(200).json({
         imageUrl: `data:${mimeType};base64,${base64ImageBytes}`,
