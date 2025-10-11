@@ -1086,10 +1086,14 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         const IMAGE_LOAD_TIMEOUT = 10000; // 10 seconds
         const imagePromises = images.map(imgData => new Promise<void>((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "anonymous";
+            // Only set crossOrigin for external URLs, not for data URLs
+            if (!imgData.src.startsWith('data:')) {
+                img.crossOrigin = "anonymous";
+            }
             
             const timeout = setTimeout(() => {
-                reject(new Error(`Image load timeout: ${imgData.src.substring(0, 50)}...`));
+                console.warn(`Image load timeout: ${imgData.src.substring(0, 50)}...`);
+                resolve(); // Don't reject, just skip this image
             }, IMAGE_LOAD_TIMEOUT);
             
             img.onload = () => {
@@ -1161,7 +1165,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
         // Load base image with timeout
         const baseImgEl = new Image();
-        baseImgEl.crossOrigin = "anonymous";
+        // Only set crossOrigin for external URLs, not for data URLs
+        if (!baseImage.src.startsWith('data:')) {
+            baseImgEl.crossOrigin = "anonymous";
+        }
         const baseImgPromise = new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
                 reject(new Error("Base image load timeout"));
@@ -1224,7 +1231,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         // Load and draw overlay images with timeout
         const overlayPromises = overlayImages.map(overlay => new Promise<void>((resolve, reject) => {
             const overlayImgEl = new Image();
-            overlayImgEl.crossOrigin = "anonymous";
+            // Only set crossOrigin for external URLs, not for data URLs
+            if (!overlay.src.startsWith('data:')) {
+                overlayImgEl.crossOrigin = "anonymous";
+            }
             
             const timeout = setTimeout(() => {
                 console.warn("Overlay image load timeout, skipping");
@@ -1385,7 +1395,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 const baseImage = images[0];
                 const overlayImages = images.slice(1);
     
+                setGenerationProgress('Preparing images...');
+                console.log(`🖼️ Creating composite: base + ${overlayImages.length} overlays + ${paths.length} paths + ${annotations.length} annotations`);
+                
                 imageForApi = await createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                
+                console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
                 if (annotations.length > 0) {
                      finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image marked with numbered boxes. These boxes are instructional overlays and indicate specific areas for editing. Your task is to perform the edits described in the user's prompt, which are mapped to these numbered boxes. After applying the edits, you MUST completely remove the boxes and their labels. The final output must be a clean, photorealistic image with no trace of any instructional markings (no boxes, no dashed lines, no numbers, no labels). It should look like a real photograph. The user's instructions are: "${prompt}"`;
@@ -1398,11 +1413,19 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     
             } else {
                 // No images, only drawings. Generate from scratch on the whole canvas.
+                setGenerationProgress('Capturing canvas...');
+                console.log(`🎨 Capturing canvas with ${paths.length} paths`);
+                
                 imageForApi = await captureCanvasAsImage();
+                
+                console.log(`✅ Canvas captured: ${(imageForApi.length / 1024).toFixed(0)}KB`);
                 finalPrompt = `Generate a photorealistic image based on the user's drawings on a blank canvas and their text prompt. The drawings provide a rough sketch or composition. The text prompt is: "${prompt}"`;
             }
             
+            setGenerationProgress('Uploading to AI...');
             const imageForApiData = imageForApi.split(',')[1];
+            console.log(`📤 Sending to API: ${(imageForApiData.length / 1024).toFixed(0)}KB image`);
+            
             const generatedUrl = await generateImage(
                 finalPrompt, 
                 [imageForApiData],
