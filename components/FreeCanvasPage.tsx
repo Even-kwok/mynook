@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback, MouseEvent as ReactMouseEvent, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toBase64 } from '../utils/imageUtils';
+import { compressInWorker, CompressionResult } from '../utils/imageCompression';
 import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
@@ -392,6 +393,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [generationProgress, setGenerationProgress] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
+    const [uploadProgress, setUploadProgress] = useState<string>('');
+    const [compressionStats, setCompressionStats] = useState<CompressionResult | null>(null);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
     const [editingPreset, setEditingPreset] = useState<PromptPreset | { name: string; prompt: string } | null>(null);
@@ -544,12 +547,33 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         const file = event.target.files?.[0];
         if (file) {
             try {
-                const base64 = await toBase64(file);
+                // Show upload progress
+                setUploadProgress('Optimizing image...');
+                
+                const startTime = Date.now();
+                const originalSizeKB = (file.size / 1024).toFixed(0);
+                console.log(`📤 Uploading image: ${originalSizeKB}KB`);
+                
+                // Use Web Worker for smart compression
+                const compressionResult = await compressInWorker(
+                    file,
+                    (progress) => setUploadProgress(progress)
+                );
+                
+                // Save compression stats
+                setCompressionStats(compressionResult);
+                
+                const processingTime = Date.now() - startTime;
+                const compressedSizeKB = (compressionResult.compressedSize / 1024).toFixed(0);
+                
+                console.log(`✅ Image optimized: ${originalSizeKB}KB → ${compressedSizeKB}KB (${compressionResult.reduction.toFixed(0)}% reduction) in ${processingTime}ms`);
+                
+                // Load compressed image to canvas
                 const img = new Image();
                 img.onload = () => {
                     const newImage: CanvasImage = {
                         id: `img_${Date.now()}`,
-                        src: base64,
+                        src: compressionResult.base64,
                         x: 50,
                         y: 50,
                         width: img.width > 400 ? 400 : img.width,
@@ -557,11 +581,21 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         rotation: 0,
                     };
                     setImages(prev => [...prev, newImage]);
+                    
+                    // Show success message briefly
+                    setUploadProgress(`✨ Optimized! ${compressionResult.reduction.toFixed(0)}% smaller`);
+                    setTimeout(() => setUploadProgress(''), 3000);
                 };
-                img.src = base64;
+                img.onerror = () => {
+                    console.error("Failed to load compressed image");
+                    onError("Failed to load image after compression.");
+                    setUploadProgress('');
+                };
+                img.src = compressionResult.base64;
             } catch (err) {
                 console.error("Error processing image:", err);
                 onError("Failed to load image.");
+                setUploadProgress('');
             }
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1583,11 +1617,17 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 <p className="text-sm text-slate-500">Combine images, draw annotations, and use a prompt to generate a new creation.</p>
                             </div>
 
-                            <Button onClick={() => fileInputRef.current?.click()}>
+                            <Button onClick={() => fileInputRef.current?.click()} disabled={!!uploadProgress && !uploadProgress.includes('✨')}>
                                 <IconUpload />
                                 Upload Image
                             </Button>
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
+                            
+                            {uploadProgress && (
+                                <div className={`text-xs px-3 py-2 rounded-lg ${uploadProgress.includes('✨') ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'} animate-fade-in`}>
+                                    {uploadProgress}
+                                </div>
+                            )}
                             
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-4">
                                 <h3 className="text-base font-semibold text-slate-800">Tools</h3>
