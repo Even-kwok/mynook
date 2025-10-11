@@ -2515,7 +2515,7 @@ const App: React.FC = () => {
                                 ) : (
                                     <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Generating..." : `Generate ${selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Design(s)` : ''} (${selectedTemplateIds.length > 0 ? selectedTemplateIds.length : 1} Credit${selectedTemplateIds.length > 1 ? 's' : ''})`}
+                                        {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
                                     </Button>
                                 )}
                             </div>
