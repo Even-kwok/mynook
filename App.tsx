@@ -1634,7 +1634,18 @@ const App: React.FC = () => {
                 return prev.filter(id => id !== templateId);
             }
             
-            // 根据会员等级限制可选择的模板数量
+            // 未登录用户可以自由选择模板（最多9个），登录时才检查权限
+            if (!currentUser) {
+                const MAX_SELECTION = 9;
+                if (prev.length < MAX_SELECTION) {
+                    return [...prev, templateId];
+                }
+                setError(`You can select up to ${MAX_SELECTION} templates at a time.`);
+                setTimeout(() => setError(null), 3000);
+                return prev;
+            }
+            
+            // 已登录用户：根据会员等级限制可选择的模板数量
             const membershipTier = getUserMembershipTier();
             const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
             
@@ -1722,6 +1733,18 @@ const App: React.FC = () => {
         }
         if (selectedTemplateIds.length === 0) {
             setError("Please select a design style.");
+            return;
+        }
+        
+        // 检查会员等级的模板选择数量限制
+        const membershipTier = getUserMembershipTier();
+        const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
+        
+        if (selectedTemplateIds.length > maxTemplates) {
+            setError(`Your ${MEMBERSHIP_CONFIG[membershipTier].name} plan allows generating up to ${maxTemplates} template${maxTemplates > 1 ? 's' : ''} at a time. You have selected ${selectedTemplateIds.length}. Please upgrade or reduce your selection.`);
+            setIsUpgradeModalOpen(true);
+            setUpgradeFeatureName('Multiple Template Generation');
+            setUpgradeRequiredTier(membershipTier === 'free' ? 'pro' : 'premium');
             return;
         }
         
