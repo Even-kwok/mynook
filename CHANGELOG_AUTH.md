@@ -15,10 +15,10 @@
 
 ### 2. 会员等级系统
 - ✅ **4 个会员等级**：
-  - 🆓 **Free**: 10 credits/月
-  - ⭐ **Pro**: 100 credits/月
-  - 👑 **Premium**: 500 credits/月
-  - 💼 **Business**: 无限 credits
+  - 🆓 **Free**: 0 credits (需要购买)
+  - ⭐ **Pro**: 1000 credits
+  - 👑 **Premium**: 5000 credits
+  - 💼 **Business**: 25000 credits
 
 ### 3. 信用点系统
 - ✅ **信用点显示**：顶部导航栏实时显示剩余信用点
@@ -98,7 +98,7 @@ mynook/
 | full_name | TEXT | 姓名 | null |
 | avatar_url | TEXT | 头像 | null |
 | membership_tier | TEXT | 会员等级 | 'free' |
-| credits | INTEGER | 信用点 | 10 |
+| credits | INTEGER | 信用点 | 0 |
 | total_generations | INTEGER | 总生成次数 | 0 |
 | created_at | TIMESTAMP | 创建时间 | NOW() |
 | updated_at | TIMESTAMP | 更新时间 | NOW() |

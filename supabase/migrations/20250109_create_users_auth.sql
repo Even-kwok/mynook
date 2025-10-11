@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   full_name TEXT,
   avatar_url TEXT,
   membership_tier TEXT DEFAULT 'free' CHECK (membership_tier IN ('free', 'pro', 'premium', 'business')),
-  credits INTEGER DEFAULT 10,
+  credits INTEGER DEFAULT 0,
   total_generations INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -84,14 +84,14 @@ COMMENT ON TABLE public.users IS '用户信息表，存储会员等级、信用�
 COMMENT ON COLUMN public.users.id IS '用户ID，关联 auth.users';
 COMMENT ON COLUMN public.users.email IS '用户邮箱';
 COMMENT ON COLUMN public.users.membership_tier IS '会员等级：free(免费), pro(专业版), premium(高级版), business(企业版)';
-COMMENT ON COLUMN public.users.credits IS '剩余信用点数，用于生成图片';
+COMMENT ON COLUMN public.users.credits IS '剩余信用点数，用于生成图片（新用户默认0点）';
 COMMENT ON COLUMN public.users.total_generations IS '总生成次数统计';
 
 -- ============================================
 -- 会员等级说明
 -- ============================================
--- free:     10 credits/月，基础功能
--- pro:      100 credits/月，高级功能
+-- free:     0 credits 起始，需要购买
+-- pro:      1000 credits，高级功能
 -- premium:  500 credits/月，优先队列
 -- business: 无限 credits，专属支持
 -- ============================================

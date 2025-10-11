@@ -21,7 +21,7 @@ An AI-powered interior design studio that transforms your room photos into vario
 -   **Persistent Sessions**: Stay logged in across browser sessions
 
 ### 💎 Membership System
--   **Free Tier**: 10 credits/month for new users
+-   **Free Tier**: 0 credits (new users need to purchase credits)
 -   **Pro/Premium/Business**: Enhanced features and credit limits
 -   **Credit Management**: Track usage and generation history
 
