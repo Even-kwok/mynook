@@ -1,6 +1,6 @@
 /**
- * 登录/注册模态框组件
- * 支持邮箱密码和Google登录
+ * Login/Register Modal Component
+ * Supports email/password and Google login
  */
 
 import React, { useState } from 'react';
@@ -27,7 +27,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // 重置表单
+  // Reset form
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -36,19 +36,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setSuccessMessage(null);
   };
 
-  // 切换模式
+  // Toggle mode
   const toggleMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     resetForm();
   };
 
-  // 关闭模态框
+  // Close modal
   const handleClose = () => {
     resetForm();
     onClose();
   };
 
-  // 处理邮箱密码登录/注册
+  // Handle email/password sign in/sign up
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -64,24 +64,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       }
 
       if (result.error) {
-        // 错误消息本地化
+        // Localize error message
         const errorMessage = getErrorMessage(result.error);
         setError(errorMessage);
         setLoading(false);
       } else {
-        // 乐观UI更新：立即关闭模态框，不等待用户资料加载
-        // onAuthStateChange会在后台自动加载用户资料
+        // Optimistic UI update: close modal immediately without waiting for user profile to load
+        // onAuthStateChange will automatically load user profile in the background
         handleClose();
-        // 保持loading状态，直到模态框关闭动画完成
+        // Keep loading state until modal close animation completes
         setTimeout(() => setLoading(false), 300);
       }
     } catch (err) {
-      setError('发生未知错误，请稍后重试');
+      setError('An unknown error occurred, please try again later');
       setLoading(false);
     }
   };
 
-  // 处理Google登录
+  // Handle Google sign in
   const handleGoogleSignIn = async () => {
     setError(null);
     setLoading(true);
@@ -90,17 +90,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        setError('Google 登录失败，请稍后重试');
+        setError('Google sign in failed, please try again later');
       }
-      // Google OAuth会重定向，不需要手动关闭模态框
+      // Google OAuth will redirect, no need to manually close modal
     } catch (err) {
-      setError('Google 登录失败，请稍后重试');
+      setError('Google sign in failed, please try again later');
     } finally {
       setLoading(false);
     }
   };
 
-  // 处理忘记密码
+  // Handle forgot password
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -114,15 +114,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         const errorMessage = getErrorMessage(error);
         setError(errorMessage);
       } else {
-        setSuccessMessage('密码重置邮件已发送！请查看您的邮箱并点击链接重置密码。');
-        // 3秒后自动切换回登录模式
+        setSuccessMessage('Password reset email sent! Please check your inbox and click the link to reset your password.');
+        // Automatically switch back to sign in mode after 3 seconds
         setTimeout(() => {
           setMode('signin');
           resetForm();
         }, 3000);
       }
     } catch (err) {
-      setError('发送邮件失败，请稍后重试');
+      setError('Failed to send email, please try again later');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* 背景遮罩 */}
+        {/* Background overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -142,14 +142,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         />
 
-        {/* 模态框内容 */}
+        {/* Modal content */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
         >
-          {/* 关闭按钮 */}
+          {/* Close button */}
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
@@ -157,23 +157,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <IconX className="w-5 h-5 text-slate-500" />
           </button>
 
-          {/* 内容区域 */}
+          {/* Content area */}
           <div className="p-8">
-            {/* 标题 */}
+            {/* Title */}
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-800 mb-2">
-                {mode === 'signin' && '欢迎回来'}
-                {mode === 'signup' && '创建账户'}
-                {mode === 'forgot-password' && '重置密码'}
+                {mode === 'signin' && 'Welcome Back'}
+                {mode === 'signup' && 'Create Account'}
+                {mode === 'forgot-password' && 'Reset Password'}
               </h2>
               <p className="text-slate-500">
-                {mode === 'signin' && '登录继续使用 AI 设计工具'}
-                {mode === 'signup' && '注册开始你的设计之旅'}
-                {mode === 'forgot-password' && '输入您的邮箱地址，我们将发送重置密码的链接'}
+                {mode === 'signin' && 'Sign in to continue using AI design tool'}
+                {mode === 'signup' && 'Sign up to start your design journey'}
+                {mode === 'forgot-password' && 'Enter your email address and we\'ll send you a link to reset your password'}
               </p>
             </div>
 
-            {/* 错误提示 */}
+            {/* Error message */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -184,7 +184,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </motion.div>
             )}
 
-            {/* 成功提示 */}
+            {/* Success message */}
             {successMessage && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -195,12 +195,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </motion.div>
             )}
 
-            {/* 忘记密码表单 */}
+            {/* Forgot password form */}
             {mode === 'forgot-password' && (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    邮箱
+                    Email
                   </label>
                   <input
                     type="email"
@@ -225,14 +225,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                         className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                       />
-                      发送中...
+                      Sending...
                     </span>
                   ) : (
-                    '发送重置邮件'
+                    'Send Reset Email'
                   )}
                 </Button>
 
-                {/* 返回登录 */}
+                {/* Back to sign in */}
                 <div className="mt-6 text-center text-sm text-slate-600">
                   <button
                     type="button"
@@ -242,25 +242,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     }}
                     className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
                   >
-                    返回登录
+                    Back to Sign In
                   </button>
                 </div>
               </form>
             )}
 
-            {/* 登录/注册表单 */}
+            {/* Sign in/Sign up form */}
             {mode !== 'forgot-password' && (
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {mode === 'signup' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    姓名
+                    Full Name
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="输入你的姓名"
+                    placeholder="Enter your name"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                   />
                 </div>
@@ -268,7 +268,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  邮箱
+                  Email
                 </label>
                 <input
                   type="email"
@@ -283,7 +283,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-slate-700">
-                    密码
+                    Password
                   </label>
                   {mode === 'signin' && (
                     <button
@@ -294,7 +294,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       }}
                       className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
                     >
-                      忘记密码？
+                      Forgot password?
                     </button>
                   )}
                 </div>
@@ -308,7 +308,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                 />
                 {mode === 'signup' && (
-                  <p className="mt-1 text-xs text-slate-500">至少6个字符</p>
+                  <p className="mt-1 text-xs text-slate-500">At least 6 characters</p>
                 )}
               </div>
 
@@ -325,29 +325,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                     />
-                    {mode === 'signin' ? '登录中...' : '注册中...'}
+                    {mode === 'signin' ? 'Signing in...' : 'Signing up...'}
                   </span>
                 ) : (
-                  mode === 'signin' ? '登录' : '注册'
+                  mode === 'signin' ? 'Sign In' : 'Sign Up'
                 )}
               </Button>
             </form>
             )}
 
-            {/* 只在登录/注册模式显示以下内容 */}
+            {/* Only show in sign in/sign up mode */}
             {mode !== 'forgot-password' && (
             <>
-            {/* 分隔线 */}
+            {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-slate-500">或</span>
+                <span className="px-4 bg-white text-slate-500">or</span>
               </div>
             </div>
 
-            {/* Google 登录 */}
+            {/* Google sign in */}
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
@@ -360,24 +360,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     className="inline-block w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full"
                   />
-                  跳转中...
+                  Redirecting...
                 </>
               ) : (
                 <>
                   <IconGoogle className="w-5 h-5" />
-                  使用 Google 账号{mode === 'signin' ? '登录' : '注册'}
+                  {mode === 'signin' ? 'Sign in with Google' : 'Sign up with Google'}
                 </>
               )}
             </button>
 
-            {/* 切换模式 */}
+            {/* Toggle mode */}
             <div className="mt-6 text-center text-sm text-slate-600">
-              {mode === 'signin' ? '还没有账户？' : '已有账户？'}
+              {mode === 'signin' ? 'Don\'t have an account?' : 'Already have an account?'}
               <button
                 onClick={toggleMode}
                 className="ml-1 font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                {mode === 'signin' ? '立即注册' : '去登录'}
+                {mode === 'signin' ? 'Sign up now' : 'Go to Sign In'}
               </button>
             </div>
             </>
@@ -389,35 +389,35 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-// 错误消息本地化
+// Localize error messages
 function getErrorMessage(error: any): string {
   const message = error?.message || '';
   
-  // Supabase 常见错误
+  // Common Supabase errors
   if (message.includes('Invalid login credentials')) {
-    return '邮箱或密码错误';
+    return 'Invalid email or password';
   }
   if (message.includes('Email not confirmed')) {
-    return '请先验证邮箱，或联系管理员禁用邮箱验证';
+    return 'Please verify your email first, or contact admin to disable email verification';
   }
   if (message.includes('User already registered')) {
-    return '该邮箱已被注册';
+    return 'This email is already registered';
   }
   if (message.includes('Password should be at least')) {
-    return '密码至少需要6个字符';
+    return 'Password must be at least 6 characters';
   }
   if (message.includes('Unable to validate email address')) {
-    return '邮箱格式无效';
+    return 'Invalid email format';
   }
   if (message.includes('Email link is invalid')) {
-    return '邮箱链接无效或已过期';
+    return 'Email link is invalid or has expired';
   }
   if (message.includes('User not found')) {
-    return '用户不存在，请先注册';
+    return 'User not found, please sign up first';
   }
   
-  // 显示原始错误信息以便调试
+  // Display original error message for debugging
   console.error('Auth error:', error);
-  return `操作失败: ${message || '未知错误'}`;
+  return `Operation failed: ${message || 'Unknown error'}`;
 }
 
