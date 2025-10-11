@@ -7,6 +7,7 @@ import { join } from 'path';
 import { 
   verifyUserToken, 
   checkCreditsAvailable, 
+  checkAndDeductCredits,
   deductCredits, 
   refundCredits,
   CREDIT_COSTS,
@@ -188,44 +189,32 @@ export default async function handler(
   }
 
   // ========================================
-  // 2. 检查信用点余额
+  // 2. 检查并扣除信用点（优化：一次操作）
   // ========================================
   const requiredCredits = CREDIT_COSTS.IMAGE_GENERATION;
-  const { available, currentCredits, membershipTier, error: checkError } = await checkCreditsAvailable(userId, requiredCredits);
-  
-  if (checkError) {
-    return res.status(500).json({ 
-      error: 'Failed to check credits',
-      code: 'CREDITS_CHECK_FAILED'
-    });
-  }
-
-  if (!available) {
-    return res.status(402).json({ 
-      error: `Insufficient credits. Required: ${requiredCredits}, Available: ${currentCredits}`,
-      code: 'INSUFFICIENT_CREDITS',
-      required: requiredCredits,
-      available: currentCredits,
-      membershipTier
-    });
-  }
-
-  // ========================================
-  // 3. 扣除信用点
-  // ========================================
-  const { success: deductSuccess, remainingCredits, error: deductError } = await deductCredits(userId, requiredCredits);
+  const { success: deductSuccess, remainingCredits, membershipTier, error: deductError } = await checkAndDeductCredits(userId, requiredCredits);
   
   if (!deductSuccess) {
+    // 检查是否是信用点不足错误
+    if (deductError && deductError.includes('Insufficient')) {
+      return res.status(402).json({ 
+        error: `Insufficient credits. Required: ${requiredCredits}`,
+        code: 'INSUFFICIENT_CREDITS',
+        required: requiredCredits,
+        membershipTier
+      });
+    }
+    
     return res.status(500).json({ 
-      error: deductError || 'Failed to deduct credits',
-      code: 'CREDITS_DEDUCT_FAILED'
+      error: deductError || 'Failed to check and deduct credits',
+      code: 'CREDITS_CHECK_FAILED'
     });
   }
 
   console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
 
   // ========================================
-  // 4. 执行图片生成
+  // 3. 执行图片生成
   // ========================================
 
   // Get API key from environment variables (server-side only)
@@ -293,7 +282,7 @@ export default async function handler(
     }
 
     console.log(`📤 Uploaded ${uploadedImageParts.length} images, calling Gemini API...`);
-    const modelName = 'gemini-2.5-flash-image-preview';
+    const modelName = 'gemini-2.5-flash-image';
     console.log(`🤖 Using model: ${modelName}`);
     
     const response = await aiClient.models.generateContent({

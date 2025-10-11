@@ -104,7 +104,39 @@ export async function checkCreditsAvailable(
 }
 
 /**
- * 扣除用户信用点
+ * 检查并扣除用户信用点（原子操作，优化版本）
+ * 使用数据库函数减少往返次数
+ */
+export async function checkAndDeductCredits(
+  userId: string,
+  amount: number
+): Promise<{ success: boolean; remainingCredits: number; membershipTier?: string; error: string | null }> {
+  try {
+    const { data, error } = await supabaseAdmin.rpc('check_and_deduct_credits', {
+      p_user_id: userId,
+      p_amount: amount
+    });
+
+    if (error) {
+      console.error('Check and deduct credits error:', error);
+      return { success: false, remainingCredits: 0, error: 'Failed to check and deduct credits' };
+    }
+
+    const result = data as any;
+    return {
+      success: result.success,
+      remainingCredits: result.remaining_credits || 0,
+      membershipTier: result.membership_tier,
+      error: result.error || null
+    };
+  } catch (error) {
+    console.error('Check and deduct credits error:', error);
+    return { success: false, remainingCredits: 0, error: 'Failed to check and deduct credits' };
+  }
+}
+
+/**
+ * 扣除用户信用点（保留旧版本以保持兼容性）
  */
 export async function deductCredits(
   userId: string,
@@ -152,43 +184,28 @@ export async function deductCredits(
 }
 
 /**
- * 回滚信用点（在操作失败时使用）
+ * 回滚信用点（优化版本，使用数据库函数）
  */
 export async function refundCredits(
   userId: string,
   amount: number
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { data: user, error: fetchError } = await supabaseAdmin
-      .from('users')
-      .select('credits, membership_tier, total_generations')
-      .eq('id', userId)
-      .single();
+    const { data, error } = await supabaseAdmin.rpc('refund_credits', {
+      p_user_id: userId,
+      p_amount: amount
+    });
 
-    if (fetchError || !user) {
-      return { success: false, error: 'Failed to fetch user data' };
-    }
-
-    // Use any to bypass type checking
-    const userData = user as any;
-
-    // 所有会员都需要回滚信用点
-    const refundData: Record<string, any> = {
-      credits: userData.credits + amount,
-      total_generations: Math.max(0, userData.total_generations - 1),
-      updated_at: new Date().toISOString(),
-    };
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update(refundData)
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('Refund credits error:', updateError);
+    if (error) {
+      console.error('Refund credits error:', error);
       return { success: false, error: 'Failed to refund credits' };
     }
 
-    return { success: true, error: null };
+    const result = data as any;
+    return {
+      success: result.success,
+      error: result.error || null
+    };
   } catch (error) {
     console.error('Refund credits error:', error);
     return { success: false, error: 'Failed to refund credits' };

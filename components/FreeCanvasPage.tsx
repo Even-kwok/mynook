@@ -389,6 +389,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     // Local UI state, doesn't need to be persisted
     const [drawingAnnotation, setDrawingAnnotation] = useState<{ startX: number; startY: number; currentBox?: { x: number; y: number; width: number; height: number; } } | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [generationProgress, setGenerationProgress] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
@@ -1206,9 +1207,13 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             }
             
             const imageForApiData = imageForApi.split(',')[1];
-            const generatedUrl = await generateImage(finalPrompt, [imageForApiData]);
+            const generatedUrl = await generateImage(
+                finalPrompt, 
+                [imageForApiData],
+                (progress) => setGenerationProgress(progress)
+            );
     
-            // Note: Backend automatically deducted 5 credits after successful generation
+            // Note: Backend automatically deducted 1 credit after successful generation
             // The parent component should refresh user data to show updated credits
     
             // Save to history
@@ -1248,6 +1253,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             }
         } finally {
             setIsLoading(false);
+            setGenerationProgress('');
         }
     };
 
@@ -1538,8 +1544,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 </aside>
                 <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
                      {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-20">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
                             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                            {generationProgress && (
+                                <p className="mt-4 text-sm text-gray-700 font-medium animate-pulse">
+                                    {generationProgress}
+                                </p>
+                            )}
+                            <p className="mt-2 text-xs text-gray-500">
+                                This may take 10-30 seconds
+                            </p>
                         </div>
                     )}
                     <AnimatePresence>
