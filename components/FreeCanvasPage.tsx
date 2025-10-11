@@ -548,32 +548,54 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         if (file) {
             try {
                 // Show upload progress
-                setUploadProgress('Optimizing image...');
+                setUploadProgress('Loading image...');
                 
                 const startTime = Date.now();
                 const originalSizeKB = (file.size / 1024).toFixed(0);
                 console.log(`📤 Uploading image: ${originalSizeKB}KB`);
                 
-                // Use Web Worker for smart compression
-                const compressionResult = await compressInWorker(
-                    file,
-                    (progress) => setUploadProgress(progress)
-                );
+                let imageDataUrl: string;
+                let compressionInfo = '';
                 
-                // Save compression stats
-                setCompressionStats(compressionResult);
+                // Try Web Worker compression first, fall back to direct load
+                try {
+                    setUploadProgress('Optimizing image...');
+                    const compressionResult = await compressInWorker(
+                        file,
+                        (progress) => setUploadProgress(progress)
+                    );
+                    
+                    if (compressionResult && compressionResult.base64) {
+                        imageDataUrl = compressionResult.base64;
+                        setCompressionStats(compressionResult);
+                        
+                        const processingTime = Date.now() - startTime;
+                        const compressedSizeKB = (compressionResult.compressedSize / 1024).toFixed(0);
+                        compressionInfo = `${compressionResult.reduction.toFixed(0)}% smaller`;
+                        
+                        console.log(`✅ Image optimized: ${originalSizeKB}KB → ${compressedSizeKB}KB (${compressionInfo}) in ${processingTime}ms`);
+                    } else {
+                        throw new Error('Compression returned invalid result');
+                    }
+                } catch (compressionError) {
+                    console.warn('⚠️ Compression failed, using original image:', compressionError);
+                    setUploadProgress('Using original image...');
+                    
+                    // Fallback: use original image without compression
+                    imageDataUrl = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target?.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                }
                 
-                const processingTime = Date.now() - startTime;
-                const compressedSizeKB = (compressionResult.compressedSize / 1024).toFixed(0);
-                
-                console.log(`✅ Image optimized: ${originalSizeKB}KB → ${compressedSizeKB}KB (${compressionResult.reduction.toFixed(0)}% reduction) in ${processingTime}ms`);
-                
-                // Load compressed image to canvas
+                // Load image to canvas
                 const img = new Image();
                 img.onload = () => {
                     const newImage: CanvasImage = {
                         id: `img_${Date.now()}`,
-                        src: compressionResult.base64,
+                        src: imageDataUrl,
                         x: 50,
                         y: 50,
                         width: img.width > 400 ? 400 : img.width,
@@ -583,15 +605,16 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     setImages(prev => [...prev, newImage]);
                     
                     // Show success message briefly
-                    setUploadProgress(`✨ Optimized! ${compressionResult.reduction.toFixed(0)}% smaller`);
+                    const successMsg = compressionInfo ? `✨ Optimized! ${compressionInfo}` : '✅ Image loaded';
+                    setUploadProgress(successMsg);
                     setTimeout(() => setUploadProgress(''), 3000);
                 };
                 img.onerror = () => {
-                    console.error("Failed to load compressed image");
-                    onError("Failed to load image after compression.");
+                    console.error("Failed to load image");
+                    onError("Failed to load image.");
                     setUploadProgress('');
                 };
-                img.src = compressionResult.base64;
+                img.src = imageDataUrl;
             } catch (err) {
                 console.error("Error processing image:", err);
                 onError("Failed to load image.");
