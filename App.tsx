@@ -1069,7 +1069,8 @@ const CustomSelect: React.FC<{
     value: string;
     onChange: (value: string) => void;
     label: string;
-}> = ({ options, value, onChange, label }) => {
+    disabled?: boolean;
+}> = ({ options, value, onChange, label, disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const selectRef = useRef<HTMLDivElement>(null);
     const selectedOption = useMemo(() => options.find(opt => opt.id === value), [options, value]);
@@ -1085,8 +1086,10 @@ const CustomSelect: React.FC<{
     }, []);
 
     const handleSelect = (optionId: string) => {
-        onChange(optionId);
-        setIsOpen(false);
+        if (!disabled) {
+            onChange(optionId);
+            setIsOpen(false);
+        }
     };
 
     return (
@@ -1095,14 +1098,19 @@ const CustomSelect: React.FC<{
             <div className="relative" ref={selectRef}>
                 <button
                     type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center justify-between p-4 bg-white/50 backdrop-blur-xl border border-slate-300 rounded-2xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    onClick={() => !disabled && setIsOpen(!isOpen)}
+                    disabled={disabled}
+                    className={`w-full flex items-center justify-between p-4 backdrop-blur-xl border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                        disabled 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-white/50 border-slate-300 text-slate-800'
+                    }`}
                 >
                     <span className="truncate">{selectedOption?.name || 'Select...'}</span>
-                    <IconChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <IconChevronDown className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${disabled ? 'text-slate-300' : 'text-slate-500'} ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
-                    {isOpen && (
+                    {isOpen && !disabled && (
                         <motion.ul
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -1481,8 +1489,9 @@ const App: React.FC = () => {
         { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true },
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
     ];
-    const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>(ADMIN_PAGE_CATEGORIES);
-    const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>(Object.keys(ADMIN_PAGE_CATEGORIES));
+    // ⚠️ 修复：初始状态设为空对象，避免显示硬编码的残留数据
+    const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>({});
+    const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>([]);
     const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
 
     // Load templates from database on mount
@@ -1521,9 +1530,14 @@ const App: React.FC = () => {
 
     // 动态生成可用的房间类型列表（只显示有启用模板的房间类型）
     const availableRoomTypes = useMemo(() => {
+        // ⚠️ 修复：数据加载期间返回空数组，不显示硬编码数据
+        if (templatesLoading) {
+            return [];
+        }
+        
         const interiorData = adminTemplateData["Interior Design"];
         if (!interiorData || interiorData.length === 0) {
-            return ROOM_TYPES; // fallback 到硬编码列表
+            return []; // 数据库为空时也返回空数组，不使用硬编码fallback
         }
         
         // 从数据库数据生成房间类型选项（只包含有模板的房间类型）
@@ -1538,8 +1552,8 @@ const App: React.FC = () => {
                 };
             });
         
-        return roomTypeOptions.length > 0 ? roomTypeOptions : ROOM_TYPES;
-    }, [adminTemplateData]);
+        return roomTypeOptions;
+    }, [adminTemplateData, templatesLoading]);
     
     // 确保当前选择的房间类型在可用列表中，否则选择第一个
     useEffect(() => {
@@ -2430,12 +2444,15 @@ const App: React.FC = () => {
                             )}
 
                             {['Interior Design', 'Festive Decor'].includes(activePage) && (
-                                <CustomSelect
-                                    label="Choose a Room Type"
-                                    options={availableRoomTypes}
-                                    value={selectedRoomType}
-                                    onChange={setSelectedRoomType}
-                                />
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Room Type"
+                                        options={availableRoomTypes.length > 0 ? availableRoomTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No room types available'}]}
+                                        value={availableRoomTypes.length > 0 ? selectedRoomType : 'loading'}
+                                        onChange={setSelectedRoomType}
+                                        disabled={templatesLoading || availableRoomTypes.length === 0}
+                                    />
+                                </div>
                             )}
                             {activePage === 'Exterior Design' && (
                                 <CustomSelect
