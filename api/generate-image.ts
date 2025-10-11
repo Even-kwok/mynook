@@ -71,6 +71,46 @@ const normalizeBase64Image = (value: unknown): string | null => {
 
 type UploadedImagePart = { part: { fileData: { fileUri: string; mimeType: string } }; fileName?: string };
 
+const detectImageType = (
+  buffer: Buffer
+): { mimeType: string; extension: string } => {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return { mimeType: 'image/jpeg', extension: 'jpg' };
+  }
+
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return { mimeType: 'image/png', extension: 'png' };
+  }
+
+  if (
+    buffer.length >= 12 &&
+    buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    buffer.toString('ascii', 8, 12) === 'WEBP'
+  ) {
+    return { mimeType: 'image/webp', extension: 'webp' };
+  }
+
+  if (
+    buffer.length >= 6 &&
+    (buffer.toString('ascii', 0, 6) === 'GIF89a' || buffer.toString('ascii', 0, 6) === 'GIF87a')
+  ) {
+    return { mimeType: 'image/gif', extension: 'gif' };
+  }
+
+  // Default to PNG if the format cannot be detected reliably
+  return { mimeType: 'image/png', extension: 'png' };
+};
+
 const uploadBase64Image = async (
   ai: GoogleGenAI,
   base64Image: string,
@@ -82,9 +122,9 @@ const uploadBase64Image = async (
       return null;
     }
 
-    const mimeType = 'image/png';
+    const { mimeType, extension } = detectImageType(imageBuffer);
     const blob = new Blob([imageBuffer], { type: mimeType });
-    const displayName = `source-image-${Date.now()}-${index}.png`;
+    const displayName = `source-image-${Date.now()}-${index}.${extension}`;
 
     const uploadedFile = await ai.files.upload({
       file: blob,
