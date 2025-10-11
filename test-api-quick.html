@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quick API Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #fff;
+    }
+    .result {
+      background: #2d2d2d;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .error { border-left: 4px solid #f44336; }
+    .success { border-left: 4px solid #4caf50; }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 MyNook API Quick Test</h1>
+  
+  <button onclick="testConnection()">Test 1: 测试 API 连接</button>
+  <button onclick="testWithAuth()">Test 2: 测试带认证的请求</button>
+  
+  <div id="result"></div>
+
+  <script>
+    function showResult(data, isError = false) {
+      const div = document.getElementById('result');
+      div.className = 'result ' + (isError ? 'error' : 'success');
+      div.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function testConnection() {
+      try {
+        const response = await fetch('/api/test-connection');
+        const data = await response.json();
+        showResult({ status: response.status, data }, !response.ok);
+      } catch (error) {
+        showResult({ error: error.message }, true);
+      }
+    }
+
+    async function testWithAuth() {
+      try {
+        // 从 localStorage 获取 session
+        const authData = localStorage.getItem('sb-' + window.location.hostname.replace(/\./g, '-') + '-auth-token');
+        
+        if (!authData) {
+          showResult({ error: 'Not logged in. Please login first.' }, true);
+          return;
+        }
+
+        const session = JSON.parse(authData);
+        const token = session.access_token;
+
+        const response = await fetch('/api/test-connection', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        showResult({ status: response.status, data }, !response.ok);
+      } catch (error) {
+        showResult({ error: error.message }, true);
+      }
+    }
+
+    // 自动运行第一个测试
+    window.onload = () => {
+      console.log('🔧 Quick API Test Tool Ready');
+      testConnection();
+    };
+  </script>
+</body>
+</html>
+
