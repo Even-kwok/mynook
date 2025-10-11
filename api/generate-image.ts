@@ -167,24 +167,41 @@ export default async function handler(
   console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
 
   // ========================================
-  // 3. 执行图片生成
+  // 3. 执行图片生成（使用 Vertex AI）
   // ========================================
 
-  // Get API key from environment variables (server-side only)
-  const apiKey = process.env.GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    // 回滚信用点
+  // 检查 Vertex AI 环境变量
+  const project = process.env.GOOGLE_CLOUD_PROJECT;
+  const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+
+  if (!project || !credentialsJson) {
     await refundCredits(userId, requiredCredits);
-    console.error('❌ GEMINI_API_KEY is not configured in environment variables');
-    console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
+    console.error('❌ Missing Vertex AI configuration');
+    console.error('GOOGLE_CLOUD_PROJECT:', !!project);
+    console.error('GOOGLE_APPLICATION_CREDENTIALS_JSON:', !!credentialsJson);
     return res.status(500).json({ 
-      error: 'API key not configured. Please set GEMINI_API_KEY in Vercel environment variables.',
-      code: 'API_KEY_MISSING'
+      error: 'Vertex AI not properly configured. Please check environment variables.',
+      code: 'VERTEX_AI_CONFIG_MISSING',
+      hint: 'Required: GOOGLE_CLOUD_PROJECT and GOOGLE_APPLICATION_CREDENTIALS_JSON'
     });
   }
 
-  console.log('✅ GEMINI_API_KEY found, initializing AI client...');
+  console.log(`✅ Vertex AI config found: project=${project}, location=${location}`);
+
+  // 解析凭据
+  let credentials;
+  try {
+    credentials = JSON.parse(credentialsJson);
+    console.log(`✅ Credentials parsed successfully: ${credentials.client_email}`);
+  } catch (err) {
+    await refundCredits(userId, requiredCredits);
+    console.error('❌ Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', err);
+    return res.status(500).json({ 
+      error: 'Invalid Vertex AI credentials format. JSON parse failed.',
+      code: 'VERTEX_AI_CREDENTIALS_INVALID'
+    });
+  }
 
   let generationSuccess = false;
 
@@ -199,8 +216,12 @@ export default async function handler(
       });
     }
 
-    console.log(`🔧 Initializing Google GenAI client for user ${userId}...`);
-    const aiClient = new GoogleGenAI({ apiKey });
+    console.log(`🔧 Initializing Vertex AI client for user ${userId}...`);
+    const aiClient = new GoogleGenAI({ 
+      vertexai: true,
+      project: credentials.project_id,
+      location,
+    });
     console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
     
     // 准备参考图像
@@ -226,8 +247,8 @@ export default async function handler(
 
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
-    console.log(`🤖 Using model: ${modelName}`);
-    console.log(`📤 Calling Gemini API with ${imageParts.length} reference image(s)...`);
+    console.log(`🤖 Using model: ${modelName} via Vertex AI`);
+    console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
 
     // 构建内容：图像 + 文本提示
     const contents = [...imageParts, instruction];
