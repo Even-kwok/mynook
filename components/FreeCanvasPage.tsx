@@ -1179,6 +1179,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         paths: DrawablePath[],
         annotations: Annotation[]
     ): Promise<string> => {
+        console.log('🖼️ [Composite] Start');
+        console.log(`📏 [Composite] Base: ${baseImage.width}x${baseImage.height}`);
+        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: false });
         if (!ctx) throw new Error("Canvas context not available");
@@ -1187,6 +1190,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         const MAX_CANVAS_SIZE = 1024; // Optimal size for fast API processing (reduced for speed)
 
         // Load base image with timeout
+        console.log('🔄 [Composite] Loading base image...');
         const baseImgEl = new Image();
         // Only set crossOrigin for external URLs, not for data URLs
         if (!baseImage.src.startsWith('data:')) {
@@ -1210,8 +1214,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         
         try {
             await baseImgPromise;
+            console.log('✅ [Composite] Base image loaded');
         } catch (err) {
-            console.error("Base image load error:", err);
+            console.error("❌ [Composite] Base image load error:", err);
             throw new Error("Failed to load base image. Please try again.");
         }
         
@@ -1288,8 +1293,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         
         try {
             await Promise.all(overlayPromises);
+            console.log(`✅ [Composite] ${overlayImages.length} overlay images loaded`);
         } catch (err) {
-            console.error("Some overlay images failed to load:", err);
+            console.error("⚠️ [Composite] Some overlay images failed to load:", err);
             // Continue anyway
         }
 
@@ -1341,7 +1347,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         try {
             // Use JPEG with quality 0.85 for much faster upload (smaller file size)
             // This significantly reduces API upload time (PNG can be 10x larger)
+            console.log('🔄 [Composite] Converting canvas to data URL...');
             const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            console.log(`✅ [Composite] Conversion complete: ${(dataUrl.length / 1024).toFixed(0)}KB`);
             
             // Force garbage collection hint by clearing canvas
             canvas.width = 0;
@@ -1349,7 +1357,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             
             return dataUrl;
         } catch (err) {
-            console.error("Error converting canvas to data URL:", err);
+            console.error("❌ [Composite] Error converting canvas to data URL:", err);
             throw new Error("Failed to process composite image. The image may be too large.");
         }
     };
@@ -1408,6 +1416,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         dragInfo.current = null;
         resizeInfo.current = null;
         setIsDrawing(false);
+        
+        console.log('🚀 [Generate] Starting generation process');
+        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}, Annotations: ${annotations.length}`);
     
         try {
             let imageForApi: string;
@@ -1417,11 +1428,34 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 // The first image in the array (bottom layer) is the base for generation.
                 const baseImage = images[0];
                 const overlayImages = images.slice(1);
-    
-                setGenerationProgress('Preparing images...');
-                console.log(`🖼️ Creating composite: base + ${overlayImages.length} overlays + ${paths.length} paths + ${annotations.length} annotations`);
                 
-                imageForApi = await createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                // Check if image is very large
+                const estimatedPixels = baseImage.width * baseImage.height;
+                console.log(`📊 [Generate] Estimated pixels: ${estimatedPixels.toLocaleString()}`);
+                if (estimatedPixels > 4 * 1024 * 1024) {
+                    console.warn('⚠️ [Generate] Very large image detected');
+                    setGenerationProgress('Processing large image, this may take a while...');
+                }
+    
+                setGenerationProgress('Step 1: Preparing image...');
+                console.log('🔍 [Generate] Step 1: Creating composite');
+                
+                // Add timeout protection for composite creation
+                const COMPOSITE_TIMEOUT = 30000; // 30 seconds
+                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('Image processing timeout after 30s')), COMPOSITE_TIMEOUT)
+                );
+                
+                try {
+                    imageForApi = await Promise.race([compositePromise, timeoutPromise]);
+                    console.log('✅ [Generate] Step 1: Complete');
+                } catch (err) {
+                    if (err instanceof Error && err.message.includes('timeout')) {
+                        throw new Error('Image processing is taking too long. Try using a smaller image or fewer overlays.');
+                    }
+                    throw err;
+                }
                 
                 console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
@@ -1436,30 +1470,37 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     
             } else {
                 // No images, only drawings. Generate from scratch on the whole canvas.
-                setGenerationProgress('Capturing canvas...');
-                console.log(`🎨 Capturing canvas with ${paths.length} paths`);
+                setGenerationProgress('Step 1: Capturing canvas...');
+                console.log('🔍 [Generate] Step 1: Capturing canvas');
+                console.log(`🎨 [Generate] Paths: ${paths.length}`);
                 
                 imageForApi = await captureCanvasAsImage();
                 
-                console.log(`✅ Canvas captured: ${(imageForApi.length / 1024).toFixed(0)}KB`);
+                console.log(`✅ [Generate] Step 1: Complete - ${(imageForApi.length / 1024).toFixed(0)}KB`);
                 finalPrompt = `Generate a photorealistic image based on the user's drawings on a blank canvas and their text prompt. The drawings provide a rough sketch or composition. The text prompt is: "${prompt}"`;
             }
             
             // Validate imageForApi
+            setGenerationProgress('Step 2: Validating...');
+            console.log('🔍 [Generate] Step 2: Validating image data');
+            
             if (!imageForApi || typeof imageForApi !== 'string') {
-                console.error('❌ Image data is invalid:', typeof imageForApi);
+                console.error('❌ [Generate] Image data is invalid:', typeof imageForApi);
                 throw new Error('Failed to prepare image for generation. Please try again.');
             }
             
-            setGenerationProgress('Uploading to AI...');
             const imageForApiData = imageForApi.split(',')[1];
             
             if (!imageForApiData) {
-                console.error('❌ Image data format is invalid');
+                console.error('❌ [Generate] Image data format is invalid');
                 throw new Error('Invalid image data format. Please try uploading again.');
             }
             
-            console.log(`📤 Sending to API: ${(imageForApiData.length / 1024).toFixed(0)}KB image`);
+            console.log('✅ [Generate] Step 2: Complete');
+            console.log(`📊 [Generate] Image size: ${(imageForApiData.length / 1024).toFixed(0)}KB`);
+            
+            setGenerationProgress('Step 3: Sending to AI...');
+            console.log('🔍 [Generate] Step 3: Calling API...');
             
             const generatedUrl = await generateImage(
                 finalPrompt, 
