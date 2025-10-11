@@ -4,6 +4,35 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
 
+// Credit packs for one-time purchase
+const creditPacks = [
+    {
+        id: '100',
+        credits: 100,
+        price: 9.90,
+        icon: '💎',
+        name: '100 Credits Pack',
+        description: 'Perfect for trying out',
+    },
+    {
+        id: '300',
+        credits: 300,
+        price: 24.99,
+        icon: '💎',
+        name: '300 Credits Pack',
+        description: 'Great for small projects',
+        isPopular: true,
+    },
+    {
+        id: '1000',
+        credits: 1000,
+        price: 69.99,
+        icon: '💎',
+        name: '1000 Credits Pack',
+        description: 'Best value per credit',
+    },
+];
+
 const plans = [
     {
         id: 'pro',
@@ -75,7 +104,73 @@ export const PricingPage: React.FC = () => {
     const { user, setShowLoginModal } = useContext(AuthContext);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+    const [loadingPackId, setLoadingPackId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const handlePurchaseCredits = async (packId: string) => {
+        // Check if user is logged in
+        if (!user) {
+            setShowLoginModal(true);
+            return;
+        }
+
+        setLoadingPackId(packId);
+        setError(null);
+
+        try {
+            // Get user session token
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !session || !session.access_token) {
+                console.error('Session error:', sessionError);
+                setShowLoginModal(true);
+                return;
+            }
+
+            console.log('✅ Session obtained, calling purchase credits API...');
+
+            // Call API to create checkout session for credits
+            const response = await fetch('/api/purchase-credits', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    packType: packId,
+                }),
+            });
+
+            // Handle non-OK responses
+            if (!response.ok) {
+                let errorMessage = 'Failed to create checkout session';
+                
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (parseError) {
+                    errorMessage = `Server error: ${response.status}`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            // Parse success response
+            const data = await response.json();
+            const checkoutUrl = data.checkoutUrl;
+
+            if (!checkoutUrl) {
+                throw new Error('No checkout URL received from server');
+            }
+
+            // Redirect to CREEM checkout page
+            window.location.href = checkoutUrl;
+
+        } catch (err: any) {
+            console.error('Error creating checkout session:', err);
+            setError(err.message || 'Something went wrong. Please try again.');
+            setLoadingPackId(null);
+        }
+    };
 
     const handleSubscribe = async (planId: string) => {
         // Check if user is logged in
@@ -285,6 +380,76 @@ export const PricingPage: React.FC = () => {
                             </div>
                         </motion.div>
                     ))}
+                </div>
+
+                {/* Credit Packs Section */}
+                <div className="mt-24 max-w-7xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">
+                            💎 Top up your credits
+                        </h2>
+                        <p className="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+                            Need more credits? Purchase one-time credit packs anytime.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {creditPacks.map((pack, index) => (
+                            <motion.div
+                                key={pack.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                                className={`relative border rounded-2xl p-6 flex flex-col ${
+                                    pack.isPopular ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-lg' : 'bg-white border-slate-200 shadow-sm'
+                                }`}
+                            >
+                                {pack.isPopular && (
+                                    <div className="absolute -top-3 -right-3">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                                            Popular
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="text-center">
+                                    <span className="text-5xl">{pack.icon}</span>
+                                    <h3 className="mt-4 text-xl font-bold text-slate-900">{pack.name}</h3>
+                                    <p className="mt-2 text-sm text-slate-500">{pack.description}</p>
+                                    
+                                    <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-lg font-bold rounded-full">
+                                        {pack.credits.toLocaleString()} Credits
+                                    </div>
+
+                                    <div className="mt-6 flex items-baseline justify-center gap-x-2">
+                                        <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                            ${pack.price}
+                                        </span>
+                                    </div>
+
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        ${(pack.price / pack.credits).toFixed(3)} per credit
+                                    </p>
+
+                                    <button
+                                        onClick={() => handlePurchaseCredits(pack.id)}
+                                        disabled={loadingPackId !== null}
+                                        className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
+                                            pack.isPopular 
+                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600' 
+                                                : 'bg-slate-800 text-white hover:bg-slate-900'
+                                        }`}
+                                    >
+                                        {loadingPackId === pack.id ? 'Processing...' : 'Buy Now'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 text-center text-sm text-slate-500">
+                        <p>💡 Credits never expire and can be used for any AI generation feature</p>
+                    </div>
                 </div>
             </div>
         </main>
