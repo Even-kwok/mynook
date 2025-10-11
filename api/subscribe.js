@@ -140,25 +140,22 @@ export default async function handler(req, res) {
     console.log(`✅ Using Product ID: ${productId} for ${planType} ${billingCycle}`);
 
     try {
-      const creemResponse = await fetch(`${creemApiUrl}/checkout/sessions`, {
+      const creemResponse = await fetch(`${creemApiUrl}/v1/checkouts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${creemApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          mode: 'subscription',
-          customer_email: userData.email,
-          client_reference_id: userData.id,
-          line_items: [
-            {
-              price: productId, // Use the Product ID from CREEM
-              quantity: 1,
-            },
-          ],
+          product_id: productId,
+          request_id: `sub_${userId}_${Date.now()}`,
+          units: 1,
+          customer: {
+            email: userData.email,
+          },
           success_url: `${baseUrl}/?message=subscription-success&plan=${planType}&cycle=${billingCycle}`,
           cancel_url: `${baseUrl}/pricing?message=subscription-cancelled`,
-          metadata: {
+          custom_field: {
             plan_type: planType,
             billing_cycle: billingCycle,
             user_id: userData.id,

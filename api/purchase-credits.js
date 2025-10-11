@@ -121,25 +121,22 @@ export default async function handler(req, res) {
       : 'http://localhost:3000';
 
     try {
-      const creemResponse = await fetch(`${creemApiUrl}/checkout/sessions`, {
+      const creemResponse = await fetch(`${creemApiUrl}/v1/checkouts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${creemApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          mode: 'payment', // One-time payment, not subscription
-          customer_email: userData.email,
-          client_reference_id: userData.id,
-          line_items: [
-            {
-              price: pack.productId, // Use the Product ID from CREEM
-              quantity: 1,
-            },
-          ],
+          product_id: pack.productId,
+          request_id: `credits_${userId}_${Date.now()}`,
+          units: 1,
+          customer: {
+            email: userData.email,
+          },
           success_url: `${baseUrl}/?message=credits-purchased&credits=${pack.credits}`,
           cancel_url: `${baseUrl}/pricing?message=purchase-cancelled`,
-          metadata: {
+          custom_field: {
             type: 'credits',
             pack_type: packType,
             credits_amount: pack.credits,
