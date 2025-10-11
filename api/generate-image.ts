@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Part } from '@google/genai';
 import { Buffer } from 'node:buffer';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 import {
   verifyUserToken,
   checkAndDeductCredits,
@@ -200,6 +202,22 @@ export default async function handler(
     return res.status(500).json({ 
       error: 'Invalid Vertex AI credentials format. JSON parse failed.',
       code: 'VERTEX_AI_CREDENTIALS_INVALID'
+    });
+  }
+
+  // 将凭据写入临时文件（Vercel 的 /tmp 目录可写）
+  const tempCredPath = join('/tmp', `gcloud-creds-${userId}-${Date.now()}.json`);
+  
+  try {
+    writeFileSync(tempCredPath, credentialsJson);
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = tempCredPath;
+    console.log(`✅ Credentials written to temp file: ${tempCredPath}`);
+  } catch (writeErr) {
+    await refundCredits(userId, requiredCredits);
+    console.error('❌ Failed to write credentials file:', writeErr);
+    return res.status(500).json({ 
+      error: 'Failed to setup Vertex AI credentials',
+      code: 'CREDENTIALS_SETUP_FAILED'
     });
   }
 
