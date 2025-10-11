@@ -89,10 +89,10 @@ export default async function handler(req, res) {
 
     console.log(`✅ Using Product ID: ${pack.productId} for ${pack.credits} credits`);
 
-    // Get user data
+    // Get user data with membership tier
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, credits')
+      .select('id, email, credits, membership_tier')
       .eq('id', user.id)
       .single();
 
@@ -100,7 +100,18 @@ export default async function handler(req, res) {
       console.error('❌ Error fetching user:', userError?.message);
       return res.status(404).json({ error: 'User not found' });
     }
-    console.log('✅ User data retrieved, current credits:', userData.credits);
+    console.log('✅ User data retrieved, current credits:', userData.credits, 'membership:', userData.membership_tier);
+
+    // Check if user has a paid membership (Pro, Premium, or Business)
+    if (userData.membership_tier === 'free') {
+      console.log('❌ Free user attempted to purchase credits');
+      return res.status(403).json({ 
+        error: 'Credit packs are only available for Pro, Premium, and Business members',
+        message: 'Please upgrade your plan to purchase credit packs',
+        requiresUpgrade: true
+      });
+    }
+    console.log('✅ User has valid membership tier for credit purchases');
 
     // ========== Call CREEM API to create checkout session ==========
     const creemApiKey = process.env.CREEM_API_KEY;

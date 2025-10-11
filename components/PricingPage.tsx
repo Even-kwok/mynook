@@ -101,7 +101,7 @@ const plans = [
 ];
 
 export const PricingPage: React.FC = () => {
-    const { user, setShowLoginModal } = useContext(AuthContext);
+    const { user, setShowLoginModal, membershipTier, profile } = useContext(AuthContext);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
     const [loadingPackId, setLoadingPackId] = useState<string | null>(null);
@@ -111,6 +111,12 @@ export const PricingPage: React.FC = () => {
         // Check if user is logged in
         if (!user) {
             setShowLoginModal(true);
+            return;
+        }
+
+        // Check if user has a paid membership (Pro, Premium, or Business)
+        if (membershipTier === 'free') {
+            setError('Credit packs are only available for Pro, Premium, and Business members. Please upgrade your plan first.');
             return;
         }
 
@@ -394,57 +400,70 @@ export const PricingPage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {creditPacks.map((pack, index) => (
-                            <motion.div
-                                key={pack.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                                className={`relative border rounded-2xl p-6 flex flex-col ${
-                                    pack.isPopular ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-lg' : 'bg-white border-slate-200 shadow-sm'
-                                }`}
-                            >
-                                {pack.isPopular && (
-                                    <div className="absolute -top-3 -right-3">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
-                                            Popular
-                                        </span>
+                        {creditPacks.map((pack, index) => {
+                            const isFreeUser = membershipTier === 'free';
+                            const isDisabled = loadingPackId !== null || isFreeUser;
+                            
+                            return (
+                                <motion.div
+                                    key={pack.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                                    className={`relative border rounded-2xl p-6 flex flex-col ${
+                                        pack.isPopular ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-lg' : 'bg-white border-slate-200 shadow-sm'
+                                    }`}
+                                >
+                                    {pack.isPopular && (
+                                        <div className="absolute -top-3 -right-3">
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                                                Popular
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="text-center">
+                                        <span className="text-5xl">{pack.icon}</span>
+                                        <h3 className="mt-4 text-xl font-bold text-slate-900">{pack.name}</h3>
+                                        <p className="mt-2 text-sm text-slate-500">{pack.description}</p>
+                                        
+                                        <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-lg font-bold rounded-full">
+                                            {pack.credits.toLocaleString()} Credits
+                                        </div>
+
+                                        <div className="mt-6 flex items-baseline justify-center gap-x-2">
+                                            <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                                ${pack.price}
+                                            </span>
+                                        </div>
+
+                                        <p className="mt-2 text-sm text-slate-500">
+                                            ${(pack.price / pack.credits).toFixed(3)} per credit
+                                        </p>
+
+                                        {isFreeUser && (
+                                            <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                                <p className="text-xs text-amber-700 font-medium">
+                                                    ⭐ Upgrade to Pro, Premium or Business to purchase credits
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            onClick={() => handlePurchaseCredits(pack.id)}
+                                            disabled={isDisabled}
+                                            className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                pack.isPopular 
+                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600' 
+                                                    : 'bg-slate-800 text-white hover:bg-slate-900'
+                                            }`}
+                                        >
+                                            {loadingPackId === pack.id ? 'Processing...' : isFreeUser ? '🔒 Upgrade Required' : 'Buy Now'}
+                                        </button>
                                     </div>
-                                )}
-
-                                <div className="text-center">
-                                    <span className="text-5xl">{pack.icon}</span>
-                                    <h3 className="mt-4 text-xl font-bold text-slate-900">{pack.name}</h3>
-                                    <p className="mt-2 text-sm text-slate-500">{pack.description}</p>
-                                    
-                                    <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-lg font-bold rounded-full">
-                                        {pack.credits.toLocaleString()} Credits
-                                    </div>
-
-                                    <div className="mt-6 flex items-baseline justify-center gap-x-2">
-                                        <span className="text-4xl font-extrabold tracking-tight text-slate-900">
-                                            ${pack.price}
-                                        </span>
-                                    </div>
-
-                                    <p className="mt-2 text-sm text-slate-500">
-                                        ${(pack.price / pack.credits).toFixed(3)} per credit
-                                    </p>
-
-                                    <button
-                                        onClick={() => handlePurchaseCredits(pack.id)}
-                                        disabled={loadingPackId !== null}
-                                        className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                            pack.isPopular 
-                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600' 
-                                                : 'bg-slate-800 text-white hover:bg-slate-900'
-                                        }`}
-                                    >
-                                        {loadingPackId === pack.id ? 'Processing...' : 'Buy Now'}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </div>
 
                     <div className="mt-8 text-center text-sm text-slate-500">
