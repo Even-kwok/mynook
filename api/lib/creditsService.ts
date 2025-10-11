@@ -129,13 +129,14 @@ export async function deductCredits(
     const newCredits = userData.credits - amount;
 
     // 3. 更新数据库
+    const updateData: Record<string, any> = {
+      credits: newCredits,
+      total_generations: userData.total_generations + 1,
+      updated_at: new Date().toISOString(),
+    };
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({
-        credits: newCredits,
-        total_generations: userData.total_generations + 1,
-        updated_at: new Date().toISOString(),
-      } as any)
+      .update(updateData)
       .eq('id', userId);
 
     if (updateError) {
@@ -172,13 +173,14 @@ export async function refundCredits(
     const userData = user as any;
 
     // 所有会员都需要回滚信用点
+    const refundData: Record<string, any> = {
+      credits: userData.credits + amount,
+      total_generations: Math.max(0, userData.total_generations - 1),
+      updated_at: new Date().toISOString(),
+    };
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({
-        credits: userData.credits + amount,
-        total_generations: Math.max(0, userData.total_generations - 1),
-        updated_at: new Date().toISOString(),
-      } as any)
+      .update(refundData)
       .eq('id', userId);
 
     if (updateError) {

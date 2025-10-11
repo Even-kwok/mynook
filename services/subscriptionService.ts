@@ -25,10 +25,16 @@ const getSupabaseClient = () => {
   }
   
   // In browser environment
-  if (typeof window !== 'undefined' && (import.meta as any).env) {
-    const url = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL') || '';
-    const key = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY') || '';
-    return createClient(url, key);
+  if (typeof window !== 'undefined') {
+    try {
+      const url = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL') || '';
+      const key = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY') || '';
+      if (url && key) {
+        return createClient(url, key);
+      }
+    } catch (e) {
+      // Fallback if import.meta is not available
+    }
   }
   
   throw new Error('Unable to initialize Supabase client');

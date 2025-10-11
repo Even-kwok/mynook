@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyNook Subscription Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      color: #333;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-size: 32px;
+      color: #667eea;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .success { border-left-color: #4caf50; background: #f1f8f4; }
+    .error { border-left-color: #f44336; background: #fef1f0; }
+    .section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+    }
+    .section h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    .status-badge.online { background: #4caf50; color: white; }
+    .status-badge.offline { background: #f44336; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 MyNook Subscription Test Tool</h1>
+    <p class="subtitle">测试订阅系统和 API 功能</p>
+
+    <!-- Section 1: Login Status -->
+    <div class="section">
+      <h2>📊 登录状态</h2>
+      <button onclick="checkLoginStatus()">检查登录状态</button>
+      <div id="login-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Section 2: API Health Check -->
+    <div class="section">
+      <h2>🏥 API 健康检查</h2>
+      <button onclick="testHealthAPI()">测试 Health API</button>
+      <button onclick="testConnectionAPI()">测试 Connection API</button>
+      <div id="health-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Section 3: Subscription Test -->
+    <div class="section">
+      <h2>💳 订阅功能测试</h2>
+      <label>选择套餐:</label>
+      <select id="planType">
+        <option value="pro">Pro Plan ($17/月)</option>
+        <option value="premium" selected>Premium Plan ($42/月)</option>
+        <option value="business">Business Plan ($142/月)</option>
+      </select>
+      <label>选择周期:</label>
+      <select id="billingCycle">
+        <option value="monthly" selected>Monthly (按月)</option>
+        <option value="yearly">Yearly (按年省50%)</option>
+      </select>
+      <button onclick="testSubscription()">测试订阅 API</button>
+      <div id="subscription-result" class="result" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function showResult(elementId, data, isError = false) {
+      const element = document.getElementById(elementId);
+      element.style.display = 'block';
+      element.className = 'result ' + (isError ? 'error' : 'success');
+      element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+
+    async function checkLoginStatus() {
+      try {
+        // 尝试从 localStorage 获取 Supabase session
+        const keys = Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('auth-token'));
+        
+        if (keys.length === 0) {
+          showResult('login-result', '❌ 未找到登录信息。请先在主页登录。', true);
+          return;
+        }
+
+        let sessionData = null;
+        for (const key of keys) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && data.access_token) {
+              sessionData = data;
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+
+        if (sessionData) {
+          showResult('login-result', {
+            status: '✅ 已登录',
+            token_preview: sessionData.access_token?.substring(0, 50) + '...',
+            user_email: sessionData.user?.email || 'N/A'
+          });
+        } else {
+          showResult('login-result', '❌ 未找到有效的 session。请先在主页登录。', true);
+        }
+      } catch (error) {
+        showResult('login-result', `❌ 错误: ${error.message}`, true);
+      }
+    }
+
+    async function testHealthAPI() {
+      try {
+        const response = await fetch(`${API_BASE}/api/health`);
+        const data = await response.json();
+        showResult('health-result', data, !response.ok);
+      } catch (error) {
+        showResult('health-result', `❌ 请求失败: ${error.message}`, true);
+      }
+    }
+
+    async function testConnectionAPI() {
+      try {
+        const response = await fetch(`${API_BASE}/api/test-connection`);
+        const data = await response.json();
+        showResult('health-result', data, !response.ok);
+      } catch (error) {
+        showResult('health-result', `❌ 请求失败: ${error.message}`, true);
+      }
+    }
+
+    async function testSubscription() {
+      try {
+        // 获取 session token
+        const keys = Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('auth-token'));
+        let sessionData = null;
+        
+        for (const key of keys) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && data.access_token) {
+              sessionData = data;
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+
+        if (!sessionData || !sessionData.access_token) {
+          showResult('subscription-result', '❌ 未登录。请先在主页登录，然后刷新此页面。', true);
+          return;
+        }
+
+        const planType = document.getElementById('planType').value;
+        const billingCycle = document.getElementById('billingCycle').value;
+
+        showResult('subscription-result', '⏳ 正在测试订阅 API...', false);
+
+        const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${sessionData.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ planType, billingCycle })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          showResult('subscription-result', {
+            status: '✅ 订阅 API 成功',
+            response: data
+          }, false);
+        } else {
+          showResult('subscription-result', {
+            status: '❌ 订阅 API 失败',
+            httpStatus: response.status,
+            error: data
+          }, true);
+        }
+      } catch (error) {
+        showResult('subscription-result', `❌ 请求失败: ${error.message}`, true);
+      }
+    }
+
+    // 页面加载时自动检查登录状态
+    window.addEventListener('load', () => {
+      console.log('🔧 Subscription Test Tool Ready');
+      checkLoginStatus();
+    });
+  </script>
+</body>
+</html>
+
