@@ -3,28 +3,79 @@
 import { PromptTemplate, PromptTemplateCategory, AdvisorPersona, User, ManagedPromptTemplateCategory, GalleryItem } from './types';
 
 export const ROOM_TYPES = [
+  // Basic Living Spaces (12)
   { id: 'living-room', name: 'Living Room' },
   { id: 'dining-room', name: 'Dining Room' },
   { id: 'bedroom', name: 'Bedroom' },
+  { id: 'master-bedroom', name: 'Master Bedroom' },
+  { id: 'guest-bedroom', name: 'Guest Bedroom' },
+  { id: 'kids-room', name: 'Kids Room' },
+  { id: 'nursery', name: 'Nursery' },
+  { id: 'teen-room', name: 'Teen Room' },
   { id: 'kitchen', name: 'Kitchen' },
   { id: 'bathroom', name: 'Bathroom' },
+  { id: 'master-bathroom', name: 'Master Bathroom' },
+  { id: 'powder-room', name: 'Powder Room' },
+  // Functional Spaces (8)
   { id: 'home-office', name: 'Home Office' },
-  { id: 'kids-room', name: 'Kids Room' },
+  { id: 'study-library', name: 'Study / Library' },
+  { id: 'laundry-room', name: 'Laundry Room' },
+  { id: 'mudroom-entryway', name: 'Mudroom / Entryway' },
+  { id: 'walk-in-closet', name: 'Walk-in Closet' },
+  { id: 'pantry', name: 'Pantry' },
   { id: 'attic', name: 'Attic' },
   { id: 'basement', name: 'Basement' },
+  // Entertainment Spaces (7)
+  { id: 'home-theater', name: 'Home Theater' },
+  { id: 'game-room', name: 'Game Room' },
+  { id: 'home-gym', name: 'Home Gym' },
+  { id: 'yoga-meditation-room', name: 'Yoga / Meditation Room' },
+  { id: 'home-bar', name: 'Home Bar' },
+  { id: 'music-room', name: 'Music Room' },
+  { id: 'craft-hobby-room', name: 'Craft / Hobby Room' },
+  // Transitional & Special Spaces (5)
+  { id: 'hallway-corridor', name: 'Hallway / Corridor' },
+  { id: 'staircase', name: 'Staircase' },
+  { id: 'sunroom-conservatory', name: 'Sunroom / Conservatory' },
+  { id: 'balcony-terrace', name: 'Balcony / Terrace' },
+  { id: 'garage', name: 'Garage' },
 ];
 
 export const BUILDING_TYPES = [
+  // Residential Buildings (12)
   { id: 'modern-house', name: 'Modern House' },
+  { id: 'contemporary-villa', name: 'Contemporary Villa' },
   { id: 'victorian-house', name: 'Victorian House' },
+  { id: 'colonial-house', name: 'Colonial House' },
+  { id: 'beach-house', name: 'Beach House' },
+  { id: 'suburban-home', name: 'Suburban Home' },
+  { id: 'mountain-cabin', name: 'Mountain Cabin' },
+  { id: 'townhouse', name: 'Townhouse' },
+  { id: 'cottage', name: 'Cottage' },
+  { id: 'ranch-house', name: 'Ranch House' },
+  { id: 'mediterranean-villa', name: 'Mediterranean Villa' },
+  { id: 'farmhouse', name: 'Farmhouse' },
+  // Multi-Unit Housing (4)
   { id: 'apartment-building', name: 'Apartment Building' },
+  { id: 'condominium', name: 'Condominium' },
+  { id: 'loft-building', name: 'Loft Building' },
+  { id: 'mixed-use-building', name: 'Mixed-Use Building' },
+  // Commercial Buildings (8)
   { id: 'office-building', name: 'Office Building' },
   { id: 'skyscraper', name: 'Skyscraper' },
   { id: 'retail-storefront', name: 'Retail Storefront' },
   { id: 'cafe-restaurant', name: 'Cafe / Restaurant' },
-  { id: 'beach-house', name: 'Beach House' },
-  { id: 'suburban-home', name: 'Suburban Home' },
-  { id: 'mountain-cabin', name: 'Mountain Cabin' },
+  { id: 'hotel', name: 'Hotel' },
+  { id: 'boutique-shop', name: 'Boutique Shop' },
+  { id: 'spa-wellness-center', name: 'Spa / Wellness Center' },
+  { id: 'gym-fitness-center', name: 'Gym / Fitness Center' },
+  // Special Buildings (6)
+  { id: 'church-chapel', name: 'Church / Chapel' },
+  { id: 'museum-gallery', name: 'Museum / Gallery' },
+  { id: 'library', name: 'Library' },
+  { id: 'school-building', name: 'School Building' },
+  { id: 'industrial-warehouse', name: 'Industrial Warehouse' },
+  { id: 'barn-agricultural', name: 'Barn / Agricultural Building' },
 ];
 
 export const ITEM_TYPES = [
