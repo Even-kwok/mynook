@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Part } from '@google/genai';
+import { GoogleGenAI, Part, Modality } from '@google/genai';
 import { Buffer } from 'node:buffer';
 import {
   verifyUserToken,
@@ -231,7 +231,7 @@ export default async function handler(
       model: modelName,
       contents,
       config: {
-        responseModalities: ['IMAGE', 'TEXT'],
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
       },
     } as any);
 
