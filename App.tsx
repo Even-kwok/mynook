@@ -1149,14 +1149,11 @@ interface FreeCanvasState {
   images: CanvasImage[];
   prompt: string;
   paths: DrawablePath[];
-  annotations: Annotation[];
-  activeTool: 'select' | 'draw' | 'annotate';
+  activeTool: 'select' | 'draw';
   brushColor: string;
   brushSize: number;
-  annotationShape: 'rect' | 'circle';
   selectedImageId: string | null;
   selectedPathId: string | null;
-  presets: PromptPreset[];
 }
 
 
@@ -1419,38 +1416,17 @@ const App: React.FC = () => {
     
     // Free Canvas State (lifted for persistence)
     const [freeCanvasState, setFreeCanvasState] = useState<FreeCanvasState>(() => {
-        const initialPresets = (() => {
-            try {
-                const savedPresets = localStorage.getItem('freeCanvasPresets');
-                return savedPresets ? JSON.parse(savedPresets) : [];
-            } catch (e) {
-                console.error("Failed to load presets from localStorage", e);
-                return [];
-            }
-        })();
         return {
             images: [],
             prompt: '',
             paths: [],
-            annotations: [],
             activeTool: 'select',
             brushColor: '#ef4444',
             brushSize: 8,
-            annotationShape: 'rect',
             selectedImageId: null,
             selectedPathId: null,
-            presets: initialPresets,
         };
     });
-
-    useEffect(() => {
-        try {
-            localStorage.setItem('freeCanvasPresets', JSON.stringify(freeCanvasState.presets));
-        } catch (e) {
-            console.error("Failed to save presets to localStorage", e);
-        }
-    }, [freeCanvasState.presets]);
-
 
     // 辅助函数：获取用户会员等级
     const getUserMembershipTier = (): 'free' | 'pro' | 'premium' | 'business' => {

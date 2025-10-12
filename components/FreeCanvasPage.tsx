@@ -7,7 +7,7 @@ import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
-import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath, Annotation, PromptPreset } from '../types';
+import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
 
 
 interface FreeCanvasPageProps {
@@ -24,14 +24,11 @@ interface FreeCanvasPageProps {
         images: CanvasImage[];
         prompt: string;
         paths: DrawablePath[];
-        annotations: Annotation[];
-        activeTool: 'select' | 'draw' | 'annotate';
+        activeTool: 'select' | 'draw';
         brushColor: string;
         brushSize: number;
-        annotationShape: 'rect' | 'circle';
         selectedImageId: string | null;
         selectedPathId: string | null;
-        presets: PromptPreset[];
     };
     setCanvasState: React.Dispatch<React.SetStateAction<FreeCanvasPageProps['canvasState']>>;
 }
@@ -366,38 +363,29 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         images,
         prompt,
         paths,
-        annotations,
         activeTool,
         brushColor,
         brushSize,
-        annotationShape,
         selectedImageId,
         selectedPathId,
-        presets,
     } = canvasState;
 
     const setImages = (updater: React.SetStateAction<CanvasImage[]>) => setCanvasState(prev => ({ ...prev, images: typeof updater === 'function' ? updater(prev.images) : updater }));
     const setPrompt = (updater: React.SetStateAction<string>) => setCanvasState(prev => ({ ...prev, prompt: typeof updater === 'function' ? updater(prev.prompt) : updater }));
     const setPaths = (updater: React.SetStateAction<DrawablePath[]>) => setCanvasState(prev => ({ ...prev, paths: typeof updater === 'function' ? updater(prev.paths) : updater }));
-    const setAnnotations = (updater: React.SetStateAction<Annotation[]>) => setCanvasState(prev => ({ ...prev, annotations: typeof updater === 'function' ? updater(prev.annotations) : updater }));
-    const setActiveTool = (updater: React.SetStateAction<'select' | 'draw' | 'annotate'>) => setCanvasState(prev => ({ ...prev, activeTool: typeof updater === 'function' ? updater(prev.activeTool) : updater }));
+    const setActiveTool = (updater: React.SetStateAction<'select' | 'draw'>) => setCanvasState(prev => ({ ...prev, activeTool: typeof updater === 'function' ? updater(prev.activeTool) : updater }));
     const setBrushColor = (updater: React.SetStateAction<string>) => setCanvasState(prev => ({ ...prev, brushColor: typeof updater === 'function' ? updater(prev.brushColor) : updater }));
     const setBrushSize = (updater: React.SetStateAction<number>) => setCanvasState(prev => ({ ...prev, brushSize: typeof updater === 'function' ? updater(prev.brushSize) : updater }));
-    const setAnnotationShape = (updater: React.SetStateAction<'rect' | 'circle'>) => setCanvasState(prev => ({ ...prev, annotationShape: typeof updater === 'function' ? updater(prev.annotationShape) : updater }));
     const setSelectedImageId = (updater: React.SetStateAction<string | null>) => setCanvasState(prev => ({ ...prev, selectedImageId: typeof updater === 'function' ? updater(prev.selectedImageId) : updater }));
     const setSelectedPathId = (updater: React.SetStateAction<string | null>) => setCanvasState(prev => ({ ...prev, selectedPathId: typeof updater === 'function' ? updater(prev.selectedPathId) : updater }));
-    const setPresets = (updater: React.SetStateAction<PromptPreset[]>) => setCanvasState(prev => ({ ...prev, presets: typeof updater === 'function' ? updater(prev.presets) : updater }));
     
     // Local UI state, doesn't need to be persisted
-    const [drawingAnnotation, setDrawingAnnotation] = useState<{ startX: number; startY: number; currentBox?: { x: number; y: number; width: number; height: number; } } | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [generationProgress, setGenerationProgress] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
     const [uploadProgress, setUploadProgress] = useState<string>('');
     const [compressionStats, setCompressionStats] = useState<CompressionResult | null>(null);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
-    const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
-    const [editingPreset, setEditingPreset] = useState<PromptPreset | { name: string; prompt: string } | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     // @ts-ignore - SpeechRecognition is a browser API that may not be in all TS lib configurations.
     const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -504,10 +492,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         setPaths(prev => prev.filter(p => p.id !== pathId));
         setSelectedPathId(null);
     }, [setPaths, setSelectedPathId]);
-
-    const handleDeleteAnnotation = useCallback((id: string) => {
-        setAnnotations(prev => prev.filter(a => a.id !== id));
-    }, [setAnnotations]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -653,12 +637,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 size: brushSize,
             };
             setPaths(prev => [...prev, newPath]);
-        } else if (activeTool === 'annotate' && workspaceRef.current && annotations.length < 9) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            setDrawingAnnotation({
-                startX: e.clientX - rect.left,
-                startY: e.clientY - rect.top,
-            });
         }
     };
 
@@ -825,49 +803,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 }
                 return newPaths;
             });
-        } else if (activeTool === 'annotate' && drawingAnnotation && workspaceRef.current) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            const { startX, startY } = drawingAnnotation;
-            const currentX = e.clientX - rect.left;
-            const currentY = e.clientY - rect.top;
-            
-            const newBox = {
-                x: Math.min(startX, currentX),
-                y: Math.min(startY, currentY),
-                width: Math.abs(currentX - startX),
-                height: Math.abs(currentY - startY),
-            };
-            setDrawingAnnotation(prev => prev ? {...prev, currentBox: newBox} : null);
         }
     };
 
     const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement>) => {
-        if (activeTool === 'annotate' && drawingAnnotation && workspaceRef.current) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            const { startX, startY } = drawingAnnotation;
-            const endX = e.clientX - rect.left;
-            const endY = e.clientY - rect.top;
-
-            const box = {
-                x: Math.min(startX, endX),
-                y: Math.min(startY, endY),
-                width: Math.abs(endX - startX),
-                height: Math.abs(endY - startY),
-            };
-
-            if (box.width > 10 && box.height > 10) {
-                const newAnnotation: Annotation = {
-                    id: `ann_${Date.now()}`,
-                    shape: annotationShape,
-                    box,
-                    label: `Box ${annotations.length + 1}`,
-                    text: '',
-                };
-                setAnnotations(prev => [...prev, newAnnotation]);
-            }
-            setDrawingAnnotation(null);
-        }
-
         dragInfo.current = null;
         resizeInfo.current = null;
         rotationInfo.current = null;
@@ -1024,60 +963,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
     // --- End Cropping ---
 
-    const handleSavePreset = () => {
-        if (!prompt.trim()) return;
-        setEditingPreset({ name: '', prompt: prompt });
-        setIsPresetModalOpen(true);
-    };
-
     const handleSetPrompt = (e: React.MouseEvent, newPrompt: string) => {
         e.stopPropagation();
         setPrompt(newPrompt);
     };
-
-    const handleEditPreset = (e: React.MouseEvent, preset: PromptPreset) => {
-        e.stopPropagation();
-        setEditingPreset(preset);
-        setIsPresetModalOpen(true);
-    };
-
-    const handleDeletePreset = (e: React.MouseEvent, presetId: string) => {
-        e.stopPropagation();
-        setPresets(prev => prev.filter(p => p.id !== presetId));
-    };
-
-    const handlePresetModalSave = (name: string, promptText: string) => {
-        if (editingPreset && 'id' in editingPreset) {
-            setPresets(prev => prev.map(p => p.id === (editingPreset as PromptPreset).id ? { ...p, name, prompt: promptText } : p));
-        } else {
-            const newPreset: PromptPreset = {
-                id: `preset_${Date.now()}`,
-                name,
-                prompt: promptText
-            };
-            setPresets(prev => [...prev, newPreset]);
-        }
-        setIsPresetModalOpen(false);
-        setEditingPreset(null);
-    };
-    
-    const handleAnnotationTextChange = (id: string, newText: string) => {
-        setAnnotations(prev =>
-            prev.map(ann => (ann.id === id ? { ...ann, text: newText } : ann))
-        );
-    };
-
-    useEffect(() => {
-        const annotationPrompt = annotations
-            .filter(ann => ann.text.trim() !== '')
-            .map(ann => `${ann.label}: ${ann.text.trim()}`)
-            .join(', ');
-        
-        if (annotations.length > 0) {
-            setPrompt(annotationPrompt);
-        }
-    }, [annotations, setPrompt]);
-
 
     const captureCanvasAsImage = async (): Promise<string> => {
         const workspace = workspaceRef.current;
@@ -1176,8 +1065,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const createCompositeForGeneration = async (
         baseImage: CanvasImage,
         overlayImages: CanvasImage[],
-        paths: DrawablePath[],
-        annotations: Annotation[]
+        paths: DrawablePath[]
     ): Promise<string> => {
         console.log('🖼️ [Composite] Start');
         console.log(`📏 [Composite] Base: ${baseImage.width}x${baseImage.height}`);
@@ -1318,47 +1206,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             ctx.stroke();
         });
 
-        console.log(`🏷️ [Composite] Drawing ${annotations.length} annotations...`);
-        const annotationStart = performance.now();
-        
-        annotations.forEach((ann, i) => {
-            console.log(`🏷️ [Composite] Ann ${i+1}/${annotations.length}: "${ann.label}" (${ann.shape}) at (${Math.round(ann.box.x)}, ${Math.round(ann.box.y)})`);
-            
-            ctx.strokeStyle = '#f59e0b'; // amber-500
-            ctx.lineWidth = 2 * scaleX;
-            // Removed setLineDash for better performance (solid line instead of dashed)
-            // ctx.setLineDash([6 * scaleX, 3 * scaleX]);
-    
-            const boxX = (ann.box.x - baseImage.x) * scaleX;
-            const boxY = (ann.box.y - baseImage.y) * scaleY;
-            const boxWidth = ann.box.width * scaleX;
-            const boxHeight = ann.box.height * scaleY;
-    
-            if (ann.shape === 'rect') {
-                ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-            } else { // circle
-                ctx.beginPath();
-                ctx.ellipse(boxX + boxWidth / 2, boxY + boxHeight / 2, boxWidth / 2, boxHeight / 2, 0, 0, 2 * Math.PI);
-                ctx.stroke();
-            }
-    
-            // ctx.setLineDash([]); // No longer needed
-    
-            // Use system font for better performance
-            ctx.fillStyle = '#f59e0b';
-            const fontSize = Math.floor(14 * scaleX);
-            ctx.font = `bold ${fontSize}px Arial`;
-            
-            try {
-                ctx.fillText(ann.label, boxX, boxY - (5 * scaleY));
-            } catch (err) {
-                console.warn(`⚠️ [Composite] Failed to render text for annotation ${ann.label}:`, err);
-            }
-        });
-        
-        const annotationTime = performance.now() - annotationStart;
-        console.log(`✅ [Composite] Annotations drawn in ${annotationTime.toFixed(0)}ms`);
-
         try {
             // Use JPEG with quality 0.85 for much faster upload (smaller file size)
             // This significantly reduces API upload time (PNG can be 10x larger)
@@ -1433,7 +1280,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         setIsDrawing(false);
         
         console.log('🚀 [Generate] Starting generation process');
-        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}, Annotations: ${annotations.length}`);
+        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}`);
     
         try {
             let imageForApi: string;
@@ -1457,7 +1304,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 
                 // Add timeout protection for composite creation
                 const COMPOSITE_TIMEOUT = 30000; // 30 seconds
-                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths);
                 const timeoutPromise = new Promise<never>((_, reject) =>
                     setTimeout(() => reject(new Error('Image processing timeout after 30s')), COMPOSITE_TIMEOUT)
                 );
@@ -1474,24 +1321,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 
                 console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
-                // Log prompt strategy
-                console.log(`📝 [Prompt] Paths: ${paths.length}, Annotations: ${annotations.length}, Overlays: ${overlayImages.length}`);
-                const strategy = annotations.length > 0 && paths.length > 0 ? 'Combined' : annotations.length > 0 ? 'Annotations' : paths.length > 0 ? 'Drawings' : 'Text-only';
-                console.log(`📝 [Prompt] Strategy: ${strategy}`);
-                
-                // Improved prompt strategy - handle combinations
-                if (annotations.length > 0 && paths.length > 0) {
-                    // Both annotations and drawings
-                    finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image with:
-1) ${annotations.length} numbered boxes (solid outlines with labels) that mark specific areas for editing
-2) Additional freehand drawings/marks that provide visual guidance
-Both the numbered boxes and the drawings are instructional overlays. Your task is to perform the edits described in the user's prompt, which are mapped to these visual guides. After applying the edits, you MUST completely remove ALL markers (boxes, labels, drawings, any visual guides). The final output must be a clean, photorealistic image with no trace of any instructional markings. User's instructions: "${prompt}"`;
-                } else if (annotations.length > 0) {
-                    // Only annotations
-                    finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image marked with ${annotations.length} numbered boxes (solid outlines with labels). These boxes indicate specific areas for editing. Your task is to perform the edits described in the user's prompt, which are mapped to these numbered boxes. After applying the edits, you MUST completely remove the boxes and their labels. The final output must be a clean, photorealistic image with no trace of any instructional markings (no boxes, no lines, no numbers, no labels). User's instructions: "${prompt}"`;
-                } else if (overlayImages.length > 0 || paths.length > 0) {
-                    // Only drawings/overlays
-                    finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
+                if (overlayImages.length > 0 || paths.length > 0) {
+                     finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
                 } else {
                     // Only text
                     finalPrompt = `You are an expert photo editor. Your task is to transform the provided image based on the user's prompt. Produce a new, photorealistic version of the original image with the requested changes seamlessly integrated. User's prompt: "${prompt}"`;
@@ -1528,17 +1359,12 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
             console.log('✅ [Generate] Step 2: Complete');
             console.log(`📊 [Generate] Image size: ${(imageForApiData.length / 1024).toFixed(0)}KB`);
             
-            setGenerationProgress('Step 3: Sending to AI...');
+            setGenerationProgress('Step 3: Generating your image...');
             console.log('🔍 [Generate] Step 3: Calling API...');
             
             const generatedUrl = await generateImage(
                 finalPrompt, 
-                [imageForApiData],
-                (progress) => {
-                    if (isMountedRef.current) {
-                        setGenerationProgress(progress);
-                    }
-                }
+                [imageForApiData]
             );
     
             // Check if component is still mounted before updating state
@@ -1606,7 +1432,6 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
     const handleConfirmClear = () => {
         setImages([]);
         setPaths([]);
-        setAnnotations([]);
         setSelectedImageId(null);
         setSelectedPathId(null);
         setCropState(null);
@@ -1670,65 +1495,8 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
         });
     };
 
-    const PresetModal = () => {
-        if (!isPresetModalOpen || !editingPreset) return null;
-
-        const [name, setName] = useState(editingPreset.name);
-        const [promptText, setPromptText] = useState(editingPreset.prompt);
-        const isEditing = 'id' in editingPreset;
-
-        const handleSubmit = (e: React.FormEvent) => {
-            e.preventDefault();
-            if (name.trim() && promptText.trim()) {
-                handlePresetModalSave(name, promptText);
-            }
-        };
-
-        return (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200"
-                >
-                    <form onSubmit={handleSubmit}>
-                        <h3 className="text-lg font-semibold mb-4 text-slate-800">{isEditing ? "Edit Prompt" : "Save Prompt"}</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="e.g., 'Remove background'"
-                                    className="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-300 focus:ring-opacity-50 p-2 bg-slate-50"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Prompt Text</label>
-                                <textarea
-                                    value={promptText}
-                                    onChange={e => setPromptText(e.target.value)}
-                                    className="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-300 focus:ring-opacity-50 h-32 p-2 bg-slate-50"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button type="button" onClick={() => setIsPresetModalOpen(false)}>Cancel</Button>
-                            <Button type="submit" primary>{isEditing ? "Update" : "Save"}</Button>
-                        </div>
-                    </form>
-                </motion.div>
-            </div>
-        );
-    };
-
-
     return (
         <>
-            <PresetModal />
             <UpgradeModal 
                 isOpen={isPermissionModalOpen}
                 onClose={() => setIsPermissionModalOpen(false)}
@@ -1766,9 +1534,6 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                      <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
                                         <IconBrush className="w-5 h-5"/> Draw
                                     </button>
-                                    <button onClick={() => setActiveTool('annotate')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'annotate' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
-                                        <IconTag className="w-5 h-5"/> Annotate
-                                    </button>
                                 </div>
                                 {activeTool === 'draw' && (
                                     <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
@@ -1799,22 +1564,6 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                         </div>
                                     </motion.div>
                                 )}
-                                {activeTool === 'annotate' && (
-                                    <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="text-sm font-medium text-slate-700">Shape</h4>
-                                            <div className="flex gap-1 p-0.5 bg-slate-200 rounded-lg">
-                                                <button onClick={() => setAnnotationShape('rect')} className={`p-1.5 rounded-md ${annotationShape === 'rect' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/70'}`} aria-label="Rectangle">
-                                                    <IconRectangle className="w-5 h-5" />
-                                                </button>
-                                                <button onClick={() => setAnnotationShape('circle')} className={`p-1.5 rounded-md ${annotationShape === 'circle' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/70'}`} aria-label="Circle">
-                                                    <IconCircle className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-500">Click and drag on the canvas to draw a shape. You can create up to 9 annotations.</p>
-                                    </motion.div>
-                                )}
                             </div>
 
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
@@ -1822,10 +1571,9 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                 <div className="relative">
                                     <textarea 
                                         value={prompt} 
-                                        onChange={(e) => { if (annotations.length === 0) setPrompt(e.target.value); }} 
-                                        readOnly={annotations.length > 0}
-                                        placeholder={annotations.length > 0 ? "Prompt is generated from annotations." : "Describe what you want to create..."} 
-                                        className="w-full p-3 pr-24 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 read-only:bg-slate-100" />
+                                        onChange={(e) => setPrompt(e.target.value)} 
+                                        placeholder="Describe what you want to create..." 
+                                        className="w-full p-3 pr-24 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
                                         <button
                                             type="button"
@@ -1840,37 +1588,7 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                         >
                                             <IconMicrophone className="w-5 h-5" />
                                         </button>
-                                        {prompt.trim() && (
-                                            <Button onClick={handleSavePreset} className="!py-1 !px-2 text-xs">
-                                                Save
-                                            </Button>
-                                        )}
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-                                <h3 className="text-base font-semibold text-slate-800">Saved Prompts</h3>
-                                <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-hide">
-                                    {presets.length > 0 ? (
-                                        presets.map(p => (
-                                            <div key={p.id} className="group flex items-center justify-between -mx-2 px-2 py-1.5 rounded-xl hover:bg-slate-200 transition-colors">
-                                                <button onClick={(e) => handleSetPrompt(e, p.prompt)} className="flex-1 text-left text-sm text-slate-700 group-hover:text-slate-900 truncate pr-2" title={p.name}>
-                                                    {p.name}
-                                                </button>
-                                                <div className="flex items-center flex-shrink-0 gap-1">
-                                                    <button onClick={(e) => handleEditPreset(e, p)} className="p-1 text-slate-500 hover:text-slate-800 rounded-md" aria-label={`Edit "${p.name}" prompt`}>
-                                                        <IconPencil className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={(e) => handleDeletePreset(e, p.id)} className="p-1 text-slate-500 hover:text-red-600 rounded-md" aria-label={`Delete "${p.name}" prompt`}>
-                                                        <IconTrash className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-slate-500 italic px-2">No saved prompts yet.</p>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1879,7 +1597,7 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                     <div className="p-6 pt-4 border-t border-slate-200">
                         <Button 
                             onClick={handleGenerate} 
-                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0 && annotations.length === 0)} 
+                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)} 
                             primary 
                             className="w-full text-base py-3"
                             locked={!hasGeneratePermission}
@@ -1915,7 +1633,7 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                         </div>
                     )}
                     <AnimatePresence>
-                        {(images.length > 0 || paths.length > 0 || annotations.length > 0) && !isLoading && (
+                        {(images.length > 0 || paths.length > 0) && !isLoading && (
                             <motion.button
                                 ref={clearButtonRef}
                                 initial={{ opacity: 0, scale: 0.8 }}
@@ -1937,7 +1655,7 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                      />
                     <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
                         <>
-                            {images.length === 0 && paths.length === 0 && annotations.length === 0 && !cropState && (
+                            {images.length === 0 && paths.length === 0 && !cropState && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
                                     <IconPhoto className="w-16 h-16" />
                                     <h3 className="text-xl font-semibold mt-4 text-slate-600">Your Creative Canvas</h3>
@@ -1946,7 +1664,7 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                             )}
                             <div 
                                 ref={workspaceRef}
-                                className={`w-full h-full relative ${activeTool === 'draw' || activeTool === 'annotate' ? 'cursor-crosshair' : 'cursor-default'}`}
+                                className={`w-full h-full relative ${activeTool === 'draw' ? 'cursor-crosshair' : 'cursor-default'}`}
                                 onMouseDown={handleMouseDown}
                                 onMouseMove={handleMouseMove}
                                 onMouseUp={handleMouseUp}
@@ -2057,64 +1775,6 @@ Both the numbered boxes and the drawings are instructional overlays. Your task i
                                         </div>
                                     );
                                 })()}
-
-                                {drawingAnnotation && drawingAnnotation.currentBox && (
-                                    <div
-                                        className={`absolute border-2 border-dashed ${annotationShape === 'circle' ? 'rounded-full' : ''}`}
-                                        style={{
-                                            left: drawingAnnotation.currentBox.x,
-                                            top: drawingAnnotation.currentBox.y,
-                                            width: drawingAnnotation.currentBox.width,
-                                            height: drawingAnnotation.currentBox.height,
-                                            borderColor: '#f59e0b',
-                                            pointerEvents: 'none'
-                                        }}
-                                    />
-                                )}
-                                {annotations.map(ann => (
-                                    <React.Fragment key={ann.id}>
-                                        <div
-                                            className={`absolute border-2 border-dashed ${ann.shape === 'circle' ? 'rounded-full' : ''}`}
-                                            style={{
-                                                left: ann.box.x,
-                                                top: ann.box.y,
-                                                width: ann.box.width,
-                                                height: ann.box.height,
-                                                borderColor: '#f59e0b', // amber-500
-                                                pointerEvents: 'none'
-                                            }}
-                                        >
-                                            <div className="absolute -top-6 left-0 bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                                                {ann.label}
-                                            </div>
-                                        </div>
-                                        <div
-                                            className="absolute flex items-center gap-2 z-10"
-                                            style={{
-                                                left: ann.box.x + ann.box.width + 10,
-                                                top: ann.box.y,
-                                            }}
-                                        >
-                                            <input
-                                                type="text"
-                                                value={ann.text}
-                                                onChange={(e) => handleAnnotationTextChange(ann.id, e.target.value)}
-                                                className="p-2 bg-white/60 backdrop-blur-lg border border-white/40 shadow-lg rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
-                                                placeholder={`Describe change for ${ann.label}...`}
-                                                onClick={e => e.stopPropagation()}
-                                                onMouseDown={e => e.stopPropagation()}
-                                            />
-                                            <button
-                                                onClick={() => handleDeleteAnnotation(ann.id)}
-                                                className="p-2 bg-white/60 backdrop-blur-lg border border-white/40 shadow-lg rounded-full text-slate-500 hover:bg-red-500/20 hover:text-red-600 transition-colors"
-                                                onMouseDown={e => e.stopPropagation()}
-                                            >
-                                                <IconX />
-                                            </button>
-                                        </div>
-                                    </React.Fragment>
-                                ))}
-
 
                                 {cropState && (() => {
                                     const image = images.find(img => img.id === cropState.imageId);

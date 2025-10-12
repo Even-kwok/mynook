@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Part } from '@google/genai';
+import { GoogleGenAI, Part, Modality } from '@google/genai';
 import { Buffer } from 'node:buffer';
 import {
   verifyUserToken,
@@ -144,8 +144,6 @@ export default async function handler(
       code: 'INVALID_TOKEN'
     });
   }
-  
-  console.log(`✅ User ${userId} authenticated successfully`);
 
   // ========================================
   // 2. 检查并扣除信用点
@@ -164,32 +162,20 @@ export default async function handler(
     });
   }
 
-  console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
-
   // ========================================
-  // 3. 执行图片生成
+  // 3. 执行图片生成（使用 Google AI Studio API）
   // ========================================
 
-  // 检查是否配置了 Vertex AI（推荐用于 gemini-2.5-flash-image）
-  const useVertexAI = process.env.GOOGLE_GENAI_USE_VERTEXAI === 'true' || 
-                      process.env.GOOGLE_CLOUD_PROJECT;
-  
-  if (!useVertexAI) {
-    // 回滚信用点
+  // 检查 API Key
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
     await refundCredits(userId, requiredCredits);
-    console.error('❌ Vertex AI is not configured');
-    console.error('Please set GOOGLE_GENAI_USE_VERTEXAI=true and GOOGLE_CLOUD_PROJECT in environment variables');
     return res.status(500).json({ 
-      error: 'Vertex AI not configured. gemini-2.5-flash-image requires Vertex AI authentication.',
-      code: 'VERTEX_AI_NOT_CONFIGURED',
-      hint: 'Please follow the VERTEX_AI_配置指南.md to set up Vertex AI'
+      error: 'API key not configured. Please set GEMINI_API_KEY in environment variables.',
+      code: 'API_KEY_MISSING'
     });
   }
-
-  const project = process.env.GOOGLE_CLOUD_PROJECT;
-  const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
-  
-  console.log(`✅ Vertex AI configured: project=${project}, location=${location}`);
 
   let generationSuccess = false;
 
@@ -204,13 +190,7 @@ export default async function handler(
       });
     }
 
-    console.log(`🔧 Initializing Vertex AI client for user ${userId}...`);
-    const aiClient = new GoogleGenAI({ 
-      vertexai: true,
-      project,
-      location,
-    });
-    console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
+    const aiClient = new GoogleGenAI({ apiKey });
     
     // 准备参考图像
     const normalizedImages = base64Images
@@ -227,7 +207,6 @@ export default async function handler(
     const imageParts = buildImageParts(normalizedImages);
     if (imageParts.length === 0) {
       await refundCredits(userId, requiredCredits);
-      console.error('❌ No valid image parts could be built');
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
@@ -235,16 +214,21 @@ export default async function handler(
 
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
-    console.log(`🤖 Using model: ${modelName} (Vertex AI)`);
-    console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
 
-    // 构建内容：图像 + 文本提示
-    const contents = [...imageParts, instruction];
-
+    // 调用 Google AI Studio API（使用原型的简洁配置）
+    // 注意：使用简单对象格式而不是数组格式，以确保调用正确的API端点
     const response = await aiClient.models.generateContent({
       model: modelName,
-      contents,
-    });
+      contents: {
+        parts: [
+          { text: instruction },
+          ...imageParts
+        ]
+      },
+      config: {
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
+      },
+    } as any);
 
     // 从响应中提取生成的图像
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(
@@ -254,19 +238,8 @@ export default async function handler(
     if (generatedImagePart?.inlineData?.data) {
       generationSuccess = true;
 
-      // 记录生成日志
-      await logGeneration({
-        userId,
-        type: 'image',
-        creditsUsed: requiredCredits,
-        success: true,
-        timestamp: new Date().toISOString(),
-      });
-
       const mimeType = generatedImagePart.inlineData.mimeType ?? 'image/png';
       const base64ImageBytes = generatedImagePart.inlineData.data;
-      
-      console.log(`✅ Image generated successfully for user ${userId}`);
       
       return res.status(200).json({
         imageUrl: `data:${mimeType};base64,${base64ImageBytes}`,
@@ -277,21 +250,7 @@ export default async function handler(
 
     // 生成失败，回滚信用点
     await refundCredits(userId, requiredCredits);
-    console.error('❌ Response structure:', {
-      hasCandidates: candidates.length > 0,
-      candidateCount: candidates.length,
-      hasContent: candidates[0]?.content !== undefined,
-      partsCount: candidates[0]?.content?.parts?.length
-    });
-    await logGeneration({
-      userId,
-      type: 'image',
-      creditsUsed: 0,
-      success: false,
-      timestamp: new Date().toISOString(),
-    });
 
-    console.error('API response did not contain generated image data:', JSON.stringify(response, null, 2));
     return res.status(500).json({
       error: 'API response did not contain image data.'
     });
@@ -309,14 +268,6 @@ export default async function handler(
     // 如果生成失败，回滚信用点
     if (!generationSuccess) {
       await refundCredits(userId, requiredCredits);
-      console.log(`💰 Refunded ${requiredCredits} credits to user ${userId}`);
-      await logGeneration({
-        userId,
-        type: 'image',
-        creditsUsed: 0,
-        success: false,
-        timestamp: new Date().toISOString(),
-      });
     }
 
     return res.status(500).json({

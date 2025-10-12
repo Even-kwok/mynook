@@ -20,6 +20,9 @@ dist-ssr
 # Vercel
 .vercel
 
+# Reference files (local only)
+参考/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
