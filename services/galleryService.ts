@@ -1,10 +1,75 @@
 /**
  * Gallery 数据服务
  * 处理 gallery_items 表的 CRUD 操作
+ * 
+ * 优化说明：
+ * - 添加了内存缓存机制，减少重复的数据库请求
+ * - 缓存时长：15分钟
+ * - 大幅提升从其他页面返回首页时的加载速度
  */
 
 import { supabase } from '../config/supabase';
 import { GalleryItem, HeroBannerItem, TransitionEffect } from '../types';
+
+// ==================== 缓存机制 ====================
+
+/**
+ * 缓存项接口
+ */
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+}
+
+/**
+ * 缓存对象
+ */
+const cache: {
+  galleryItems: CacheItem<GalleryItem[]> | null;
+  heroBanners: CacheItem<HeroBannerItem[]> | null;
+} = {
+  galleryItems: null,
+  heroBanners: null
+};
+
+/**
+ * 缓存有效期：15分钟
+ */
+const CACHE_DURATION = 15 * 60 * 1000;
+
+/**
+ * 检查缓存是否有效
+ */
+const isCacheValid = <T>(cacheItem: CacheItem<T> | null): boolean => {
+  if (!cacheItem) return false;
+  const now = Date.now();
+  return (now - cacheItem.timestamp) < CACHE_DURATION;
+};
+
+/**
+ * 清除所有缓存（供管理员更新数据后调用）
+ */
+export const clearGalleryCache = (): void => {
+  cache.galleryItems = null;
+  cache.heroBanners = null;
+  console.log('[Gallery Cache] Cache cleared');
+};
+
+/**
+ * 清除画廊图片缓存
+ */
+export const clearGalleryItemsCache = (): void => {
+  cache.galleryItems = null;
+  console.log('[Gallery Cache] Gallery items cache cleared');
+};
+
+/**
+ * 清除横幅缓存
+ */
+export const clearHeroBannersCache = (): void => {
+  cache.heroBanners = null;
+  console.log('[Gallery Cache] Hero banners cache cleared');
+};
 
 export interface GalleryItemData {
   storage_path: string;
@@ -76,8 +141,18 @@ const convertToGalleryItem = (dbItem: GalleryItemDB): GalleryItem => {
 /**
  * 获取所有激活的图片墙项目
  * 注意：排除 hero-banner 类别，因为它只用于首页横幅显示
+ * 
+ * 优化：使用15分钟内存缓存，减少重复请求
  */
 export const fetchGalleryItems = async (): Promise<GalleryItem[]> => {
+  // 检查缓存
+  if (isCacheValid(cache.galleryItems)) {
+    console.log('[Gallery Cache] Using cached gallery items');
+    return cache.galleryItems!.data;
+  }
+
+  console.log('[Gallery Cache] Fetching fresh gallery items from database');
+  
   try {
     const { data, error } = await supabase
       .from('gallery_items')
@@ -92,7 +167,17 @@ export const fetchGalleryItems = async (): Promise<GalleryItem[]> => {
       return [];
     }
     
-    return data.map(convertToGalleryItem);
+    const items = data.map(convertToGalleryItem);
+    
+    // 更新缓存
+    cache.galleryItems = {
+      data: items,
+      timestamp: Date.now()
+    };
+    
+    console.log(`[Gallery Cache] Cached ${items.length} gallery items`);
+    
+    return items;
   } catch (error) {
     console.error('Fetch gallery items error:', error);
     return [];
@@ -174,6 +259,13 @@ export const createGalleryItem = async (itemData: GalleryItemData): Promise<stri
       return null;
     }
     
+    // 清除相关缓存
+    if (itemData.category === 'hero-banner') {
+      clearHeroBannersCache();
+    } else {
+      clearGalleryItemsCache();
+    }
+    
     return data?.id || null;
   } catch (error) {
     console.error('Create gallery item error:', error);
@@ -215,6 +307,9 @@ export const updateGalleryItem = async (
       return false;
     }
     
+    // 清除所有缓存（因为我们不确定该项目的分类）
+    clearGalleryCache();
+    
     return true;
   } catch (error) {
     console.error('Update gallery item error:', error);
@@ -236,6 +331,9 @@ export const deleteGalleryItem = async (id: string): Promise<boolean> => {
       console.error('Delete gallery item error:', error);
       return false;
     }
+    
+    // 清除所有缓存
+    clearGalleryCache();
     
     return true;
   } catch (error) {
@@ -270,6 +368,9 @@ export const reorderGalleryItems = async (
         .update({ display_order: update.display_order })
         .eq('id', update.id);
     }
+    
+    // 清除所有缓存
+    clearGalleryCache();
     
     return true;
   } catch (error) {
@@ -311,8 +412,18 @@ const convertToHeroBannerItem = (dbItem: GalleryItemDB): HeroBannerItem => {
 
 /**
  * 获取所有激活的 Hero Banners（按排序顺序）
+ * 
+ * 优化：使用15分钟内存缓存，减少重复请求
  */
 export const fetchHeroBanners = async (): Promise<HeroBannerItem[]> => {
+  // 检查缓存
+  if (isCacheValid(cache.heroBanners)) {
+    console.log('[Gallery Cache] Using cached hero banners');
+    return cache.heroBanners!.data;
+  }
+
+  console.log('[Gallery Cache] Fetching fresh hero banners from database');
+  
   try {
     const { data, error } = await supabase
       .from('gallery_items')
@@ -327,7 +438,17 @@ export const fetchHeroBanners = async (): Promise<HeroBannerItem[]> => {
       return [];
     }
     
-    return data.map(convertToHeroBannerItem);
+    const banners = data.map(convertToHeroBannerItem);
+    
+    // 更新缓存
+    cache.heroBanners = {
+      data: banners,
+      timestamp: Date.now()
+    };
+    
+    console.log(`[Gallery Cache] Cached ${banners.length} hero banners`);
+    
+    return banners;
   } catch (error) {
     console.error('Fetch hero banners error:', error);
     return [];
@@ -395,6 +516,9 @@ export const reorderHeroBanners = async (
         return false;
       }
     }
+    
+    // 清除横幅缓存
+    clearHeroBannersCache();
     
     return true;
   } catch (error) {
