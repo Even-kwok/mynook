@@ -162,7 +162,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
   if (!hasBanners) {
     // 显示默认横幅
     return (
-      <section className="relative bg-cover bg-center h-[600px] md:h-[800px] lg:h-[1000px]"
+      <section className="relative bg-cover bg-center h-[600px] md:h-[800px] lg:h-[1000px] z-10"
         style={{ backgroundImage: `url('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png')` }}
       >
       </section>
@@ -173,7 +173,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
 
   return (
     <section
-      className="relative overflow-hidden h-[600px] md:h-[800px] lg:h-[1000px]"
+      className="relative overflow-hidden h-[600px] md:h-[800px] lg:h-[1000px] z-10"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={onTouchStart}
