@@ -787,7 +787,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 />
             )}
             
-            <section className="px-4 sm:px-6 lg:px-8 mt-16 md:mt-20 lg:mt-24 pb-16">
+            <section className="px-4 sm:px-6 lg:px-8 py-16">
                 {isInitialLoading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
