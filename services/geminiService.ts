@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../config/supabase';
+import { requestQueue } from '../utils/requestQueue';
 
 /**
  * 获取用户认证 token
@@ -142,11 +143,28 @@ export const generateImage = async (
     base64Images: string[],
     onProgress?: (message: string) => void
 ): Promise<string> => {
-    const MAX_RETRIES = 0; // 暂时禁用重试，避免长时间卡住
-    const TIMEOUT = 100000; // 100秒超时（给Vertex AI充足时间）
-    const RETRY_DELAY = 2000; // 2秒延迟
+    // 生成唯一的请求ID
+    const requestId = `img_gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    console.log(`[ImageGen] Creating request: ${requestId}`);
+    
+    // 将请求加入队列
+    return requestQueue.enqueue(requestId, async () => {
+        const MAX_RETRIES = 0; // 暂时禁用重试，避免长时间卡住
+        const TIMEOUT = 100000; // 100秒超时（给Vertex AI充足时间）
+        const RETRY_DELAY = 2000; // 2秒延迟
+        
+        // 检查队列状态
+        const queueStatus = requestQueue.getStatus();
+        if (queueStatus.queueLength > 0) {
+            const message = `Waiting in queue... (${queueStatus.queueLength} request(s) ahead)`;
+            console.log(`[ImageGen] ${message}`);
+            if (onProgress) {
+                onProgress(message);
+            }
+        }
+        
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
             const token = await getAuthToken();
             if (!token) {
@@ -221,6 +239,7 @@ export const generateImage = async (
                     ?? data?.images?.[0];
 
                 if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+                    console.log(`[ImageGen] Request ${requestId} completed successfully`);
                     return imageUrl;
                 }
 
@@ -239,13 +258,14 @@ export const generateImage = async (
                 throw error;
             }
         } catch (error) {
-            console.error(`Error generating image (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
+            console.error(`[ImageGen] Error in request ${requestId} (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
             
             // Don't retry for auth/credit errors
             if (error instanceof Error) {
                 if (error.message.includes('Authentication') || 
                     error.message.includes('Insufficient credits') ||
-                    error.message.includes('logged in')) {
+                    error.message.includes('logged in') ||
+                    error.message.includes('already in progress')) {
                     throw error;
                 }
             }
@@ -264,7 +284,8 @@ export const generateImage = async (
             }
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         }
-    }
-    
-    throw new Error("Image generation failed after multiple attempts.");
+        }
+        
+        throw new Error("Image generation failed after multiple attempts.");
+    });
 };
