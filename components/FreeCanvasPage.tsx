@@ -6,7 +6,7 @@ import { compressInWorker, CompressionResult } from '../utils/imageCompression';
 import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
-import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
+import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
 
 
@@ -40,10 +40,6 @@ interface MyDesignsSidebarProps {
     onImageDragStart?: (e: React.DragEvent<HTMLImageElement>, src: string) => void;
     onDelete: (batchId: string, imageId: string) => void;
 }
-
-// @ts-ignore
-// Renamed the `SpeechRecognition` constant to `SpeechRecognitionAPI` to avoid shadowing the global `SpeechRecognition` type. This resolves the "Cannot find name 'SpeechRecognition'" error for the `recognitionRef` type annotation.
-const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
     generationHistory,
@@ -386,11 +382,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [uploadProgress, setUploadProgress] = useState<string>('');
     const [compressionStats, setCompressionStats] = useState<CompressionResult | null>(null);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
-    const [isRecording, setIsRecording] = useState(false);
-    // @ts-ignore - SpeechRecognition is a browser API that may not be in all TS lib configurations.
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
-    // FIX: Use ReturnType<typeof setTimeout> for browser compatibility instead of NodeJS.Timeout.
-    const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [isRotationSnapped, setIsRotationSnapped] = useState<boolean>(false);
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const clearButtonRef = useRef<HTMLButtonElement>(null);
@@ -420,68 +411,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             maxY = Math.max(maxY, p.y);
         });
         return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-    };
-    
-    useEffect(() => {
-        if (!SpeechRecognitionAPI) {
-            console.warn("Speech Recognition not supported by this browser.");
-            return;
-        }
-
-        const recognition = new SpeechRecognitionAPI();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            setPrompt(prev => (prev ? prev + ' ' : '') + transcript);
-        };
-
-        recognition.onerror = (event) => {
-            console.error("Speech recognition error", event.error);
-            onError(`Speech recognition error: ${event.error}`);
-        };
-
-        recognition.onend = () => {
-            if (recordingTimeoutRef.current) {
-                clearTimeout(recordingTimeoutRef.current);
-                recordingTimeoutRef.current = null;
-            }
-            setIsRecording(false);
-        };
-
-        recognitionRef.current = recognition;
-
-        return () => {
-            recognition.stop();
-            if (recordingTimeoutRef.current) {
-                clearTimeout(recordingTimeoutRef.current);
-            }
-        };
-    }, [onError, setPrompt]);
-    
-    const handleToggleRecording = () => {
-        if (!recognitionRef.current) {
-            onError("Speech recognition is not supported by your browser.");
-            return;
-        }
-    
-        if (isRecording) {
-            recognitionRef.current.stop();
-        } else {
-            try {
-                recognitionRef.current.start();
-                setIsRecording(true);
-                recordingTimeoutRef.current = setTimeout(() => {
-                    recognitionRef.current?.stop();
-                }, 15000); // 15 second limit
-            } catch (e) {
-                console.error("Could not start speech recognition", e);
-                onError("Could not start speech recognition. Please check microphone permissions.");
-                setIsRecording(false);
-            }
-        }
     };
 
     const handleUndo = useCallback(() => {
@@ -1571,28 +1500,11 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
                                 <h3 className="text-base font-semibold text-slate-800">Prompt</h3>
-                                <div className="relative">
-                                    <textarea 
-                                        value={prompt} 
-                                        onChange={(e) => setPrompt(e.target.value)} 
-                                        placeholder="Describe what you want to create..." 
-                                        className="w-full p-3 pr-24 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                                    <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleToggleRecording}
-                                            className={`p-2 rounded-full transition-colors ${
-                                                isRecording
-                                                    ? 'bg-red-500 text-white animate-pulse'
-                                                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                            }`}
-                                            aria-label={isRecording ? 'Stop recording' : 'Start voice input'}
-                                            disabled={!SpeechRecognitionAPI}
-                                        >
-                                            <IconMicrophone className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                </div>
+                                <textarea 
+                                    value={prompt} 
+                                    onChange={(e) => setPrompt(e.target.value)} 
+                                    placeholder="Describe what you want to create..." 
+                                    className="w-full p-3 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                             </div>
                         </div>
                     </div>
