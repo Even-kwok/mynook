@@ -1489,8 +1489,14 @@ const App: React.FC = () => {
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
     ];
     // ⚠️ 修复：初始状态设为空对象，避免显示硬编码的残留数据
+    // 前端功能页面使用的模板数据（只包含启用的模板）
     const [adminTemplateData, setAdminTemplateData] = useState<ManagedTemplateData>({});
     const [adminCategoryOrder, setAdminCategoryOrder] = useState<string[]>([]);
+    
+    // Admin Panel使用的模板数据（包含所有模板，包括禁用的）
+    const [adminTemplateDataFull, setAdminTemplateDataFull] = useState<ManagedTemplateData>({});
+    const [adminCategoryOrderFull, setAdminCategoryOrderFull] = useState<string[]>([]);
+    
     const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
 
     // Load templates from database on mount
@@ -1499,26 +1505,40 @@ const App: React.FC = () => {
             try {
                 setTemplatesLoading(true);
                 
-                // 前端功能页面总是使用 getAllTemplatesPublic()（只显示启用的模板）
-                // Admin Panel 会在组件内部单独调用 getAllTemplates()
-                const templates = await getAllTemplatesPublic();
+                // 前端功能页面使用 getAllTemplatesPublic()（只显示启用的模板）
+                const publicTemplates = await getAllTemplatesPublic();
+                
+                // Admin Panel 使用 getAllTemplates()（显示所有模板）
+                const allTemplates = await getAllTemplates();
                 
                 // 完全使用数据库模板，不合并硬编码模板
-                if (Object.keys(templates).length > 0) {
-                    setAdminTemplateData(templates);
-                    setAdminCategoryOrder(Object.keys(templates));
-                    console.log('✅ Templates loaded from database (public)');
+                if (Object.keys(publicTemplates).length > 0) {
+                    setAdminTemplateData(publicTemplates);
+                    setAdminCategoryOrder(Object.keys(publicTemplates));
+                    console.log('✅ Public templates loaded from database');
                 } else {
                     // 仅在数据库完全为空时使用默认模板作为fallback
                     console.log('ℹ️ Database empty, using default templates as fallback');
                     setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
                     setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
                 }
+                
+                // 设置Admin Panel的完整数据
+                if (Object.keys(allTemplates).length > 0) {
+                    setAdminTemplateDataFull(allTemplates);
+                    setAdminCategoryOrderFull(Object.keys(allTemplates));
+                    console.log('✅ All templates loaded for Admin Panel');
+                } else {
+                    setAdminTemplateDataFull(ADMIN_PAGE_CATEGORIES);
+                    setAdminCategoryOrderFull(Object.keys(ADMIN_PAGE_CATEGORIES));
+                }
             } catch (error) {
                 console.error('Failed to load templates:', error);
                 // 错误时使用默认模板
                 setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
                 setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
+                setAdminTemplateDataFull(ADMIN_PAGE_CATEGORIES);
+                setAdminCategoryOrderFull(Object.keys(ADMIN_PAGE_CATEGORIES));
             } finally {
                 setTemplatesLoading(false);
             }
@@ -1526,6 +1546,31 @@ const App: React.FC = () => {
         
         loadTemplates();
     }, [currentUser?.permissionLevel]);
+    
+    // 刷新模板数据的回调函数（在Admin Panel编辑模板后调用）
+    const refreshTemplateData = useCallback(async () => {
+        try {
+            console.log('🔄 Refreshing template data...');
+            
+            // 刷新前端功能页面的公开模板
+            const publicTemplates = await getAllTemplatesPublic();
+            if (Object.keys(publicTemplates).length > 0) {
+                setAdminTemplateData(publicTemplates);
+                setAdminCategoryOrder(Object.keys(publicTemplates));
+                console.log('✅ Public templates refreshed');
+            }
+            
+            // 刷新Admin Panel的完整模板
+            const allTemplates = await getAllTemplates();
+            if (Object.keys(allTemplates).length > 0) {
+                setAdminTemplateDataFull(allTemplates);
+                setAdminCategoryOrderFull(Object.keys(allTemplates));
+                console.log('✅ Admin templates refreshed');
+            }
+        } catch (error) {
+            console.error('Failed to refresh templates:', error);
+        }
+    }, []);
 
     // 动态生成可用的房间类型列表（只显示有启用模板的房间类型）
     const availableRoomTypes = useMemo(() => {
@@ -2336,11 +2381,12 @@ const App: React.FC = () => {
                     generationHistory={generationHistory} 
                     totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
                     onDeleteBatch={handleDeleteGenerationBatch} 
-                    templateData={adminTemplateData} 
-                    setTemplateData={setAdminTemplateData} 
-                    categoryOrder={adminCategoryOrder} 
-                    setCategoryOrder={setAdminCategoryOrder}
-                />
+                    templateData={adminTemplateDataFull} 
+                    setTemplateData={setAdminTemplateDataFull} 
+                    categoryOrder={adminCategoryOrderFull} 
+                    setCategoryOrder={setAdminCategoryOrderFull}
+                    onTemplatesUpdated={refreshTemplateData}
+                  />
             default: return renderMainGenerator();
         }
     };
@@ -2368,15 +2414,15 @@ const App: React.FC = () => {
                 }
             }
         } else if (activePage === 'Wall Paint') {
-             categories = adminTemplateData["Wall Paint"];
+             categories = adminTemplateData["Wall Paint"] || [];
         } else if (activePage === 'Floor Style') {
-            categories = adminTemplateData["Floor Style"];
+            categories = adminTemplateData["Floor Style"] || [];
         } else if (activePage === 'Garden & Backyard Design') {
-            categories = adminTemplateData["Garden"];
+            categories = adminTemplateData["Garden"] || [];
         } else if (activePage === 'Exterior Design') {
-            categories = adminTemplateData["Exterior Design"];
+            categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
-            categories = adminTemplateData["Festive Decor"];
+            categories = adminTemplateData["Festive Decor"] || [];
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
