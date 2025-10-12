@@ -205,13 +205,19 @@ export default async function handler(
     });
   }
 
-  // 将凭据写入临时文件（Vercel 的 /tmp 目录可写）
-  const tempCredPath = join('/tmp', `gcloud-creds-${userId}-${Date.now()}.json`);
+  // 优化：使用固定的凭据文件名，避免每次创建新文件
+  // 这样可以重用已有文件，减少I/O操作
+  const tempCredPath = join('/tmp', `gcloud-creds-${credentials.project_id}.json`);
   
   try {
-    writeFileSync(tempCredPath, credentialsJson);
+    // 只在文件不存在时才写入，节省时间
+    if (!existsSync(tempCredPath)) {
+      writeFileSync(tempCredPath, credentialsJson);
+      console.log(`✅ Credentials written to temp file: ${tempCredPath}`);
+    } else {
+      console.log(`✅ Reusing existing credentials file: ${tempCredPath}`);
+    }
     process.env.GOOGLE_APPLICATION_CREDENTIALS = tempCredPath;
-    console.log(`✅ Credentials written to temp file: ${tempCredPath}`);
   } catch (writeErr) {
     await refundCredits(userId, requiredCredits);
     console.error('❌ Failed to write credentials file:', writeErr);
@@ -234,13 +240,14 @@ export default async function handler(
       });
     }
 
-    console.log(`🔧 Initializing Vertex AI client for user ${userId}...`);
+    const startTime = Date.now();
+    console.log(`🔧 [${startTime}] Initializing Vertex AI client for user ${userId}...`);
     const aiClient = new GoogleGenAI({ 
       vertexai: true,
       project: credentials.project_id,
       location,
     });
-    console.log(`📝 Instruction: ${instruction.substring(0, 100)}...`);
+    console.log(`📝 Instruction length: ${instruction.length} chars, Images: ${base64Images.length}`);
     
     // 准备参考图像
     const normalizedImages = base64Images
@@ -265,7 +272,8 @@ export default async function handler(
 
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
-    console.log(`🤖 Using model: ${modelName} via Vertex AI`);
+    const prepTime = Date.now() - startTime;
+    console.log(`🤖 Using model: ${modelName} via Vertex AI (prep: ${prepTime}ms)`);
     console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
 
     // 构建内容：图像 + 文本提示
@@ -279,10 +287,28 @@ export default async function handler(
       }
     ];
 
-    const response = await aiClient.models.generateContent({
+    // 设置请求超时为90秒（给Vertex AI充足时间）
+    const apiStartTime = Date.now();
+    console.log(`📡 [${apiStartTime}] Starting Vertex AI API call...`);
+    
+    const requestTimeout = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        console.error(`⏱️ Vertex AI timeout triggered after 90 seconds`);
+        reject(new Error('Vertex AI request timeout after 90 seconds'));
+      }, 90000);
+    });
+
+    const generateRequest = aiClient.models.generateContent({
       model: modelName,
       contents,
+    }).then(res => {
+      const apiTime = Date.now() - apiStartTime;
+      console.log(`✅ Vertex AI responded in ${apiTime}ms (${(apiTime/1000).toFixed(1)}s)`);
+      return res;
     });
+
+    // 使用Promise.race来实现超时控制
+    const response = await Promise.race([generateRequest, requestTimeout]);
 
     // 从响应中提取生成的图像
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(
@@ -291,6 +317,7 @@ export default async function handler(
 
     if (generatedImagePart?.inlineData?.data) {
       generationSuccess = true;
+      const totalTime = Date.now() - startTime;
 
       // 记录生成日志
       await logGeneration({
@@ -304,7 +331,7 @@ export default async function handler(
       const mimeType = generatedImagePart.inlineData.mimeType ?? 'image/png';
       const base64ImageBytes = generatedImagePart.inlineData.data;
       
-      console.log(`✅ Image generated successfully for user ${userId}`);
+      console.log(`✅ Image generated successfully for user ${userId} in ${totalTime}ms (${(totalTime/1000).toFixed(1)}s)`);
       
       return res.status(200).json({
         imageUrl: `data:${mimeType};base64,${base64ImageBytes}`,
@@ -357,16 +384,11 @@ export default async function handler(
       code: 'GENERATION_FAILED'
     });
   } finally {
+    // 保留凭据文件以供后续请求重用，不再每次删除
+    // 这显著提升了第二次及后续请求的速度
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredPath) {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     }
-    if (existsSync(tempCredPath)) {
-      try {
-        unlinkSync(tempCredPath);
-        console.log(`🧹 Cleaned up temp credentials file: ${tempCredPath}`);
-      } catch (cleanupErr) {
-        console.warn('⚠️ Failed to remove temp credentials file:', cleanupErr);
-      }
-    }
+    console.log(`✅ Request completed, credentials file retained for reuse`);
   }
 }

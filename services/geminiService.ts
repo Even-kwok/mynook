@@ -142,9 +142,9 @@ export const generateImage = async (
     base64Images: string[],
     onProgress?: (message: string) => void
 ): Promise<string> => {
-    const MAX_RETRIES = 2;
-    const TIMEOUT = 70000; // 70 seconds timeout (Vercel Pro allows 60s + buffer)
-    const RETRY_DELAY = 3000; // 3 seconds delay between retries
+    const MAX_RETRIES = 0; // 暂时禁用重试，避免长时间卡住
+    const TIMEOUT = 100000; // 100秒超时（给Vertex AI充足时间）
+    const RETRY_DELAY = 2000; // 2秒延迟
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
@@ -158,9 +158,11 @@ export const generateImage = async (
                 if (attempt === 0) {
                     onProgress('Preparing your image...');
                 } else {
-                    onProgress(`Retrying (${attempt}/${MAX_RETRIES})...`);
+                    onProgress(`Retrying (attempt ${attempt + 1}/${MAX_RETRIES + 1})...`);
                 }
             }
+            
+            console.log(`[API Call] Attempt ${attempt + 1}/${MAX_RETRIES + 1}, Timeout: ${TIMEOUT}ms`);
 
             // Create abort controller for timeout
             const controller = new AbortController();
@@ -170,6 +172,9 @@ export const generateImage = async (
                 if (onProgress) {
                     onProgress('Uploading to AI service...');
                 }
+                
+                const startTime = Date.now();
+                console.log(`[API Call] Starting fetch at ${startTime}`);
 
                 const response = await fetch('/api/generate-image', {
                     method: 'POST',
@@ -185,9 +190,11 @@ export const generateImage = async (
                 });
 
                 clearTimeout(timeoutId);
+                const fetchTime = Date.now() - startTime;
+                console.log(`[API Call] Fetch completed in ${fetchTime}ms`);
 
                 if (onProgress) {
-                    onProgress('Generating your design...');
+                    onProgress('Processing response...');
                 }
 
                 if (!response.ok) {
@@ -224,9 +231,11 @@ export const generateImage = async (
                 
                 // Check if it's an abort error (timeout)
                 if (error instanceof Error && error.name === 'AbortError') {
-                    throw new Error('Request timeout. The AI service is taking too long to respond. Please try again.');
+                    console.error(`[API Call] Request timed out after ${TIMEOUT}ms`);
+                    throw new Error(`Request timeout after ${TIMEOUT / 1000}s. The AI service is taking too long. Please try again.`);
                 }
                 
+                console.error('[API Call] Fetch error:', error);
                 throw error;
             }
         } catch (error) {
