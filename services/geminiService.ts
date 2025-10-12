@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '../config/supabase';
-import { requestQueue } from '../utils/requestQueue';
 
 /**
  * 获取用户认证 token
@@ -143,28 +142,18 @@ export const generateImage = async (
     base64Images: string[],
     onProgress?: (message: string) => void
 ): Promise<string> => {
-    // 生成唯一的请求ID
+    // 生成唯一的请求ID（用于日志追踪）
     const requestId = `img_gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     console.log(`[ImageGen] Creating request: ${requestId}`);
     
-    // 将请求加入队列
-    return requestQueue.enqueue(requestId, async () => {
-        const MAX_RETRIES = 0; // 暂时禁用重试，避免长时间卡住
-        const TIMEOUT = 100000; // 100秒超时（给Vertex AI充足时间）
-        const RETRY_DELAY = 2000; // 2秒延迟
-        
-        // 检查队列状态
-        const queueStatus = requestQueue.getStatus();
-        if (queueStatus.queueLength > 0) {
-            const message = `Waiting in queue... (${queueStatus.queueLength} request(s) ahead)`;
-            console.log(`[ImageGen] ${message}`);
-            if (onProgress) {
-                onProgress(message);
-            }
-        }
-        
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    // 直接执行请求，支持自然并发（不使用队列）
+    // Google AI Studio API 配额（15 QPM）会自动控制速率
+    const MAX_RETRIES = 0; // 禁用重试，快速失败
+    const TIMEOUT = 60000; // 60秒超时（Google AI Studio 通常更快）
+    const RETRY_DELAY = 2000; // 2秒延迟
+    
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
             const token = await getAuthToken();
             if (!token) {
@@ -180,7 +169,7 @@ export const generateImage = async (
                 }
             }
             
-            console.log(`[API Call] Attempt ${attempt + 1}/${MAX_RETRIES + 1}, Timeout: ${TIMEOUT}ms`);
+            console.log(`[API Call] Request ${requestId}, Attempt ${attempt + 1}/${MAX_RETRIES + 1}, Timeout: ${TIMEOUT}ms`);
 
             // Create abort controller for timeout
             const controller = new AbortController();
@@ -284,8 +273,7 @@ export const generateImage = async (
             }
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         }
-        }
-        
-        throw new Error("Image generation failed after multiple attempts.");
-    });
+    }
+    
+    throw new Error("Image generation failed after multiple attempts.");
 };

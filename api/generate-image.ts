@@ -1,8 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Part } from '@google/genai';
 import { Buffer } from 'node:buffer';
-import { writeFileSync, unlinkSync, existsSync } from 'fs';
-import { join } from 'path';
 import {
   verifyUserToken,
   checkAndDeductCredits,
@@ -169,63 +167,22 @@ export default async function handler(
   console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
 
   // ========================================
-  // 3. 执行图片生成（使用 Vertex AI）
+  // 3. 执行图片生成（使用 Google AI Studio API）
   // ========================================
 
-  // 检查 Vertex AI 环境变量
-  const project = process.env.GOOGLE_CLOUD_PROJECT;
-  const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
-  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  // 检查 API Key
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!project || !credentialsJson) {
+  if (!apiKey) {
     await refundCredits(userId, requiredCredits);
-    console.error('❌ Missing Vertex AI configuration');
-    console.error('GOOGLE_CLOUD_PROJECT:', !!project);
-    console.error('GOOGLE_APPLICATION_CREDENTIALS_JSON:', !!credentialsJson);
+    console.error('❌ GEMINI_API_KEY is not configured');
     return res.status(500).json({ 
-      error: 'Vertex AI not properly configured. Please check environment variables.',
-      code: 'VERTEX_AI_CONFIG_MISSING',
-      hint: 'Required: GOOGLE_CLOUD_PROJECT and GOOGLE_APPLICATION_CREDENTIALS_JSON'
+      error: 'API key not configured. Please set GEMINI_API_KEY in environment variables.',
+      code: 'API_KEY_MISSING'
     });
   }
 
-  console.log(`✅ Vertex AI config found: project=${project}, location=${location}`);
-
-  // 解析凭据
-  let credentials;
-  try {
-    credentials = JSON.parse(credentialsJson);
-    console.log(`✅ Credentials parsed successfully: ${credentials.client_email}`);
-  } catch (err) {
-    await refundCredits(userId, requiredCredits);
-    console.error('❌ Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', err);
-    return res.status(500).json({ 
-      error: 'Invalid Vertex AI credentials format. JSON parse failed.',
-      code: 'VERTEX_AI_CREDENTIALS_INVALID'
-    });
-  }
-
-  // 优化：使用固定的凭据文件名，避免每次创建新文件
-  // 这样可以重用已有文件，减少I/O操作
-  const tempCredPath = join('/tmp', `gcloud-creds-${credentials.project_id}.json`);
-  
-  try {
-    // 只在文件不存在时才写入，节省时间
-    if (!existsSync(tempCredPath)) {
-      writeFileSync(tempCredPath, credentialsJson);
-      console.log(`✅ Credentials written to temp file: ${tempCredPath}`);
-    } else {
-      console.log(`✅ Reusing existing credentials file: ${tempCredPath}`);
-    }
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = tempCredPath;
-  } catch (writeErr) {
-    await refundCredits(userId, requiredCredits);
-    console.error('❌ Failed to write credentials file:', writeErr);
-    return res.status(500).json({ 
-      error: 'Failed to setup Vertex AI credentials',
-      code: 'CREDENTIALS_SETUP_FAILED'
-    });
-  }
+  console.log(`✅ GEMINI_API_KEY found, initializing AI client...`);
 
   let generationSuccess = false;
 
@@ -241,12 +198,8 @@ export default async function handler(
     }
 
     const startTime = Date.now();
-    console.log(`🔧 [${startTime}] Initializing Vertex AI client for user ${userId}...`);
-    const aiClient = new GoogleGenAI({ 
-      vertexai: true,
-      project: credentials.project_id,
-      location,
-    });
+    console.log(`🔧 [${startTime}] Initializing Google AI client for user ${userId}...`);
+    const aiClient = new GoogleGenAI({ apiKey });
     console.log(`📝 Instruction length: ${instruction.length} chars, Images: ${base64Images.length}`);
     
     // 准备参考图像
@@ -273,8 +226,8 @@ export default async function handler(
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
     const prepTime = Date.now() - startTime;
-    console.log(`🤖 Using model: ${modelName} via Vertex AI (prep: ${prepTime}ms)`);
-    console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
+    console.log(`🤖 Using model: ${modelName} via Google AI Studio (prep: ${prepTime}ms)`);
+    console.log(`📤 Calling Google AI Studio with ${imageParts.length} reference image(s)...`);
 
     // 构建内容：图像 + 文本提示
     const contents = [
@@ -287,23 +240,30 @@ export default async function handler(
       }
     ];
 
-    // 设置请求超时为90秒（给Vertex AI充足时间）
+    // 设置请求超时为60秒（Google AI Studio 通常更快）
     const apiStartTime = Date.now();
-    console.log(`📡 [${apiStartTime}] Starting Vertex AI API call...`);
+    console.log(`📡 [${apiStartTime}] Starting Google AI Studio API call...`);
     
     const requestTimeout = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        console.error(`⏱️ Vertex AI timeout triggered after 90 seconds`);
-        reject(new Error('Vertex AI request timeout after 90 seconds'));
-      }, 90000);
+        console.error(`⏱️ API timeout triggered after 60 seconds`);
+        reject(new Error('API request timeout after 60 seconds'));
+      }, 60000);
     });
 
     const generateRequest = aiClient.models.generateContent({
       model: modelName,
       contents,
-    }).then(res => {
+      config: {
+        candidateCount: 1,      // 只生成1个结果（关键优化！）
+        temperature: 0.4,       // 降低随机性，加快速度
+        topK: 32,               // 限制候选词数量
+        topP: 1,                // 核心采样参数
+        maxOutputTokens: 2048,  // 限制输出长度
+      },
+    } as any).then(res => {
       const apiTime = Date.now() - apiStartTime;
-      console.log(`✅ Vertex AI responded in ${apiTime}ms (${(apiTime/1000).toFixed(1)}s)`);
+      console.log(`✅ Google AI Studio responded in ${apiTime}ms (${(apiTime/1000).toFixed(1)}s)`);
       return res;
     });
 
@@ -383,12 +343,5 @@ export default async function handler(
       details: message,
       code: 'GENERATION_FAILED'
     });
-  } finally {
-    // 保留凭据文件以供后续请求重用，不再每次删除
-    // 这显著提升了第二次及后续请求的速度
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredPath) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
-    console.log(`✅ Request completed, credentials file retained for reuse`);
   }
 }
