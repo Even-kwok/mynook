@@ -787,68 +787,71 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 />
             )}
             
-            <section className="flex-shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
-                {isInitialLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                        <p className="text-slate-600 text-lg">Loading gallery...</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
-                            {displayedItems.map((item) => (
-                        <div 
-                            key={item.id} 
-                            onClick={() => onNavigate(item.toolPage)}
-                            className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
-                            style={{
-                                aspectRatio: (item.width && item.height) ? `${item.width} / ${item.height}` : 'auto'
-                            }}
-                        >
-                            {item.type === 'image' ? (
-                                <img 
-                                    src={item.src} 
-                                    alt={item.title} 
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                />
-                            ) : (
-                                <video 
-                                    src={item.src} 
-                                    autoPlay 
-                                    loop 
-                                    muted 
-                                    playsInline
-                                    className="w-full h-full object-cover" 
-                                />
-                            )}
-                            {/* Hover overlay with category info */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="absolute bottom-0 left-0 right-0 p-4">
-                                    <p className="text-white font-semibold text-sm mb-1">{item.categoryName}</p>
-                                    <p className="text-white/80 text-xs">Click to use this tool</p>
+            {/* Only show gallery section when loading or when there are items */}
+            {(isInitialLoading || displayedItems.length > 0) && (
+                <section className="flex-shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
+                    {isInitialLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                            <p className="text-slate-600 text-lg">Loading gallery...</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
+                                {displayedItems.map((item) => (
+                            <div 
+                                key={item.id} 
+                                onClick={() => onNavigate(item.toolPage)}
+                                className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
+                                style={{
+                                    aspectRatio: (item.width && item.height) ? `${item.width} / ${item.height}` : 'auto'
+                                }}
+                            >
+                                {item.type === 'image' ? (
+                                    <img 
+                                        src={item.src} 
+                                        alt={item.title} 
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <video 
+                                        src={item.src} 
+                                        autoPlay 
+                                        loop 
+                                        muted 
+                                        playsInline
+                                        className="w-full h-full object-cover" 
+                                    />
+                                )}
+                                {/* Hover overlay with category info */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                                        <p className="text-white font-semibold text-sm mb-1">{item.categoryName}</p>
+                                        <p className="text-white/80 text-xs">Click to use this tool</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
 
-                        {/* Loading indicator */}
-                        <div ref={loadMoreRef} className="flex justify-center items-center py-12">
-                            {isLoading && hasMore && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="flex flex-col items-center gap-3"
-                                >
-                                    <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                                    <p className="text-slate-500 text-sm">Loading more images...</p>
-                                </motion.div>
-                            )}
-                        </div>
-                    </>
-                )}
-            </section>
+                            {/* Loading indicator */}
+                            <div ref={loadMoreRef} className="flex justify-center items-center py-12">
+                                {isLoading && hasMore && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex flex-col items-center gap-3"
+                                    >
+                                        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                                        <p className="text-slate-500 text-sm">Loading more images...</p>
+                                    </motion.div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </section>
+            )}
         </main>
     );
 };
