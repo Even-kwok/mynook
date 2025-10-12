@@ -775,7 +775,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     const hasMore = displayedCount < TOTAL_ITEMS;
 
     return (
-        <main className="flex-1 overflow-y-auto bg-white text-slate-800 scrollbar-hide flex flex-col">
+        <main className="flex-1 overflow-y-auto text-slate-800 scrollbar-hide flex flex-col">
             {/* Hero Banner Carousel */}
             {!isBannersLoading && (
                 <HeroBannerCarousel
@@ -789,7 +789,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             
             {/* Only show gallery section when loading or when there are items */}
             {(isInitialLoading || displayedItems.length > 0) && (
-                <section className="flex-shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
+                <section className="flex-shrink-0 bg-white px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
                     {isInitialLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
                             <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
