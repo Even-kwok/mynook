@@ -33,7 +33,7 @@ const PromptTemplates: React.FC<{
         <div className="space-y-6">
             {categories.map(category => (
                 <div key={category.name}>
-                    <h2 className="text-base font-semibold text-slate-700 mb-3">{category.name}</h2>
+                    <h2 className="text-lg font-semibold text-slate-800 mb-3">{category.name}</h2>
                     <div className="grid grid-cols-3 gap-3">
                         {category.templates.map((template) => {
                             const isSelected = selectedTemplateIds.includes(template.id);
@@ -2408,7 +2408,7 @@ const App: React.FC = () => {
                 if (roomCategory && roomCategory.templates.length > 0) {
                     // 转换为前端需要的格式
                     categories = [{
-                        name: "Design Aesthetics",
+                        name: "Choose a Style",
                         templates: roomCategory.templates
                     }];
                 }
@@ -2423,6 +2423,14 @@ const App: React.FC = () => {
             categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
             categories = adminTemplateData["Festive Decor"] || [];
+        }
+        
+        // 统一修改类别名称为 "Choose a Style"（除了 Festive Decor）
+        if (activePage !== 'Festive Decor' && categories.length > 0) {
+            categories = categories.map(cat => ({
+                ...cat,
+                name: "Choose a Style"
+            }));
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
