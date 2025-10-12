@@ -33,7 +33,7 @@ const PromptTemplates: React.FC<{
         <div className="space-y-6">
             {categories.map(category => (
                 <div key={category.name}>
-                    <h2 className="text-base font-semibold text-slate-700 mb-3">{category.name}</h2>
+                    <h2 className="text-lg font-semibold text-slate-800 mb-3">{category.name}</h2>
                     <div className="grid grid-cols-3 gap-3">
                         {category.templates.map((template) => {
                             const isSelected = selectedTemplateIds.includes(template.id);
