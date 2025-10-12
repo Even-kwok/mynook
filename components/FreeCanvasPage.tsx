@@ -1499,17 +1499,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             console.log('✅ [Generate] Step 2: Complete');
             console.log(`📊 [Generate] Image size: ${(imageForApiData.length / 1024).toFixed(0)}KB`);
             
-            setGenerationProgress('Step 3: Sending to AI...');
+            setGenerationProgress('Step 3: Generating your image...');
             console.log('🔍 [Generate] Step 3: Calling API...');
             
             const generatedUrl = await generateImage(
                 finalPrompt, 
-                [imageForApiData],
-                (progress) => {
-                    if (isMountedRef.current) {
-                        setGenerationProgress(progress);
-                    }
-                }
+                [imageForApiData]
             );
     
             // Check if component is still mounted before updating state

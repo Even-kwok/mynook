@@ -144,8 +144,6 @@ export default async function handler(
       code: 'INVALID_TOKEN'
     });
   }
-  
-  console.log(`✅ User ${userId} authenticated successfully`);
 
   // ========================================
   // 2. 检查并扣除信用点
@@ -164,8 +162,6 @@ export default async function handler(
     });
   }
 
-  console.log(`✅ Credits deducted for user ${userId}: -${requiredCredits} (remaining: ${remainingCredits})`);
-
   // ========================================
   // 3. 执行图片生成（使用 Google AI Studio API）
   // ========================================
@@ -175,14 +171,11 @@ export default async function handler(
 
   if (!apiKey) {
     await refundCredits(userId, requiredCredits);
-    console.error('❌ GEMINI_API_KEY is not configured');
     return res.status(500).json({ 
       error: 'API key not configured. Please set GEMINI_API_KEY in environment variables.',
       code: 'API_KEY_MISSING'
     });
   }
-
-  console.log(`✅ GEMINI_API_KEY found, initializing AI client...`);
 
   let generationSuccess = false;
 
@@ -197,10 +190,7 @@ export default async function handler(
       });
     }
 
-    const startTime = Date.now();
-    console.log(`🔧 [${startTime}] Initializing Google AI client for user ${userId}...`);
     const aiClient = new GoogleGenAI({ apiKey });
-    console.log(`📝 Instruction length: ${instruction.length} chars, Images: ${base64Images.length}`);
     
     // 准备参考图像
     const normalizedImages = base64Images
@@ -217,7 +207,6 @@ export default async function handler(
     const imageParts = buildImageParts(normalizedImages);
     if (imageParts.length === 0) {
       await refundCredits(userId, requiredCredits);
-      console.error('❌ No valid image parts could be built');
       return res.status(400).json({
         error: 'No valid base64 images were provided for generation.'
       });
@@ -225,9 +214,6 @@ export default async function handler(
 
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
-    const prepTime = Date.now() - startTime;
-    console.log(`🤖 Using model: ${modelName} via Google AI Studio (prep: ${prepTime}ms)`);
-    console.log(`📤 Calling Google AI Studio with ${imageParts.length} reference image(s)...`);
 
     // 构建内容：图像 + 文本提示
     const contents = [
@@ -240,35 +226,14 @@ export default async function handler(
       }
     ];
 
-    // 设置请求超时为60秒（Google AI Studio 通常更快）
-    const apiStartTime = Date.now();
-    console.log(`📡 [${apiStartTime}] Starting Google AI Studio API call...`);
-    
-    const requestTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        console.error(`⏱️ API timeout triggered after 60 seconds`);
-        reject(new Error('API request timeout after 60 seconds'));
-      }, 60000);
-    });
-
-    const generateRequest = aiClient.models.generateContent({
+    // 调用 Google AI Studio API（使用原型的简洁配置）
+    const response = await aiClient.models.generateContent({
       model: modelName,
       contents,
       config: {
-        candidateCount: 1,      // 只生成1个结果（关键优化！）
-        temperature: 0.4,       // 降低随机性，加快速度
-        topK: 32,               // 限制候选词数量
-        topP: 1,                // 核心采样参数
-        maxOutputTokens: 2048,  // 限制输出长度
+        responseModalities: ['IMAGE', 'TEXT'],
       },
-    } as any).then(res => {
-      const apiTime = Date.now() - apiStartTime;
-      console.log(`✅ Google AI Studio responded in ${apiTime}ms (${(apiTime/1000).toFixed(1)}s)`);
-      return res;
-    });
-
-    // 使用Promise.race来实现超时控制
-    const response = await Promise.race([generateRequest, requestTimeout]);
+    } as any);
 
     // 从响应中提取生成的图像
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(
@@ -277,21 +242,9 @@ export default async function handler(
 
     if (generatedImagePart?.inlineData?.data) {
       generationSuccess = true;
-      const totalTime = Date.now() - startTime;
-
-      // 记录生成日志
-      await logGeneration({
-        userId,
-        type: 'image',
-        creditsUsed: requiredCredits,
-        success: true,
-        timestamp: new Date().toISOString(),
-      });
 
       const mimeType = generatedImagePart.inlineData.mimeType ?? 'image/png';
       const base64ImageBytes = generatedImagePart.inlineData.data;
-      
-      console.log(`✅ Image generated successfully for user ${userId} in ${totalTime}ms (${(totalTime/1000).toFixed(1)}s)`);
       
       return res.status(200).json({
         imageUrl: `data:${mimeType};base64,${base64ImageBytes}`,
@@ -302,15 +255,7 @@ export default async function handler(
 
     // 生成失败，回滚信用点
     await refundCredits(userId, requiredCredits);
-    await logGeneration({
-      userId,
-      type: 'image',
-      creditsUsed: 0,
-      success: false,
-      timestamp: new Date().toISOString(),
-    });
 
-    console.error('API response did not contain generated image data:', JSON.stringify(response, null, 2));
     return res.status(500).json({
       error: 'API response did not contain image data.'
     });
@@ -328,14 +273,6 @@ export default async function handler(
     // 如果生成失败，回滚信用点
     if (!generationSuccess) {
       await refundCredits(userId, requiredCredits);
-      console.log(`💰 Refunded ${requiredCredits} credits to user ${userId}`);
-      await logGeneration({
-        userId,
-        type: 'image',
-        creditsUsed: 0,
-        success: false,
-        timestamp: new Date().toISOString(),
-      });
     }
 
     return res.status(500).json({
