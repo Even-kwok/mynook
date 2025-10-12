@@ -162,7 +162,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
   if (!hasBanners) {
     // 显示默认横幅
     return (
-      <section className="relative bg-cover bg-center h-[600px] md:h-[800px] lg:h-[1000px] flex-shrink-0"
+      <section className="relative bg-cover bg-center w-full aspect-[4096/2341] flex-shrink-0"
         style={{ backgroundImage: `url('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png')` }}
       >
       </section>
@@ -170,10 +170,16 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
   }
 
   const transitionVariants = getTransitionVariants(currentBanner.transitionEffect);
+  
+  // 计算宽高比
+  const aspectRatio = currentBanner.width && currentBanner.height 
+    ? `${currentBanner.width}/${currentBanner.height}`
+    : '4096/2341';
 
   return (
     <section
-      className="relative overflow-hidden h-[600px] md:h-[800px] lg:h-[1000px] flex-shrink-0"
+      className="relative overflow-hidden w-full flex-shrink-0"
+      style={{ aspectRatio }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={onTouchStart}
