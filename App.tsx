@@ -6,7 +6,7 @@ import { GeneratedImage, PromptTemplateCategory, GenerationBatch, PromptTemplate
 import { toBase64 } from './utils/imageUtils';
 import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
-import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark } from './components/Icons';
+import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark, IconLock } from './components/Icons';
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
@@ -430,10 +430,14 @@ const MultiItemUploader: React.FC<{
 const DesignToolsMenu: React.FC<{
     onNavigate: (page: string) => void;
     activeItem: string;
-    designTools: { key: string; label: string; requiresPremium?: boolean; }[];
+    designTools: { key: string; label: string; requiresPremium?: boolean; comingSoon?: boolean; }[];
     user: User | null;
 }> = ({ onNavigate, activeItem, designTools, user }) => {
-    const handleNavigate = (item: { key: string; label: string; requiresPremium?: boolean; }) => {
+    const handleNavigate = (item: { key: string; label: string; requiresPremium?: boolean; comingSoon?: boolean; }) => {
+        // 如果是Coming Soon功能，不允许导航
+        if (item.comingSoon) {
+            return;
+        }
         // 允许所有用户进入页面浏览功能
         // 权限检查将在具体使用功能时进行（如点击生成按钮）
         onNavigate(item.label);
@@ -451,14 +455,25 @@ const DesignToolsMenu: React.FC<{
                 <button
                     key={item.key}
                     onClick={() => handleNavigate(item)}
-                    className={`w-full text-left px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${activeItem === item.label ? 'bg-indigo-500/10 text-indigo-600' : 'hover:bg-slate-500/10'}`}
+                    disabled={item.comingSoon}
+                    className={`w-full text-left px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${
+                        item.comingSoon 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : activeItem === item.label 
+                                ? 'bg-indigo-500/10 text-indigo-600' 
+                                : 'hover:bg-slate-500/10'
+                    }`}
                 >
                     <span>{item.label}</span>
-                    {item.requiresPremium && (
+                    {item.comingSoon ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-slate-400 to-slate-500 text-white">
+                            <IconLock className="w-3 h-3" /> Coming
+                        </span>
+                    ) : item.requiresPremium ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500 to-amber-500 text-white">
                             👑 Premium
                         </span>
-                    )}
+                    ) : null}
                 </button>
             ))}
         </motion.div>
@@ -496,7 +511,7 @@ const Header: React.FC<{
 
     const designToolLabels = useMemo(() => designTools.map(item => item.label), [designTools]);
     const isDesignToolActive = useMemo(() => designToolLabels.includes(activeItem), [designToolLabels, activeItem]);
-    const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Tools';
+    const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Start Design My Nook';
 
     const upgradeButton = useMemo(() => {
         if (!user) {
@@ -524,15 +539,18 @@ const Header: React.FC<{
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent animate-gradient-pan">MyNook.AI</span>
                 </button>
+            </div>
+            <div className="flex items-center gap-4">
+                {/* Design Tools Menu */}
                 <nav className="hidden md:flex items-center gap-2">
                     <div className="relative" ref={designToolsRef}>
                         <button
                             onClick={() => setDesignToolsOpen(o => !o)}
-                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors relative flex items-center gap-1.5 ${isDesignToolActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30' : 'text-slate-700 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200'}`}
                         >
+                            <IconSparkles className={`w-4 h-4 ${isDesignToolActive ? 'text-yellow-300 animate-pulse' : 'text-purple-500'}`} />
                             <span>{activeDesignToolLabel}</span>
                             <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
-                            {isDesignToolActive && <motion.div className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-500" layoutId="nav-underline" />}
                         </button>
                         <AnimatePresence>
                             {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
@@ -551,8 +569,6 @@ const Header: React.FC<{
                         </a>
                     ))}
                 </nav>
-            </div>
-            <div className="flex items-center gap-4">
                 {user && (
                     <div className="flex items-center gap-2">
                         {/* 会员等级徽章 */}
@@ -1467,9 +1483,9 @@ const App: React.FC = () => {
         { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
         { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
-        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true },
-        { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true },
-        { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true },
+        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true, comingSoon: true },
+        { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
+        { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true, comingSoon: true },
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
     ];
     // ⚠️ 修复：初始状态设为空对象，避免显示硬编码的残留数据
