@@ -215,21 +215,16 @@ export default async function handler(
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
 
-    // 构建内容：图像 + 文本提示
-    const contents = [
-      {
-        role: 'user',
-        parts: [
-          ...imageParts,
-          { text: instruction }
-        ]
-      }
-    ];
-
     // 调用 Google AI Studio API（使用原型的简洁配置）
+    // 注意：使用简单对象格式而不是数组格式，以确保调用正确的API端点
     const response = await aiClient.models.generateContent({
       model: modelName,
-      contents,
+      contents: {
+        parts: [
+          { text: instruction },
+          ...imageParts
+        ]
+      },
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
       },
