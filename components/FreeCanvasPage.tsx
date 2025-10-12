@@ -7,7 +7,7 @@ import { generateImage } from '../services/geminiService';
 import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconMicrophone, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
-import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath, Annotation, PromptPreset } from '../types';
+import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
 
 
 interface FreeCanvasPageProps {
@@ -386,8 +386,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [uploadProgress, setUploadProgress] = useState<string>('');
     const [compressionStats, setCompressionStats] = useState<CompressionResult | null>(null);
     const [cropState, setCropState] = useState<{ imageId: string; box: { x: number; y: number; width: number; height: number; }; } | null>(null);
-    const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
-    const [editingPreset, setEditingPreset] = useState<PromptPreset | { name: string; prompt: string } | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     // @ts-ignore - SpeechRecognition is a browser API that may not be in all TS lib configurations.
     const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -494,10 +492,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         setPaths(prev => prev.filter(p => p.id !== pathId));
         setSelectedPathId(null);
     }, [setPaths, setSelectedPathId]);
-
-    const handleDeleteAnnotation = useCallback((id: string) => {
-        setAnnotations(prev => prev.filter(a => a.id !== id));
-    }, [setAnnotations]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -974,50 +968,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         setPrompt(newPrompt);
     };
 
-    const handleEditPreset = (e: React.MouseEvent, preset: PromptPreset) => {
-        e.stopPropagation();
-        setEditingPreset(preset);
-        setIsPresetModalOpen(true);
-    };
-
-    const handleDeletePreset = (e: React.MouseEvent, presetId: string) => {
-        e.stopPropagation();
-        setPresets(prev => prev.filter(p => p.id !== presetId));
-    };
-
-    const handlePresetModalSave = (name: string, promptText: string) => {
-        if (editingPreset && 'id' in editingPreset) {
-            setPresets(prev => prev.map(p => p.id === (editingPreset as PromptPreset).id ? { ...p, name, prompt: promptText } : p));
-        } else {
-            const newPreset: PromptPreset = {
-                id: `preset_${Date.now()}`,
-                name,
-                prompt: promptText
-            };
-            setPresets(prev => [...prev, newPreset]);
-        }
-        setIsPresetModalOpen(false);
-        setEditingPreset(null);
-    };
-    
-    const handleAnnotationTextChange = (id: string, newText: string) => {
-        setAnnotations(prev =>
-            prev.map(ann => (ann.id === id ? { ...ann, text: newText } : ann))
-        );
-    };
-
-    useEffect(() => {
-        const annotationPrompt = annotations
-            .filter(ann => ann.text.trim() !== '')
-            .map(ann => `${ann.label}: ${ann.text.trim()}`)
-            .join(', ');
-        
-        if (annotations.length > 0) {
-            setPrompt(annotationPrompt);
-        }
-    }, [annotations, setPrompt]);
-
-
     const captureCanvasAsImage = async (): Promise<string> => {
         const workspace = workspaceRef.current;
         if (!workspace) throw new Error("Workspace not found");
@@ -1115,8 +1065,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const createCompositeForGeneration = async (
         baseImage: CanvasImage,
         overlayImages: CanvasImage[],
-        paths: DrawablePath[],
-        annotations: Annotation[]
+        paths: DrawablePath[]
     ): Promise<string> => {
         console.log('🖼️ [Composite] Start');
         console.log(`📏 [Composite] Base: ${baseImage.width}x${baseImage.height}`);
@@ -1257,32 +1206,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             ctx.stroke();
         });
 
-        annotations.forEach(ann => {
-            ctx.strokeStyle = '#f59e0b'; // amber-500
-            ctx.lineWidth = 2 * scaleX;
-            ctx.setLineDash([6 * scaleX, 3 * scaleX]);
-    
-            const boxX = (ann.box.x - baseImage.x) * scaleX;
-            const boxY = (ann.box.y - baseImage.y) * scaleY;
-            const boxWidth = ann.box.width * scaleX;
-            const boxHeight = ann.box.height * scaleY;
-    
-            if (ann.shape === 'rect') {
-                ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-            } else { // circle
-                ctx.beginPath();
-                ctx.ellipse(boxX + boxWidth / 2, boxY + boxHeight / 2, boxWidth / 2, boxHeight / 2, 0, 0, 2 * Math.PI);
-                ctx.stroke();
-            }
-    
-            ctx.setLineDash([]);
-    
-            ctx.fillStyle = '#f59e0b';
-            const fontSize = 14 * scaleX;
-            ctx.font = `bold ${fontSize}px sans-serif`;
-            ctx.fillText(ann.label, boxX, boxY - (5 * scaleY));
-        });
-
         try {
             // Use JPEG with quality 0.85 for much faster upload (smaller file size)
             // This significantly reduces API upload time (PNG can be 10x larger)
@@ -1357,7 +1280,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         setIsDrawing(false);
         
         console.log('🚀 [Generate] Starting generation process');
-        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}, Annotations: ${annotations.length}`);
+        console.log(`📊 [Generate] Images: ${images.length}, Paths: ${paths.length}`);
     
         try {
             let imageForApi: string;
@@ -1381,7 +1304,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 
                 // Add timeout protection for composite creation
                 const COMPOSITE_TIMEOUT = 30000; // 30 seconds
-                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths, annotations);
+                const compositePromise = createCompositeForGeneration(baseImage, overlayImages, paths);
                 const timeoutPromise = new Promise<never>((_, reject) =>
                     setTimeout(() => reject(new Error('Image processing timeout after 30s')), COMPOSITE_TIMEOUT)
                 );
@@ -1398,9 +1321,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 
                 console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
-                if (annotations.length > 0) {
-                     finalPrompt = `You are an expert inpainting and photo editing AI. The user has provided an image marked with numbered boxes. These boxes are instructional overlays and indicate specific areas for editing. Your task is to perform the edits described in the user's prompt, which are mapped to these numbered boxes. After applying the edits, you MUST completely remove the boxes and their labels. The final output must be a clean, photorealistic image with no trace of any instructional markings (no boxes, no dashed lines, no numbers, no labels). It should look like a real photograph. The user's instructions are: "${prompt}"`;
-                } else if (overlayImages.length > 0 || paths.length > 0) {
+                if (overlayImages.length > 0 || paths.length > 0) {
                      finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
                 } else {
                     // Just one image and a text prompt, treat as a general transformation.
@@ -1511,7 +1432,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const handleConfirmClear = () => {
         setImages([]);
         setPaths([]);
-        setAnnotations([]);
         setSelectedImageId(null);
         setSelectedPathId(null);
         setCropState(null);
@@ -1575,65 +1495,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         });
     };
 
-    const PresetModal = () => {
-        if (!isPresetModalOpen || !editingPreset) return null;
-
-        const [name, setName] = useState(editingPreset.name);
-        const [promptText, setPromptText] = useState(editingPreset.prompt);
-        const isEditing = 'id' in editingPreset;
-
-        const handleSubmit = (e: React.FormEvent) => {
-            e.preventDefault();
-            if (name.trim() && promptText.trim()) {
-                handlePresetModalSave(name, promptText);
-            }
-        };
-
-        return (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200"
-                >
-                    <form onSubmit={handleSubmit}>
-                        <h3 className="text-lg font-semibold mb-4 text-slate-800">{isEditing ? "Edit Prompt" : "Save Prompt"}</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="e.g., 'Remove background'"
-                                    className="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-300 focus:ring-opacity-50 p-2 bg-slate-50"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Prompt Text</label>
-                                <textarea
-                                    value={promptText}
-                                    onChange={e => setPromptText(e.target.value)}
-                                    className="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-300 focus:ring-opacity-50 h-32 p-2 bg-slate-50"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button type="button" onClick={() => setIsPresetModalOpen(false)}>Cancel</Button>
-                            <Button type="submit" primary>{isEditing ? "Update" : "Save"}</Button>
-                        </div>
-                    </form>
-                </motion.div>
-            </div>
-        );
-    };
-
-
     return (
         <>
-            <PresetModal />
             <UpgradeModal 
                 isOpen={isPermissionModalOpen}
                 onClose={() => setIsPermissionModalOpen(false)}
@@ -1708,10 +1571,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 <div className="relative">
                                     <textarea 
                                         value={prompt} 
-                                        onChange={(e) => { if (annotations.length === 0) setPrompt(e.target.value); }} 
-                                        readOnly={annotations.length > 0}
-                                        placeholder={annotations.length > 0 ? "Prompt is generated from annotations." : "Describe what you want to create..."} 
-                                        className="w-full p-3 pr-24 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 read-only:bg-slate-100" />
+                                        onChange={(e) => setPrompt(e.target.value)} 
+                                        placeholder="Describe what you want to create..." 
+                                        className="w-full p-3 pr-24 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
                                         <button
                                             type="button"
@@ -1735,7 +1597,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     <div className="p-6 pt-4 border-t border-slate-200">
                         <Button 
                             onClick={handleGenerate} 
-                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0 && annotations.length === 0)} 
+                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)} 
                             primary 
                             className="w-full text-base py-3"
                             locked={!hasGeneratePermission}
@@ -1771,7 +1633,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </div>
                     )}
                     <AnimatePresence>
-                        {(images.length > 0 || paths.length > 0 || annotations.length > 0) && !isLoading && (
+                        {(images.length > 0 || paths.length > 0) && !isLoading && (
                             <motion.button
                                 ref={clearButtonRef}
                                 initial={{ opacity: 0, scale: 0.8 }}
@@ -1793,7 +1655,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                      />
                     <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
                         <>
-                            {images.length === 0 && paths.length === 0 && annotations.length === 0 && !cropState && (
+                            {images.length === 0 && paths.length === 0 && !cropState && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
                                     <IconPhoto className="w-16 h-16" />
                                     <h3 className="text-xl font-semibold mt-4 text-slate-600">Your Creative Canvas</h3>
@@ -1913,64 +1775,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                         </div>
                                     );
                                 })()}
-
-                                {drawingAnnotation && drawingAnnotation.currentBox && (
-                                    <div
-                                        className={`absolute border-2 border-dashed ${annotationShape === 'circle' ? 'rounded-full' : ''}`}
-                                        style={{
-                                            left: drawingAnnotation.currentBox.x,
-                                            top: drawingAnnotation.currentBox.y,
-                                            width: drawingAnnotation.currentBox.width,
-                                            height: drawingAnnotation.currentBox.height,
-                                            borderColor: '#f59e0b',
-                                            pointerEvents: 'none'
-                                        }}
-                                    />
-                                )}
-                                {annotations.map(ann => (
-                                    <React.Fragment key={ann.id}>
-                                        <div
-                                            className={`absolute border-2 border-dashed ${ann.shape === 'circle' ? 'rounded-full' : ''}`}
-                                            style={{
-                                                left: ann.box.x,
-                                                top: ann.box.y,
-                                                width: ann.box.width,
-                                                height: ann.box.height,
-                                                borderColor: '#f59e0b', // amber-500
-                                                pointerEvents: 'none'
-                                            }}
-                                        >
-                                            <div className="absolute -top-6 left-0 bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                                                {ann.label}
-                                            </div>
-                                        </div>
-                                        <div
-                                            className="absolute flex items-center gap-2 z-10"
-                                            style={{
-                                                left: ann.box.x + ann.box.width + 10,
-                                                top: ann.box.y,
-                                            }}
-                                        >
-                                            <input
-                                                type="text"
-                                                value={ann.text}
-                                                onChange={(e) => handleAnnotationTextChange(ann.id, e.target.value)}
-                                                className="p-2 bg-white/60 backdrop-blur-lg border border-white/40 shadow-lg rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
-                                                placeholder={`Describe change for ${ann.label}...`}
-                                                onClick={e => e.stopPropagation()}
-                                                onMouseDown={e => e.stopPropagation()}
-                                            />
-                                            <button
-                                                onClick={() => handleDeleteAnnotation(ann.id)}
-                                                className="p-2 bg-white/60 backdrop-blur-lg border border-white/40 shadow-lg rounded-full text-slate-500 hover:bg-red-500/20 hover:text-red-600 transition-colors"
-                                                onMouseDown={e => e.stopPropagation()}
-                                            >
-                                                <IconX />
-                                            </button>
-                                        </div>
-                                    </React.Fragment>
-                                ))}
-
 
                                 {cropState && (() => {
                                     const image = images.find(img => img.id === cropState.imageId);
