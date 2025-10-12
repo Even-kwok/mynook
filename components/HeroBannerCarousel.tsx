@@ -226,9 +226,9 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
           >
-            {currentBanner.bannerTitle && (
+            {(currentBanner.bannerTitle || currentBanner.title) && (
               <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg">
-                {currentBanner.bannerTitle}
+                {currentBanner.bannerTitle || currentBanner.title}
               </h1>
             )}
             {currentBanner.bannerSubtitle && (
