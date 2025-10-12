@@ -74,6 +74,7 @@ export interface PromptTemplate {
   prompt: string;
   category?: string;
   roomType?: string | null; // 房间类型，用于Interior Design
+  subCategory?: string; // 子分类，用于前端分组显示
 }
 
 export interface PromptTemplateCategory {

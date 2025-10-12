@@ -2403,17 +2403,27 @@ const App: React.FC = () => {
         
         let categories: PromptTemplateCategory[] = [];
         if (activePage === 'Interior Design') {
-            // ✅ 从数据库加载 Interior Design 数据
+            // ✅ 从数据库加载 Interior Design 数据，按 sub_category 分组显示
             const interiorData = adminTemplateData["Interior Design"];
             if (interiorData) {
                 // 查找当前选择的房间类型
                 const roomCategory = interiorData.find(sc => sc.name === selectedRoomType);
                 if (roomCategory && roomCategory.templates.length > 0) {
+                    // 按 sub_category 重新分组
+                    const groupedBySubCategory: { [key: string]: PromptTemplate[] } = {};
+                    roomCategory.templates.forEach(template => {
+                        const subCat = template.subCategory || 'Other Styles';
+                        if (!groupedBySubCategory[subCat]) {
+                            groupedBySubCategory[subCat] = [];
+                        }
+                        groupedBySubCategory[subCat].push(template);
+                    });
+                    
                     // 转换为前端需要的格式
-                    categories = [{
-                        name: "Choose a Style",
-                        templates: roomCategory.templates
-                    }];
+                    categories = Object.entries(groupedBySubCategory).map(([subCatName, templates]) => ({
+                        name: subCatName,
+                        templates: templates
+                    }));
                 }
             }
         } else if (activePage === 'Wall Paint') {
@@ -2426,14 +2436,6 @@ const App: React.FC = () => {
             categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
             categories = adminTemplateData["Festive Decor"] || [];
-        }
-        
-        // 统一修改类别名称为 "Choose a Style"（除了 Festive Decor）
-        if (activePage !== 'Festive Decor' && categories.length > 0) {
-            categories = categories.map(cat => ({
-                ...cat,
-                name: "Choose a Style"
-            }));
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
@@ -2540,12 +2542,15 @@ const App: React.FC = () => {
                             )}
 
                             {isStyleBased && categories.length > 0 && (
-                                <PromptTemplates 
-                                    categories={categories} 
-                                    onTemplateSelect={handleTemplateSelect} 
-                                    selectedTemplateIds={selectedTemplateIds}
-                                    maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
-                                />
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
+                                    <PromptTemplates 
+                                        categories={categories} 
+                                        onTemplateSelect={handleTemplateSelect} 
+                                        selectedTemplateIds={selectedTemplateIds}
+                                        maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                    />
+                                </div>
                             )}
                             {isAIAdvisor && (
                                 <div className="space-y-4">

@@ -80,7 +80,8 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
         imageUrl: template.image_url,
         prompt: template.prompt,
         category: template.main_category,
-        roomType: template.room_type
+        roomType: template.room_type,
+        subCategory: template.sub_category // 添加 sub_category 字段用于前端重新分组
       });
       
       // 更新子分类的 enabled 状态：如果有任何模板是启用的，子分类就是启用的
@@ -388,7 +389,8 @@ export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
         imageUrl: template.image_url,
         prompt: '', // 前端不需要看到，将在生成时动态获取
         category: template.main_category,
-        roomType: template.room_type
+        roomType: template.room_type,
+        subCategory: template.sub_category // 添加 sub_category 字段用于前端重新分组
       });
     });
 
