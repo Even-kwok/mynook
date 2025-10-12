@@ -162,11 +162,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
   if (!hasBanners) {
     // 显示默认横幅
     return (
-      <section className="relative bg-cover bg-center text-white pt-[168px] pb-24 sm:pt-[200px] sm:pb-32 px-4 h-[50vh] flex items-center justify-center"
+      <section className="relative bg-cover bg-center text-white aspect-[4096/2341] flex items-center justify-center"
         style={{ backgroundImage: `url('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png')` }}
       >
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative container mx-auto max-w-4xl text-center">
+        <div className="relative container mx-auto max-w-4xl text-center px-4">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -192,7 +191,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
 
   return (
     <section
-      className="relative overflow-hidden text-white h-[50vh] flex items-center justify-center"
+      className="relative overflow-hidden text-white aspect-[4096/2341] flex items-center justify-center"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={onTouchStart}
@@ -217,11 +216,8 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
         />
       </AnimatePresence>
 
-      {/* 黑色遮罩 */}
-      <div className="absolute inset-0 bg-black/40"></div>
-
       {/* 内容区域 */}
-      <div className="relative container mx-auto max-w-4xl text-center px-4 pt-[168px] pb-24 sm:pt-[200px] sm:pb-32">
+      <div className="relative container mx-auto max-w-4xl text-center px-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={`content-${currentIndex}`}
@@ -230,12 +226,16 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg">
-              {currentBanner.bannerTitle}
-            </h1>
-            <p className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto text-white/90 drop-shadow-md">
-              {currentBanner.bannerSubtitle}
-            </p>
+            {currentBanner.bannerTitle && (
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg">
+                {currentBanner.bannerTitle}
+              </h1>
+            )}
+            {currentBanner.bannerSubtitle && (
+              <p className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto text-white/90 drop-shadow-md">
+                {currentBanner.bannerSubtitle}
+              </p>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
