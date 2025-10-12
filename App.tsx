@@ -2414,15 +2414,15 @@ const App: React.FC = () => {
                 }
             }
         } else if (activePage === 'Wall Paint') {
-             categories = adminTemplateData["Wall Paint"];
+             categories = adminTemplateData["Wall Paint"] || [];
         } else if (activePage === 'Floor Style') {
-            categories = adminTemplateData["Floor Style"];
+            categories = adminTemplateData["Floor Style"] || [];
         } else if (activePage === 'Garden & Backyard Design') {
-            categories = adminTemplateData["Garden"];
+            categories = adminTemplateData["Garden"] || [];
         } else if (activePage === 'Exterior Design') {
-            categories = adminTemplateData["Exterior Design"];
+            categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
-            categories = adminTemplateData["Festive Decor"];
+            categories = adminTemplateData["Festive Decor"] || [];
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
