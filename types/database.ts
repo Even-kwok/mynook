@@ -89,20 +89,20 @@ export const MEMBERSHIP_CONFIG = {
   premium: {
     name: 'Premium',
     credits: 5000, // Premium 用户 5000 点
-    maxTemplates: 9, // Premium 可以选择9个模板，生成9张图片
+    maxTemplates: 8, // Premium 可以选择8个模板，生成8张图片
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
     icon: '👑',
-    features: ['优先队列', '解锁 Free Canvas 功能', '5000 信用点', '每次生成最多9张图片'],
+    features: ['优先队列', '解锁 Free Canvas 功能', '5000 信用点', '每次生成最多8张图片'],
   },
   business: {
     name: 'Business',
     credits: 25000, // Business 用户 25000 点
-    maxTemplates: 18, // Business 可以选择18个模板，生成18张图片
+    maxTemplates: 16, // Business 可以选择16个模板，生成16张图片
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
     icon: '💼',
-    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低', '每次生成最多18张图片'],
+    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低', '每次生成最多16张图片'],
   },
 } as const;
 
