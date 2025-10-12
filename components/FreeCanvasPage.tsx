@@ -24,14 +24,11 @@ interface FreeCanvasPageProps {
         images: CanvasImage[];
         prompt: string;
         paths: DrawablePath[];
-        annotations: Annotation[];
-        activeTool: 'select' | 'draw' | 'annotate';
+        activeTool: 'select' | 'draw';
         brushColor: string;
         brushSize: number;
-        annotationShape: 'rect' | 'circle';
         selectedImageId: string | null;
         selectedPathId: string | null;
-        presets: PromptPreset[];
     };
     setCanvasState: React.Dispatch<React.SetStateAction<FreeCanvasPageProps['canvasState']>>;
 }
@@ -366,30 +363,23 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
         images,
         prompt,
         paths,
-        annotations,
         activeTool,
         brushColor,
         brushSize,
-        annotationShape,
         selectedImageId,
         selectedPathId,
-        presets,
     } = canvasState;
 
     const setImages = (updater: React.SetStateAction<CanvasImage[]>) => setCanvasState(prev => ({ ...prev, images: typeof updater === 'function' ? updater(prev.images) : updater }));
     const setPrompt = (updater: React.SetStateAction<string>) => setCanvasState(prev => ({ ...prev, prompt: typeof updater === 'function' ? updater(prev.prompt) : updater }));
     const setPaths = (updater: React.SetStateAction<DrawablePath[]>) => setCanvasState(prev => ({ ...prev, paths: typeof updater === 'function' ? updater(prev.paths) : updater }));
-    const setAnnotations = (updater: React.SetStateAction<Annotation[]>) => setCanvasState(prev => ({ ...prev, annotations: typeof updater === 'function' ? updater(prev.annotations) : updater }));
-    const setActiveTool = (updater: React.SetStateAction<'select' | 'draw' | 'annotate'>) => setCanvasState(prev => ({ ...prev, activeTool: typeof updater === 'function' ? updater(prev.activeTool) : updater }));
+    const setActiveTool = (updater: React.SetStateAction<'select' | 'draw'>) => setCanvasState(prev => ({ ...prev, activeTool: typeof updater === 'function' ? updater(prev.activeTool) : updater }));
     const setBrushColor = (updater: React.SetStateAction<string>) => setCanvasState(prev => ({ ...prev, brushColor: typeof updater === 'function' ? updater(prev.brushColor) : updater }));
     const setBrushSize = (updater: React.SetStateAction<number>) => setCanvasState(prev => ({ ...prev, brushSize: typeof updater === 'function' ? updater(prev.brushSize) : updater }));
-    const setAnnotationShape = (updater: React.SetStateAction<'rect' | 'circle'>) => setCanvasState(prev => ({ ...prev, annotationShape: typeof updater === 'function' ? updater(prev.annotationShape) : updater }));
     const setSelectedImageId = (updater: React.SetStateAction<string | null>) => setCanvasState(prev => ({ ...prev, selectedImageId: typeof updater === 'function' ? updater(prev.selectedImageId) : updater }));
     const setSelectedPathId = (updater: React.SetStateAction<string | null>) => setCanvasState(prev => ({ ...prev, selectedPathId: typeof updater === 'function' ? updater(prev.selectedPathId) : updater }));
-    const setPresets = (updater: React.SetStateAction<PromptPreset[]>) => setCanvasState(prev => ({ ...prev, presets: typeof updater === 'function' ? updater(prev.presets) : updater }));
     
     // Local UI state, doesn't need to be persisted
-    const [drawingAnnotation, setDrawingAnnotation] = useState<{ startX: number; startY: number; currentBox?: { x: number; y: number; width: number; height: number; } } | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [generationProgress, setGenerationProgress] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
@@ -653,12 +643,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 size: brushSize,
             };
             setPaths(prev => [...prev, newPath]);
-        } else if (activeTool === 'annotate' && workspaceRef.current && annotations.length < 9) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            setDrawingAnnotation({
-                startX: e.clientX - rect.left,
-                startY: e.clientY - rect.top,
-            });
         }
     };
 
@@ -825,49 +809,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 }
                 return newPaths;
             });
-        } else if (activeTool === 'annotate' && drawingAnnotation && workspaceRef.current) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            const { startX, startY } = drawingAnnotation;
-            const currentX = e.clientX - rect.left;
-            const currentY = e.clientY - rect.top;
-            
-            const newBox = {
-                x: Math.min(startX, currentX),
-                y: Math.min(startY, currentY),
-                width: Math.abs(currentX - startX),
-                height: Math.abs(currentY - startY),
-            };
-            setDrawingAnnotation(prev => prev ? {...prev, currentBox: newBox} : null);
         }
     };
 
     const handleMouseUp = (e: ReactMouseEvent<HTMLDivElement>) => {
-        if (activeTool === 'annotate' && drawingAnnotation && workspaceRef.current) {
-            const rect = workspaceRef.current.getBoundingClientRect();
-            const { startX, startY } = drawingAnnotation;
-            const endX = e.clientX - rect.left;
-            const endY = e.clientY - rect.top;
-
-            const box = {
-                x: Math.min(startX, endX),
-                y: Math.min(startY, endY),
-                width: Math.abs(endX - startX),
-                height: Math.abs(endY - startY),
-            };
-
-            if (box.width > 10 && box.height > 10) {
-                const newAnnotation: Annotation = {
-                    id: `ann_${Date.now()}`,
-                    shape: annotationShape,
-                    box,
-                    label: `Box ${annotations.length + 1}`,
-                    text: '',
-                };
-                setAnnotations(prev => [...prev, newAnnotation]);
-            }
-            setDrawingAnnotation(null);
-        }
-
         dragInfo.current = null;
         resizeInfo.current = null;
         rotationInfo.current = null;
@@ -1023,12 +968,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     };
 
     // --- End Cropping ---
-
-    const handleSavePreset = () => {
-        if (!prompt.trim()) return;
-        setEditingPreset({ name: '', prompt: prompt });
-        setIsPresetModalOpen(true);
-    };
 
     const handleSetPrompt = (e: React.MouseEvent, newPrompt: string) => {
         e.stopPropagation();
@@ -1732,9 +1671,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                      <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
                                         <IconBrush className="w-5 h-5"/> Draw
                                     </button>
-                                    <button onClick={() => setActiveTool('annotate')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'annotate' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
-                                        <IconTag className="w-5 h-5"/> Annotate
-                                    </button>
                                 </div>
                                 {activeTool === 'draw' && (
                                     <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
@@ -1765,22 +1701,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                         </div>
                                     </motion.div>
                                 )}
-                                {activeTool === 'annotate' && (
-                                    <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="text-sm font-medium text-slate-700">Shape</h4>
-                                            <div className="flex gap-1 p-0.5 bg-slate-200 rounded-lg">
-                                                <button onClick={() => setAnnotationShape('rect')} className={`p-1.5 rounded-md ${annotationShape === 'rect' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/70'}`} aria-label="Rectangle">
-                                                    <IconRectangle className="w-5 h-5" />
-                                                </button>
-                                                <button onClick={() => setAnnotationShape('circle')} className={`p-1.5 rounded-md ${annotationShape === 'circle' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/70'}`} aria-label="Circle">
-                                                    <IconCircle className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-500">Click and drag on the canvas to draw a shape. You can create up to 9 annotations.</p>
-                                    </motion.div>
-                                )}
                             </div>
 
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
@@ -1806,37 +1726,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                         >
                                             <IconMicrophone className="w-5 h-5" />
                                         </button>
-                                        {prompt.trim() && (
-                                            <Button onClick={handleSavePreset} className="!py-1 !px-2 text-xs">
-                                                Save
-                                            </Button>
-                                        )}
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-                                <h3 className="text-base font-semibold text-slate-800">Saved Prompts</h3>
-                                <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-hide">
-                                    {presets.length > 0 ? (
-                                        presets.map(p => (
-                                            <div key={p.id} className="group flex items-center justify-between -mx-2 px-2 py-1.5 rounded-xl hover:bg-slate-200 transition-colors">
-                                                <button onClick={(e) => handleSetPrompt(e, p.prompt)} className="flex-1 text-left text-sm text-slate-700 group-hover:text-slate-900 truncate pr-2" title={p.name}>
-                                                    {p.name}
-                                                </button>
-                                                <div className="flex items-center flex-shrink-0 gap-1">
-                                                    <button onClick={(e) => handleEditPreset(e, p)} className="p-1 text-slate-500 hover:text-slate-800 rounded-md" aria-label={`Edit "${p.name}" prompt`}>
-                                                        <IconPencil className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={(e) => handleDeletePreset(e, p.id)} className="p-1 text-slate-500 hover:text-red-600 rounded-md" aria-label={`Delete "${p.name}" prompt`}>
-                                                        <IconTrash className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-slate-500 italic px-2">No saved prompts yet.</p>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1912,7 +1802,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                             )}
                             <div 
                                 ref={workspaceRef}
-                                className={`w-full h-full relative ${activeTool === 'draw' || activeTool === 'annotate' ? 'cursor-crosshair' : 'cursor-default'}`}
+                                className={`w-full h-full relative ${activeTool === 'draw' ? 'cursor-crosshair' : 'cursor-default'}`}
                                 onMouseDown={handleMouseDown}
                                 onMouseMove={handleMouseMove}
                                 onMouseUp={handleMouseUp}
