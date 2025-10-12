@@ -24,6 +24,7 @@ export interface AdminPageProps {
     setTemplateData: React.Dispatch<React.SetStateAction<ManagedTemplateData>>;
     categoryOrder: string[];
     setCategoryOrder: React.Dispatch<React.SetStateAction<string[]>>;
+    onTemplatesUpdated?: () => void;
 }
 
 // --- Sub-Components ---
@@ -220,7 +221,8 @@ const TemplateManagement: React.FC<{
     setTemplateData: React.Dispatch<React.SetStateAction<ManagedTemplateData>>;
     categoryOrder: string[];
     setCategoryOrder: React.Dispatch<React.SetStateAction<string[]>>;
-}> = ({ templateData, setTemplateData, categoryOrder, setCategoryOrder }) => {
+    onTemplatesUpdated?: () => void;
+}> = ({ templateData, setTemplateData, categoryOrder, setCategoryOrder, onTemplatesUpdated }) => {
     const [editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [targetCategory, setTargetCategory] = useState<{ main: string, sub: string } | null>(null);
@@ -280,12 +282,15 @@ const TemplateManagement: React.FC<{
                 });
             }
             
-            // 重新从数据库加载所有模板
+            // 重新从数据库加载所有模板（Admin Panel用）
             const freshTemplates = await getAllTemplates();
-            
-            // 更新父组件的state
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             setIsTemplateModalOpen(false);
             
@@ -304,10 +309,15 @@ const TemplateManagement: React.FC<{
             // Delete from database
             await deleteTemplateFromDB(templateId);
             
-            // 重新从数据库加载
+            // 重新从数据库加载（Admin Panel用）
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             alert('Template deleted successfully!');
         } catch (error) {
@@ -339,6 +349,11 @@ const TemplateManagement: React.FC<{
                 return newData;
             });
             
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
+            
             console.log(`✅ Main category ${mainCategory} toggled to ${newEnabledState}`);
         } catch (error) {
             console.error('Failed to toggle main category:', error);
@@ -358,10 +373,15 @@ const TemplateManagement: React.FC<{
         try {
             await deleteMainCategoryFromDB(mainCategory);
             
-            // 重新从数据库加载
+            // 重新从数据库加载（Admin Panel用）
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             alert(`Successfully deleted "${mainCategory}" category!`);
         } catch (error) {
@@ -383,10 +403,15 @@ const TemplateManagement: React.FC<{
         try {
             await deleteSubCategoryFromDB(mainCategory, subCategoryName);
             
-            // 重新从数据库加载
+            // 重新从数据库加载（Admin Panel用）
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             alert(`Successfully deleted "${subCategoryName}"!`);
         } catch (error) {
@@ -416,6 +441,11 @@ const TemplateManagement: React.FC<{
                 }
                 return newData;
             });
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             console.log(`✅ Category ${mainCategory} > ${subCategoryName} toggled to ${newEnabledState}`);
         } catch (error) {
@@ -500,10 +530,15 @@ const TemplateManagement: React.FC<{
             
             await batchImportTemplates(templatesToImport);
             
-            // 重新从数据库加载
+            // 重新从数据库加载（Admin Panel用）
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
             
             alert(`Successfully imported ${templatesToImport.length} templates!`);
         } catch (error) {
@@ -969,6 +1004,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setTemplateData,
     categoryOrder,
     setCategoryOrder,
+    onTemplatesUpdated,
 }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const tabs = [
@@ -981,21 +1017,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
 
-    // Admin Panel 独立加载所有模板（包括禁用的），不受前端功能页面影响
-    useEffect(() => {
-        const loadAdminTemplates = async () => {
-            try {
-                const allTemplates = await getAllTemplates(); // 获取所有模板（包括禁用的）
-                setTemplateData(allTemplates);
-                setCategoryOrder(Object.keys(allTemplates));
-                console.log('✅ Admin Panel loaded all templates (including disabled)');
-            } catch (error) {
-                console.error('Failed to load admin templates:', error);
-            }
-        };
-        
-        loadAdminTemplates();
-    }, []); // 只在 mount 时执行一次
+    // 注意：模板数据现在通过props从App.tsx传入（adminTemplateDataFull）
+    // Admin Panel 使用包含所有模板（包括禁用的）的完整数据
+    // 前端功能页面使用只包含启用模板的数据（adminTemplateData）
 
     const renderContent = () => {
         switch (activeTab) {
@@ -1006,7 +1030,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             case 'designs':
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
-                return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} />;
+                return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
             case 'hero-banner':
                 return <HeroBannerManager />;
             case 'gallery':
