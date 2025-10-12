@@ -162,27 +162,9 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
   if (!hasBanners) {
     // 显示默认横幅
     return (
-      <section className="relative bg-cover bg-center text-white aspect-[3/2] flex items-center justify-center"
+      <section className="relative bg-cover bg-center h-[600px] md:h-[800px] lg:h-[1000px]"
         style={{ backgroundImage: `url('https://storage.googleapis.com/aistudio-hosting/templates/interior-japandi.png')` }}
       >
-        <div className="relative container mx-auto max-w-4xl text-center px-4">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg"
-          >
-            Effortless Design, Powered by AI
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-            className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto text-white/90 drop-shadow-md"
-          >
-            Transform photos of your rooms with powerful AI. Create stunning visuals for home renovations, staging, lookbooks, and more.
-          </motion.p>
-        </div>
       </section>
     );
   }
@@ -191,7 +173,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
 
   return (
     <section
-      className="relative overflow-hidden text-white aspect-[3/2] flex items-center justify-center"
+      className="relative overflow-hidden h-[600px] md:h-[800px] lg:h-[1000px]"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={onTouchStart}
@@ -215,30 +197,6 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
           style={{ backgroundImage: `url('${currentBanner.src}')` }}
         />
       </AnimatePresence>
-
-      {/* 内容区域 */}
-      <div className="relative container mx-auto max-w-4xl text-center px-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`content-${currentIndex}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-          >
-            {(currentBanner.bannerTitle || currentBanner.title) && (
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-lg">
-                {currentBanner.bannerTitle || currentBanner.title}
-              </h1>
-            )}
-            {currentBanner.bannerSubtitle && (
-              <p className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto text-white/90 drop-shadow-md">
-                {currentBanner.bannerSubtitle}
-              </p>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
 
       {/* 左右控制按钮 */}
       {showControls && hasMultipleBanners && (
