@@ -1374,7 +1374,10 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             }
     
             // Note: Backend automatically deducted 1 credit after successful generation
-            // The parent component should refresh user data to show updated credits
+            // Refresh user data to show updated credits
+            if (currentUser) {
+                onUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
+            }
     
             // Save to history
             const resultImage: GeneratedImage = {

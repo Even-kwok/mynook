@@ -27,9 +27,8 @@ const PromptTemplates: React.FC<{
     categories: PromptTemplateCategory[];
     onTemplateSelect: (templateId: string) => void;
     selectedTemplateIds: string[];
-}> = ({ categories, onTemplateSelect, selectedTemplateIds }) => {
-    const SELECTION_LIMIT = 9;
-
+    maxTemplates: number;
+}> = ({ categories, onTemplateSelect, selectedTemplateIds, maxTemplates }) => {
     return (
         <div className="space-y-6">
             {categories.map(category => (
@@ -38,7 +37,7 @@ const PromptTemplates: React.FC<{
                     <div className="grid grid-cols-3 gap-3">
                         {category.templates.map((template) => {
                             const isSelected = selectedTemplateIds.includes(template.id);
-                            const limitReached = selectedTemplateIds.length >= SELECTION_LIMIT;
+                            const limitReached = selectedTemplateIds.length >= maxTemplates;
                             const isDisabled = !isSelected && limitReached;
 
                             return (
@@ -1355,7 +1354,14 @@ const App: React.FC = () => {
     };
     
     // 保留用于Admin页面的用户更新函数（如果需要的话）
-    const handleUpdateUser = (userId: string, updates: Partial<User>) => {
+    const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+        // 如果是更新信用点，刷新当前用户信息以同步显示
+        if (updates.credits !== undefined && userId === currentUser?.id) {
+            // 等待一小段时间，确保后端已经完成信用点扣除
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // 刷新用户信息以显示最新的信用点
+            await auth.refreshProfile();
+        }
         // TODO: 如果需要管理其他用户，需要通过Supabase API实现
         console.log('Update user:', userId, updates);
     };
@@ -1746,7 +1752,6 @@ const App: React.FC = () => {
             return;
         }
     
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - creditsNeeded });
         setIsLoading(true);
         setError(null);
         setCurrentAdvisorResponse(null);
@@ -1817,6 +1822,9 @@ const App: React.FC = () => {
         };
         setGenerationHistory(prev => [newBatch, ...prev]);
     
+        // 图片生成完成后，刷新用户信用点显示
+        await handleUpdateUser(currentUser.id, { credits: currentUser.credits - creditsNeeded });
+    
         setIsLoading(false);
     };
 
@@ -1842,7 +1850,6 @@ const App: React.FC = () => {
             return;
         }
     
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         setIsLoading(true);
         setError(null);
         setCurrentAdvisorResponse(null);
@@ -1879,6 +1886,9 @@ const App: React.FC = () => {
                 userId: currentUser.id,
             };
             setGenerationHistory(prev => [newBatch, ...prev]);
+            
+            // 图片生成完成后，刷新用户信用点显示
+            await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
     
         } catch (err) {
             console.error("Item replacement failed:", err);
@@ -1910,7 +1920,6 @@ const App: React.FC = () => {
             return;
         }
 
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         setIsLoading(true);
         setError(null);
         setCurrentAdvisorResponse(null);
@@ -1947,6 +1956,9 @@ const App: React.FC = () => {
                 userId: currentUser.id,
             };
             setGenerationHistory(prev => [newBatch, ...prev]);
+            
+            // 图片生成完成后，刷新用户信用点显示
+            await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
     
         } catch (err) {
             console.error("Style match failed:", err);
@@ -1980,7 +1992,6 @@ const App: React.FC = () => {
             return;
         }
 
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         setIsLoading(true);
         setError(null);
         setCurrentAdvisorResponse(null);
@@ -2017,6 +2028,9 @@ const App: React.FC = () => {
                 userId: currentUser.id,
             };
             setGenerationHistory(prev => [newBatch, ...prev]);
+            
+            // 图片生成完成后，刷新用户信用点显示
+            await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
     
         } catch (err) {
             console.error("Multi-item placement failed:", err);
@@ -2051,7 +2065,6 @@ const App: React.FC = () => {
             return;
         }
 
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         setIsAdvisorLoading(true);
         setError(null);
         setGeneratedImages([]);
@@ -2118,6 +2131,9 @@ const App: React.FC = () => {
             setCurrentAdvisorResponse(newBatch);
             setGenerationHistory(prev => [newBatch, ...prev]);
             
+            // 图片生成完成后，刷新用户信用点显示
+            await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
+            
             if (successfulResponses.length < selectedPersonas.length) {
                 setError("Some advisors could not respond. Showing available answers.");
             }
@@ -2139,7 +2155,6 @@ const App: React.FC = () => {
             return;
         }
         
-        handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         const cleanModule1 = module1Images.filter((img): img is string => !!img);
         if (cleanModule1.length === 0) {
             setError(`Cannot regenerate "${image.id}" without the original room photo.`);
@@ -2153,6 +2168,9 @@ const App: React.FC = () => {
             const module1ForApi = cleanModule1.map(img => img.split(',')[1]);
             const newImageUrl = await generateImage(getModelInstruction(image.promptBase), module1ForApi);
             setGeneratedImages(prev => prev.map(img => img.id === image.id ? { ...img, status: 'success', imageUrl: newImageUrl } : img));
+            
+            // 图片生成完成后，刷新用户信用点显示
+            await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         } catch (err) {
             console.error(`Regeneration failed for ${image.id}:`, err);
             setError(`Oops! Regeneration for "${image.id}" failed.`);
@@ -2449,7 +2467,12 @@ const App: React.FC = () => {
                             )}
 
                             {isStyleBased && categories.length > 0 && (
-                                <PromptTemplates categories={categories} onTemplateSelect={handleTemplateSelect} selectedTemplateIds={selectedTemplateIds} />
+                                <PromptTemplates 
+                                    categories={categories} 
+                                    onTemplateSelect={handleTemplateSelect} 
+                                    selectedTemplateIds={selectedTemplateIds}
+                                    maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                />
                             )}
                             {isAIAdvisor && (
                                 <div className="space-y-4">
