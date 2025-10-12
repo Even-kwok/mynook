@@ -496,7 +496,7 @@ const Header: React.FC<{
 
     const designToolLabels = useMemo(() => designTools.map(item => item.label), [designTools]);
     const isDesignToolActive = useMemo(() => designToolLabels.includes(activeItem), [designToolLabels, activeItem]);
-    const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Tools';
+    const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Start Design My Nook';
 
     const upgradeButton = useMemo(() => {
         if (!user) {
@@ -524,15 +524,18 @@ const Header: React.FC<{
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent animate-gradient-pan">MyNook.AI</span>
                 </button>
+            </div>
+            <div className="flex items-center gap-4">
+                {/* Design Tools Menu */}
                 <nav className="hidden md:flex items-center gap-2">
                     <div className="relative" ref={designToolsRef}>
                         <button
                             onClick={() => setDesignToolsOpen(o => !o)}
-                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors relative flex items-center gap-1.5 ${isDesignToolActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30' : 'text-slate-700 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200'}`}
                         >
+                            <IconSparkles className={`w-4 h-4 ${isDesignToolActive ? 'text-yellow-300 animate-pulse' : 'text-purple-500'}`} />
                             <span>{activeDesignToolLabel}</span>
                             <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
-                            {isDesignToolActive && <motion.div className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-500" layoutId="nav-underline" />}
                         </button>
                         <AnimatePresence>
                             {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
@@ -551,8 +554,6 @@ const Header: React.FC<{
                         </a>
                     ))}
                 </nav>
-            </div>
-            <div className="flex items-center gap-4">
                 {user && (
                     <div className="flex items-center gap-2">
                         {/* 会员等级徽章 */}
