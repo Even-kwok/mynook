@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Part } from '@google/genai';
 import { Buffer } from 'node:buffer';
-import { writeFileSync } from 'fs';
+import { writeFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import {
   verifyUserToken,
@@ -269,7 +269,15 @@ export default async function handler(
     console.log(`📤 Calling Vertex AI with ${imageParts.length} reference image(s)...`);
 
     // 构建内容：图像 + 文本提示
-    const contents = [...imageParts, instruction];
+    const contents = [
+      {
+        role: 'user',
+        parts: [
+          ...imageParts,
+          { text: instruction }
+        ]
+      }
+    ];
 
     const response = await aiClient.models.generateContent({
       model: modelName,
@@ -348,5 +356,17 @@ export default async function handler(
       details: message,
       code: 'GENERATION_FAILED'
     });
+  } finally {
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredPath) {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+    if (existsSync(tempCredPath)) {
+      try {
+        unlinkSync(tempCredPath);
+        console.log(`🧹 Cleaned up temp credentials file: ${tempCredPath}`);
+      } catch (cleanupErr) {
+        console.warn('⚠️ Failed to remove temp credentials file:', cleanupErr);
+      }
+    }
   }
 }

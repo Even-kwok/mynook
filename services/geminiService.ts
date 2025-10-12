@@ -207,8 +207,18 @@ export const generateImage = async (
                     throw new Error((errorData.error || 'Failed to get response from server') + detail);
                 }
 
-                const data = await response.json();
-                return data.imageUrl;
+                const data: any = await response.json();
+                const imageUrl: unknown = data?.imageUrl
+                    ?? data?.imageUrls?.[0]
+                    ?? data?.images?.[0]?.imageUrl
+                    ?? data?.images?.[0];
+
+                if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+                    return imageUrl;
+                }
+
+                console.error('Unexpected image response format:', data);
+                throw new Error('Server returned an unexpected response format. Please try again.');
             } catch (error) {
                 clearTimeout(timeoutId);
                 
