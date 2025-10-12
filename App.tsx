@@ -2431,7 +2431,7 @@ const App: React.FC = () => {
         } else if (activePage === 'Floor Style') {
             categories = adminTemplateData["Floor Style"] || [];
         } else if (activePage === 'Garden & Backyard Design') {
-            categories = adminTemplateData["Garden"] || [];
+            categories = adminTemplateData["Garden & Backyard Design"] || [];
         } else if (activePage === 'Exterior Design') {
             categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {

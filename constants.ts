@@ -656,7 +656,7 @@ export const ADMIN_PAGE_CATEGORIES: Record<string, ManagedPromptTemplateCategory
     "Exterior Design": EXTERIOR_STYLES,
     "Festive Decor": FESTIVE_DECOR_STYLES,
     "Floor Style": FLOOR_STYLE_CATEGORIES,
-    "Garden": gardenStyles,
+    "Garden & Backyard Design": gardenStyles,
     "Interior Design": INTERIOR_DESIGN_STYLES,
     "Wall Paint": WALL_PAINT_CATEGORIES,
 };
