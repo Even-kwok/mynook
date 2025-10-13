@@ -164,17 +164,17 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         return parts.join(' → ');
     };
 
-    // 批量下载所有图片 - 根据路径信息命名
+    // Batch download all images - named by path info
     const handleBatchDownload = async () => {
         const allImages = allGalleryImages.filter(img => img.status === 'success' && img.imageUrl);
         
         if (allImages.length === 0) {
-            alert('没有可下载的图片');
+            alert('No images available for download');
             return;
         }
 
-        // 确认下载
-        if (!confirm(`准备下载 ${allImages.length} 张图片，确定继续吗？`)) {
+        // Confirm download
+        if (!confirm(`Ready to download ${allImages.length} image${allImages.length > 1 ? 's' : ''}. Continue?`)) {
             return;
         }
 
@@ -214,7 +214,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
             }
         }
 
-        alert(`成功下载 ${downloadCount} / ${allImages.length} 张图片`);
+        alert(`Successfully downloaded ${downloadCount} / ${allImages.length} image${allImages.length > 1 ? 's' : ''}`);
     };
 
     return (
@@ -252,7 +252,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             ))}
                         </div>
                     </div>
-                    {/* 批量下载按钮 */}
+                    {/* Batch Download Button */}
                     {allGalleryImages.length > 0 && (
                         <div className="px-2 mb-4 flex-shrink-0">
                             <button
@@ -260,7 +260,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                 className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                             >
                                 <IconDownload className="w-4 h-4" />
-                                批量下载全部 ({allGalleryImages.length})
+                                Download All ({allGalleryImages.length})
                             </button>
                         </div>
                     )}
