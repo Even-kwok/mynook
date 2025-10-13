@@ -2249,6 +2249,25 @@ const App: React.FC = () => {
             const newImageUrl = await generateImage(getModelInstruction(image.promptBase), module1ForApi);
             setGeneratedImages(prev => prev.map(img => img.id === image.id ? { ...img, status: 'success', imageUrl: newImageUrl } : img));
             
+            // 同步更新 generationHistory 中的对应图片
+            setGenerationHistory(prevHistory => 
+                prevHistory.map(batch => {
+                    // 检查这个批次是否包含当前重新生成的图片
+                    const hasImage = batch.results.some(img => img.id === image.id);
+                    if (hasImage) {
+                        return {
+                            ...batch,
+                            results: batch.results.map(img => 
+                                img.id === image.id 
+                                    ? { ...img, status: 'success', imageUrl: newImageUrl }
+                                    : img
+                            )
+                        };
+                    }
+                    return batch;
+                })
+            );
+            
             // 图片生成完成后，刷新用户信用点显示
             await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         } catch (err) {
