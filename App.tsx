@@ -2271,9 +2271,31 @@ const App: React.FC = () => {
     };
 
     const handleDownload = (imageUrl: string, baseName: string) => {
+        // 从 generationHistory 中查找这张图片的完整信息，使用统一的命名格式
+        let fileName = `${baseName.replace(/\s+/g, '_')}_${Date.now()}.png`;
+        
+        // 尝试找到对应的 batch 和 image
+        for (const batch of generationHistory) {
+            const image = batch.results.find(r => r.imageUrl === imageUrl);
+            if (image) {
+                // 使用与批量下载相同的命名格式: type_roomTypeId_templateName_timestamp
+                const parts = [
+                    batch.type,
+                    batch.roomTypeId || batch.buildingTypeId || 'no-room',
+                    image.id,
+                    batch.id,
+                ];
+                
+                fileName = parts
+                    .map(p => String(p).toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+                    .join('_') + '.png';
+                break;
+            }
+        }
+        
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = `${baseName.replace(/\s+/g, '_')}_${Date.now()}.png`;
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
