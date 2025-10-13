@@ -1422,6 +1422,10 @@ const App: React.FC = () => {
     const [selectedRoomType, setSelectedRoomType] = useState<string>(ROOM_TYPES[0].id);
     const [selectedBuildingType, setSelectedBuildingType] = useState<string>(BUILDING_TYPES[0].id);
     const [selectedItemType, setSelectedItemType] = useState<string>(ITEM_TYPES[0].id);
+    const [selectedFestiveType, setSelectedFestiveType] = useState<string>('');
+    const [selectedWallPaintType, setSelectedWallPaintType] = useState<string>('');
+    const [selectedFloorType, setSelectedFloorType] = useState<string>('');
+    const [selectedGardenType, setSelectedGardenType] = useState<string>('');
     
     // AI Advisor State
     const [advisorChat, setAdvisorChat] = useState<Chat | null>(null);
@@ -1479,11 +1483,11 @@ const App: React.FC = () => {
 
     const designTools = [
         { key: 'Interior Design', label: 'Interior Design', requiresPremium: false },
-        { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Exterior Design', label: 'Exterior Design', requiresPremium: false },
         { key: 'Wall Paint', label: 'Wall Paint', requiresPremium: false },
         { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
+        { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
         { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true, comingSoon: true },
         { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
@@ -1601,15 +1605,90 @@ const App: React.FC = () => {
         return roomTypeOptions;
     }, [adminTemplateData, templatesLoading]);
     
-    // 确保当前选择的房间类型在可用列表中，否则选择第一个
+    // Festive Decor 子分类选项
+    const availableFestiveTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const festiveData = adminTemplateData["Festive Decor"];
+        if (!festiveData || festiveData.length === 0) return [];
+        return festiveData
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Exterior Design 建筑类型选项
+    const availableBuildingTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const exteriorData = adminTemplateData["Exterior Design"];
+        if (!exteriorData || exteriorData.length === 0) return [];
+        return exteriorData
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Wall Paint 色调选项
+    const availableWallPaintTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Wall Paint"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Floor Style 地板类型选项
+    const availableFloorTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Floor Style"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Garden & Backyard Design 花园类型选项
+    const availableGardenTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Garden & Backyard Design"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+    
+    // 确保当前选择的类型在可用列表中，否则选择第一个
     useEffect(() => {
-        if ((activePage === 'Interior Design' || activePage === 'Festive Decor') && availableRoomTypes.length > 0) {
+        if (activePage === 'Interior Design' && availableRoomTypes.length > 0) {
             const isCurrentRoomTypeAvailable = availableRoomTypes.some(rt => rt.id === selectedRoomType);
             if (!isCurrentRoomTypeAvailable) {
                 setSelectedRoomType(availableRoomTypes[0].id);
             }
+        } else if (activePage === 'Festive Decor' && availableFestiveTypes.length > 0) {
+            if (!selectedFestiveType || !availableFestiveTypes.some(ft => ft.id === selectedFestiveType)) {
+                setSelectedFestiveType(availableFestiveTypes[0].id);
+            }
+        } else if (activePage === 'Exterior Design' && availableBuildingTypes.length > 0) {
+            if (!selectedBuildingType || !availableBuildingTypes.some(bt => bt.id === selectedBuildingType)) {
+                setSelectedBuildingType(availableBuildingTypes[0].id);
+            }
+        } else if (activePage === 'Wall Paint' && availableWallPaintTypes.length > 0) {
+            if (!selectedWallPaintType || !availableWallPaintTypes.some(wt => wt.id === selectedWallPaintType)) {
+                setSelectedWallPaintType(availableWallPaintTypes[0].id);
+            }
+        } else if (activePage === 'Floor Style' && availableFloorTypes.length > 0) {
+            if (!selectedFloorType || !availableFloorTypes.some(ft => ft.id === selectedFloorType)) {
+                setSelectedFloorType(availableFloorTypes[0].id);
+            }
+        } else if (activePage === 'Garden & Backyard Design' && availableGardenTypes.length > 0) {
+            if (!selectedGardenType || !availableGardenTypes.some(gt => gt.id === selectedGardenType)) {
+                setSelectedGardenType(availableGardenTypes[0].id);
+            }
         }
-    }, [availableRoomTypes, selectedRoomType, activePage]);
+    }, [availableRoomTypes, selectedRoomType, activePage, 
+        availableFestiveTypes, selectedFestiveType,
+        availableBuildingTypes, selectedBuildingType,
+        availableWallPaintTypes, selectedWallPaintType,
+        availableFloorTypes, selectedFloorType,
+        availableGardenTypes, selectedGardenType]);
 
     // --- Image Handling ---
     
@@ -2501,18 +2580,61 @@ const App: React.FC = () => {
                     }];
                 }
             }
-        } else if (activePage === 'Wall Paint') {
-             categories = adminTemplateData["Wall Paint"] || [];
-        } else if (activePage === 'Floor Style') {
-            categories = adminTemplateData["Floor Style"] || [];
-        } else if (activePage === 'Garden & Backyard Design') {
-            categories = adminTemplateData["Garden & Backyard Design"] || [];
-        } else if (activePage === 'Exterior Design') {
-            // ✅ Exterior Design 数据已按建筑类型（room_type）分组
-            // sub_category 是固定值（"Architectural Styles"），前端不显示
-            categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
-            categories = adminTemplateData["Festive Decor"] || [];
+            const festiveData = adminTemplateData["Festive Decor"];
+            if (festiveData) {
+                const festiveCategory = festiveData.find(sc => sc.name === selectedFestiveType);
+                if (festiveCategory && festiveCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedFestiveType,
+                        templates: festiveCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Exterior Design') {
+            const exteriorData = adminTemplateData["Exterior Design"];
+            if (exteriorData) {
+                const buildingCategory = exteriorData.find(sc => sc.name === selectedBuildingType);
+                if (buildingCategory && buildingCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedBuildingType,
+                        templates: buildingCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Wall Paint') {
+            const wallPaintData = adminTemplateData["Wall Paint"];
+            if (wallPaintData) {
+                const wallPaintCategory = wallPaintData.find(sc => sc.name === selectedWallPaintType);
+                if (wallPaintCategory && wallPaintCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedWallPaintType,
+                        templates: wallPaintCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Floor Style') {
+            const floorData = adminTemplateData["Floor Style"];
+            if (floorData) {
+                const floorCategory = floorData.find(sc => sc.name === selectedFloorType);
+                if (floorCategory && floorCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedFloorType,
+                        templates: floorCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Garden & Backyard Design') {
+            const gardenData = adminTemplateData["Garden & Backyard Design"];
+            if (gardenData) {
+                const gardenCategory = gardenData.find(sc => sc.name === selectedGardenType);
+                if (gardenCategory && gardenCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedGardenType,
+                        templates: gardenCategory.templates
+                    }];
+                }
+            }
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
@@ -2590,7 +2712,7 @@ const App: React.FC = () => {
                                 />
                             )}
 
-                            {['Interior Design', 'Festive Decor'].includes(activePage) && (
+                            {activePage === 'Interior Design' && (
                                 <div>
                                     <CustomSelect
                                         label="Choose a Room Type"
@@ -2601,13 +2723,60 @@ const App: React.FC = () => {
                                     />
                                 </div>
                             )}
+                            {activePage === 'Festive Decor' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Festive Type"
+                                        options={availableFestiveTypes.length > 0 ? availableFestiveTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No festive types available'}]}
+                                        value={availableFestiveTypes.length > 0 ? selectedFestiveType : 'loading'}
+                                        onChange={setSelectedFestiveType}
+                                        disabled={templatesLoading || availableFestiveTypes.length === 0}
+                                    />
+                                </div>
+                            )}
                             {activePage === 'Exterior Design' && (
-                                <CustomSelect
-                                    label="Choose a Building Type"
-                                    options={BUILDING_TYPES}
-                                    value={selectedBuildingType}
-                                    onChange={setSelectedBuildingType}
-                                />
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Building Type"
+                                        options={availableBuildingTypes.length > 0 ? availableBuildingTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No building types available'}]}
+                                        value={availableBuildingTypes.length > 0 ? selectedBuildingType : 'loading'}
+                                        onChange={setSelectedBuildingType}
+                                        disabled={templatesLoading || availableBuildingTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Wall Paint' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Color Tone"
+                                        options={availableWallPaintTypes.length > 0 ? availableWallPaintTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No color tones available'}]}
+                                        value={availableWallPaintTypes.length > 0 ? selectedWallPaintType : 'loading'}
+                                        onChange={setSelectedWallPaintType}
+                                        disabled={templatesLoading || availableWallPaintTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Floor Style' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Floor Type"
+                                        options={availableFloorTypes.length > 0 ? availableFloorTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No floor types available'}]}
+                                        value={availableFloorTypes.length > 0 ? selectedFloorType : 'loading'}
+                                        onChange={setSelectedFloorType}
+                                        disabled={templatesLoading || availableFloorTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Garden & Backyard Design' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Garden Type"
+                                        options={availableGardenTypes.length > 0 ? availableGardenTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No garden types available'}]}
+                                        value={availableGardenTypes.length > 0 ? selectedGardenType : 'loading'}
+                                        onChange={setSelectedGardenType}
+                                        disabled={templatesLoading || availableGardenTypes.length === 0}
+                                    />
+                                </div>
                             )}
                             {isItemReplace && (
                                 <CustomSelect
