@@ -80,22 +80,24 @@ function parseFileName(fileName: string): ParsedFileName | null {
 async function uploadFile(
     supabase: any,
     filePath: string,
-    parsed: ParsedFileName
+    parsed: ParsedFileName,
+    templateId: string
 ): Promise<UploadResult> {
     try {
         // 读取文件
         const fileBuffer = fs.readFileSync(filePath);
         
-        // 构建 Storage 路径: {type}/{roomTypeId}/{templateName}_{timestamp}.png
-        const storagePath = `${parsed.type}/${parsed.roomTypeId}/${parsed.templateName}_${parsed.timestamp}.png`;
+        // 构建 Storage 路径: {type}/{roomTypeId}/{templateId}.png
+        // 使用实际的模板UUID作为文件名，确保唯一性
+        const storagePath = `${parsed.type}/${parsed.roomTypeId}/${templateId}.png`;
         
-        console.log(`📤 上传: ${parsed.originalName} → ${storagePath}`);
+        console.log(`   📤 上传到: ${storagePath}`);
         
         if (DRY_RUN) {
             console.log(`   [测试模式] 跳过实际上传`);
         return {
             fileName: parsed.originalName,
-            templateId: parsed.templateName,
+            templateId: templateId,
             success: true,
             storageUrl: `[DRY_RUN] ${storagePath}`
         };
@@ -124,7 +126,7 @@ async function uploadFile(
         
         return {
             fileName: parsed.originalName,
-            templateId: parsed.templateName,
+            templateId: templateId,
             success: true,
             storageUrl: publicUrl
         };
@@ -133,7 +135,7 @@ async function uploadFile(
         console.error(`   ❌ 上传失败:`, error.message);
         return {
             fileName: parsed.originalName,
-            templateId: parsed.templateName,
+            templateId: templateId,
             success: false,
             error: error.message
         };
@@ -141,7 +143,7 @@ async function uploadFile(
 }
 
 /**
- * 更新 templates 表
+ * 更新 design_templates 表的 image_url
  */
 async function updateTemplateUrl(
     supabase: any,
@@ -154,11 +156,9 @@ async function updateTemplateUrl(
             return true;
         }
         
-        // 根据 templateId 查找模板（id 字段可能就是 templateId）
-        // 如果你的模板 ID 存储方式不同，需要调整查询条件
         const { data, error } = await supabase
-            .from('templates')
-            .update({ imageUrl: imageUrl })
+            .from('design_templates')
+            .update({ image_url: imageUrl })
             .eq('id', templateId)
             .select();
         
@@ -177,6 +177,53 @@ async function updateTemplateUrl(
     } catch (error: any) {
         console.error(`   ❌ 数据库更新失败:`, error.message);
         return false;
+    }
+}
+
+/**
+ * 根据 templateName 查找模板ID
+ */
+async function findTemplateByName(
+    supabase: any,
+    templateName: string,
+    roomTypeId: string
+): Promise<{ id: string; name: string; hasImage: boolean } | null> {
+    try {
+        // 将文件名格式转回正常格式用于查询
+        // 例如: 'modern-minimalist' -> 'Modern Minimalist'
+        const searchName = templateName
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        
+        const { data, error } = await supabase
+            .from('design_templates')
+            .select('id, name, image_url, room_type')
+            .ilike('name', `%${searchName}%`)
+            .limit(5);
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            return null;
+        }
+        
+        // 如果有多个结果，尝试精确匹配或使用第一个
+        const exactMatch = data.find((t: any) => 
+            t.name.toLowerCase().replace(/\s+/g, '-') === templateName
+        );
+        
+        const template = exactMatch || data[0];
+        
+        return {
+            id: template.id,
+            name: template.name,
+            hasImage: !!template.image_url
+        };
+        
+    } catch (error: any) {
+        console.error(`   ❌ 查询模板失败:`, error.message);
+        return null;
     }
 }
 
@@ -226,6 +273,10 @@ async function main() {
     let uploadFailed = 0;
     let dbUpdateSuccess = 0;
     let dbUpdateFailed = 0;
+    let skipped = 0;
+    
+    // 追踪已处理的模板ID，避免重复上传
+    const processedTemplates = new Map<string, string>(); // templateId -> fileName
     
     // 处理每个文件
     for (let i = 0; i < files.length; i++) {
@@ -250,9 +301,48 @@ async function main() {
         console.log(`      - 房间类型: ${parsed.roomTypeId}`);
         console.log(`      - 模板名称: ${parsed.templateName}`);
         
+        // 查找模板ID
+        console.log(`   🔍 查找模板...`);
+        const template = await findTemplateByName(supabase, parsed.templateName, parsed.roomTypeId);
+        
+        if (!template) {
+            console.log(`   ⚠️  未找到匹配的模板，跳过`);
+            uploadFailed++;
+            results.push({
+                fileName,
+                templateId: parsed.templateName,
+                success: false,
+                error: '未找到匹配的模板'
+            });
+            continue;
+        }
+        
+        console.log(`   ✅ 找到模板: ${template.name} (ID: ${template.id})`);
+        
+        // 检查是否已处理过该模板
+        if (processedTemplates.has(template.id)) {
+            const previousFile = processedTemplates.get(template.id);
+            console.log(`   ⏭️  跳过: 该模板已被处理 (使用文件: ${previousFile})`);
+            skipped++;
+            results.push({
+                fileName,
+                templateId: template.id,
+                success: true,
+                error: `跳过：模板已处理 (${previousFile})`
+            });
+            continue;
+        }
+        
+        // 显示是否会覆盖现有图片
+        if (template.hasImage) {
+            console.log(`   🔄 将覆盖现有缩略图`);
+        } else {
+            console.log(`   🆕 将创建新缩略图`);
+        }
+        
         // 上传文件
         const filePath = path.join(IMAGES_FOLDER, fileName);
-        const uploadResult = await uploadFile(supabase, filePath, parsed);
+        const uploadResult = await uploadFile(supabase, filePath, parsed, template.id);
         results.push(uploadResult);
         
         if (uploadResult.success) {
@@ -262,12 +352,14 @@ async function main() {
             if (uploadResult.storageUrl) {
                 const dbSuccess = await updateTemplateUrl(
                     supabase,
-                    parsed.templateId,
+                    template.id,
                     uploadResult.storageUrl
                 );
                 
                 if (dbSuccess) {
                     dbUpdateSuccess++;
+                    // 标记该模板已处理
+                    processedTemplates.set(template.id, fileName);
                 } else {
                     dbUpdateFailed++;
                 }
@@ -284,6 +376,7 @@ async function main() {
     console.log('\n\n📊 上传统计\n');
     console.log(`总文件数: ${files.length}`);
     console.log(`✅ 上传成功: ${uploadSuccess}`);
+    console.log(`⏭️  跳过（重复）: ${skipped}`);
     console.log(`❌ 上传失败: ${uploadFailed}`);
     console.log(`✅ 数据库更新成功: ${dbUpdateSuccess}`);
     console.log(`❌ 数据库更新失败: ${dbUpdateFailed}`);
