@@ -234,10 +234,30 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
   };
 };
 
+// 主分类配置
+const MAIN_CATEGORIES = [
+  { id: 'interior', label: '室内设计 (Interior Design)', value: 'Interior Design' },
+  { id: 'exterior', label: '建筑设计 (Exterior Design)', value: 'Exterior Design' },
+  { id: 'festive', label: '节日装饰 (Festive Decor)', value: 'Festive Decor' },
+  { id: 'wall-paint', label: '墙面涂料 (Wall Paint)', value: 'Wall Paint' },
+  { id: 'floor', label: '地板风格 (Floor Style)', value: 'Floor Style' },
+  { id: 'garden', label: '花园设计 (Garden)', value: 'Exterior Design', subCategory: 'Garden' },
+];
+
+// 节日装饰子分类
+const FESTIVE_SUB_CATEGORIES = [
+  { id: 'halloween', label: '万圣节 (Halloween)', value: 'Halloween' },
+  { id: 'christmas', label: '圣诞节 (Christmas)', value: 'Christmas' },
+  { id: 'thanksgiving', label: '感恩节 (Thanksgiving)', value: 'Thanksgiving' },
+  { id: 'easter', label: '复活节 (Easter)', value: 'Easter' },
+];
+
 export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen, onClose, onSuccess }) => {
   const [templates, setTemplates] = useState<ParsedTemplate[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(MAIN_CATEGORIES[0]);
+  const [selectedFestiveSub, setSelectedFestiveSub] = useState(FESTIVE_SUB_CATEGORIES[0]);
 
   // 处理文件选择
   // 压缩图片到 150x150
@@ -308,7 +328,68 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
       if (!file.type.startsWith('image/')) continue;
       
       // 从文件名获取模板名称（去掉扩展名）
-      const parsed = parseFileName(file.name);
+      const nameWithoutExt = file.name.replace(/\.(png|jpg|jpeg)$/i, '');
+      
+      // 根据用户选择的分类和文件名智能解析
+      let parsed: Omit<ParsedTemplate, 'file' | 'preview' | 'status' | 'prompt'>;
+      
+      if (selectedCategory.value === 'Interior Design') {
+        // 室内设计：自动识别房间类型
+        const roomMatch = ROOM_TYPE_PATTERNS.find(room => room.pattern.test(nameWithoutExt));
+        if (roomMatch) {
+          parsed = {
+            name: nameWithoutExt,
+            mainCategory: 'Interior Design',
+            subCategory: 'Style',
+            roomType: roomMatch.displayName,
+            roomTypeId: roomMatch.roomTypeId,
+          };
+        } else {
+          // 默认为 Living Room
+          parsed = {
+            name: nameWithoutExt,
+            mainCategory: 'Interior Design',
+            subCategory: 'Style',
+            roomType: 'Living Room',
+            roomTypeId: 'living-room',
+          };
+        }
+      } else if (selectedCategory.value === 'Exterior Design' && !selectedCategory.subCategory) {
+        // 建筑设计：自动识别建筑类型
+        const buildingMatch = BUILDING_TYPE_PATTERNS.find(building => building.pattern.test(nameWithoutExt));
+        if (buildingMatch) {
+          parsed = {
+            name: nameWithoutExt,
+            mainCategory: 'Exterior Design',
+            subCategory: 'Architectural Styles',
+            roomType: buildingMatch.displayName,
+            roomTypeId: buildingMatch.buildingTypeId,
+          };
+        } else {
+          // 默认为 Modern House
+          parsed = {
+            name: nameWithoutExt,
+            mainCategory: 'Exterior Design',
+            subCategory: 'Architectural Styles',
+            roomType: 'Modern House',
+            roomTypeId: 'modern-house',
+          };
+        }
+      } else if (selectedCategory.value === 'Festive Decor') {
+        // 节日装饰：使用选择的子分类
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Festive Decor',
+          subCategory: selectedFestiveSub.value,
+        };
+      } else {
+        // 其他分类（Wall Paint, Floor Style, Garden）
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: selectedCategory.value,
+          subCategory: selectedCategory.subCategory || selectedCategory.value.replace(/\s+/g, ' '),
+        };
+      }
       
       // 提取提示词
       console.log(`📝 Processing: ${file.name}`);
@@ -327,7 +408,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
     }
     
     setTemplates(prev => [...prev, ...newTemplates]);
-  }, []);
+  }, [selectedCategory, selectedFestiveSub]);
 
   // 拖放处理
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -511,6 +592,81 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
             >
               <IconX className="w-6 h-6" />
             </button>
+          </div>
+
+          {/* Category Selection */}
+          <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  选择分类
+                </label>
+                <select
+                  value={selectedCategory.id}
+                  onChange={(e) => {
+                    const category = MAIN_CATEGORIES.find(c => c.id === e.target.value);
+                    if (category) {
+                      setSelectedCategory(category);
+                      setTemplates([]); // 清空已选文件
+                    }
+                  }}
+                  disabled={isUploading}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {MAIN_CATEGORIES.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Festive Decor Sub-category */}
+              {selectedCategory.value === 'Festive Decor' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择节日
+                  </label>
+                  <select
+                    value={selectedFestiveSub.id}
+                    onChange={(e) => {
+                      const sub = FESTIVE_SUB_CATEGORIES.find(s => s.id === e.target.value);
+                      if (sub) {
+                        setSelectedFestiveSub(sub);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {FESTIVE_SUB_CATEGORIES.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* Category Tips */}
+              <div className="text-xs text-slate-600 bg-white rounded-lg p-3 border border-slate-200">
+                {selectedCategory.id === 'interior' && (
+                  <p>💡 文件名中包含房间类型会自动识别，如 "Modern Living Room.png"</p>
+                )}
+                {selectedCategory.id === 'exterior' && (
+                  <p>💡 文件名中包含建筑类型会自动识别，如 "Modern House.png"</p>
+                )}
+                {selectedCategory.id === 'festive' && (
+                  <p>💡 将创建节日装饰模板，主题为 {selectedFestiveSub.label}</p>
+                )}
+                {selectedCategory.id === 'garden' && (
+                  <p>💡 将创建花园与庭院设计模板</p>
+                )}
+                {(selectedCategory.id === 'wall-paint' || selectedCategory.id === 'floor') && (
+                  <p>💡 将创建 {selectedCategory.label.split('(')[0].trim()} 模板</p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Content */}
