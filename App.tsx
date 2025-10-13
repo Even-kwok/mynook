@@ -1896,6 +1896,15 @@ const App: React.FC = () => {
         // 图片生成完成后，刷新用户信用点显示
         await handleUpdateUser(currentUser.id, { credits: currentUser.credits - creditsNeeded });
     
+        // 根据生成结果决定是否清除选中状态
+        const hasAnySuccess = finalResults.some(result => result.status === 'success');
+        
+        if (hasAnySuccess) {
+            // 至少有一个生成成功，清除选中状态，避免下次重复生成
+            setSelectedTemplateIds([]);
+        }
+        // 如果全部失败，保持选中状态，方便用户重试
+    
         setIsLoading(false);
     };
 
