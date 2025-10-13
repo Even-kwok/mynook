@@ -1855,6 +1855,11 @@ const App: React.FC = () => {
                     : isExteriorDesign
                         ? `A ${buildingTypeName}, ${templatePrompt}`
                         : `A ${roomTypeName}, ${templatePrompt}`,
+                // 保存模板元数据以便后续显示完整路径
+                templateId: template.id,
+                templateName: template.name,
+                templateCategory: template.category,
+                templateSubCategory: template.subCategory,
             };
         });
         
@@ -1882,6 +1887,8 @@ const App: React.FC = () => {
             results: finalResults,
             templateIds: selectedTemplateIds,
             ...(isExteriorDesign && { buildingTypeId: selectedBuildingType }),
+            // 保存房间类型ID以便后续显示完整路径
+            roomTypeId: selectedRoomType,
             userId: currentUser.id,
         };
         setGenerationHistory(prev => [newBatch, ...prev]);

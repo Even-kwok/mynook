@@ -8,6 +8,7 @@ import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
+import { ROOM_TYPES, BUILDING_TYPES } from '../constants';
 
 
 interface FreeCanvasPageProps {
@@ -128,6 +129,41 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         }
     }, [galleryViewSize]);
 
+    // 生成完整路径：功能类型 → 房间类型 → 风格分类 → 模板名称
+    const getImageDisplayPath = (image: typeof allGalleryImages[0]) => {
+        const parts: string[] = [];
+        const batch = generationHistory.find(b => b.id === image.batchInfo.id);
+        
+        // 1. 功能类型
+        parts.push(albumTypeLabels[image.batchInfo.type] || 'Unknown');
+        
+        // 2. 房间类型或建筑类型
+        if (batch?.roomTypeId) {
+            const roomType = ROOM_TYPES.find(r => r.id === batch.roomTypeId);
+            if (roomType) parts.push(roomType.name);
+        } else if (batch?.buildingTypeId) {
+            const buildingType = BUILDING_TYPES.find(b => b.id === batch.buildingTypeId);
+            if (buildingType) parts.push(buildingType.name);
+        }
+        
+        // 3. 风格分类（优先使用 subCategory，然后是 category）
+        if (image.templateSubCategory) {
+            parts.push(image.templateSubCategory);
+        } else if (image.templateCategory) {
+            parts.push(image.templateCategory);
+        }
+        
+        // 4. 模板名称
+        if (image.templateName) {
+            parts.push(image.templateName);
+        } else {
+            // 如果没有模板名称，使用 prompt 作为后备
+            parts.push(image.batchInfo.prompt);
+        }
+        
+        return parts.join(' → ');
+    };
+
     return (
         <div className="relative flex-shrink-0">
             <button
@@ -211,8 +247,12 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                                                         onDragStart={(e) => onImageDragStart?.(e, image.imageUrl!)}
                                                                     />
                                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-2 flex flex-col justify-end">
-                                                                        <h4 className="text-white text-xs font-semibold truncate">{image.batchInfo.prompt}</h4>
-                                                                        <p className="text-white/80 text-xs truncate">{albumTypeLabels[image.batchInfo.type]}</p>
+                                                                        <h4 className="text-white text-xs font-semibold truncate" title={getImageDisplayPath(image)}>
+                                                                            {getImageDisplayPath(image)}
+                                                                        </h4>
+                                                                        <p className="text-white/80 text-[10px] truncate">
+                                                                            {new Date(image.batchInfo.timestamp).toLocaleString()}
+                                                                        </p>
                                                                     </div>
                                                                     <button
                                                                         onClick={() => onDownload(image.imageUrl!, image.id)}

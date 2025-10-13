@@ -12,6 +12,11 @@ export interface GeneratedImage {
   status: GeneratedImageStatus;
   imageUrl: string | null;
   promptBase: string;
+  // 模板元数据 - 用于显示完整路径和批量上传
+  templateId?: string;
+  templateName?: string;
+  templateCategory?: string;
+  templateSubCategory?: string;
 }
 
 export interface GenerationBatch {
@@ -34,6 +39,7 @@ export interface GenerationBatch {
     text: string;
   }[];
   buildingTypeId?: string;
+  roomTypeId?: string; // 房间类型ID（用于Interior Design）
   userId?: string; // To link generation to a user
 }
 
