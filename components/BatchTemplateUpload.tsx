@@ -158,11 +158,12 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
   // 检查房间类型（Interior Design）
   for (const room of ROOM_TYPE_PATTERNS) {
     if (room.pattern.test(nameWithoutExt)) {
-      const styleName = nameWithoutExt.replace(room.pattern, '').trim();
+      // 对于 Interior Design，sub_category 设置为固定值 "Style"
+      // 这样不会创建额外的子分类层级，模板直接归属到房间类型下
       return {
         name: nameWithoutExt,
         mainCategory: 'Interior Design',
-        subCategory: styleName || 'Modern',
+        subCategory: 'Style', // 固定值，不创建额外层级
         roomType: room.displayName,
         roomTypeId: room.roomTypeId,
       };
@@ -175,7 +176,7 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
       return {
         name: nameWithoutExt,
         mainCategory: cat.mainCategory,
-        subCategory: cat.subCategory,
+        subCategory: cat.subCategory, // 使用预定义的子分类
       };
     }
   }
@@ -184,7 +185,7 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
   return {
     name: nameWithoutExt,
     mainCategory: 'Interior Design',
-    subCategory: nameWithoutExt,
+    subCategory: 'Style', // 固定值
     roomType: 'Living Room',
     roomTypeId: 'living-room',
   };
@@ -196,6 +197,67 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
   const [isUploading, setIsUploading] = useState(false);
 
   // 处理文件选择
+  // 压缩图片到 150x150
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = 150;
+        canvas.height = 150;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+        
+        // 计算裁剪区域（中心裁剪）
+        const sourceSize = Math.min(img.width, img.height);
+        const sourceX = (img.width - sourceSize) / 2;
+        const sourceY = (img.height - sourceSize) / 2;
+        
+        // 绘制裁剪并缩放的图片
+        ctx.drawImage(
+          img,
+          sourceX, sourceY, sourceSize, sourceSize, // 源区域
+          0, 0, 150, 150 // 目标区域
+        );
+        
+        // 转换为 Blob
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to create blob'));
+              return;
+            }
+            
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            
+            console.log(`🗜️ Compressed: ${(file.size / 1024).toFixed(2)}KB -> ${(compressedFile.size / 1024).toFixed(2)}KB`);
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = url;
+    });
+  };
+
   const handleFiles = useCallback(async (files: FileList) => {
     const newTemplates: ParsedTemplate[] = [];
     
@@ -289,17 +351,20 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '');
         
-        const fileExt = template.file.name.split('.').pop();
+        // 压缩图片到 150x150
+        console.log(`🗜️ Compressing: ${template.file.name}`);
+        const compressedFile = await compressImage(template.file);
+        
         const storagePath = template.roomTypeId
-          ? `interior-design/${template.roomTypeId}/${sanitizedName}-${timestamp}.${fileExt}`
-          : `${template.mainCategory.toLowerCase().replace(/\s+/g, '-')}/${sanitizedName}-${timestamp}.${fileExt}`;
+          ? `interior-design/${template.roomTypeId}/${sanitizedName}-${timestamp}.jpg`
+          : `${template.mainCategory.toLowerCase().replace(/\s+/g, '-')}/${sanitizedName}-${timestamp}.jpg`;
 
         console.log(`📤 Uploading to: ${storagePath}`);
 
         const { error: uploadError } = await supabase.storage
           .from('template-thumbnails')
-          .upload(storagePath, template.file, {
-            contentType: template.file.type,
+          .upload(storagePath, compressedFile, {
+            contentType: 'image/jpeg',
             upsert: false,
           });
 
