@@ -10,7 +10,6 @@ import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX,
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
-import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
@@ -531,7 +530,7 @@ const Header: React.FC<{
         }
     }, [user]);
 
-    const navItems = ['Terms', 'Pricing', 'News'];
+    const navItems = ['Terms', 'Pricing'];
 
     return (
         <header className="fixed top-0 left-0 right-0 flex items-center justify-between p-4 bg-white/70 backdrop-blur-xl z-40 border-b border-slate-900/10 shadow-sm">
@@ -2377,7 +2376,6 @@ const App: React.FC = () => {
         switch (activePage) {
             case 'Explore': return <ExplorePage onNavigate={setActivePage} />;
             case 'Pricing': return <PricingPage />;
-            case 'News': return <BlogPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
             case 'Free Canvas':
