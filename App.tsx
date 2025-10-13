@@ -1864,16 +1864,45 @@ const App: React.FC = () => {
         
         setGeneratedImages(placeholders);
     
-        const finalResults = await Promise.all(placeholders.map(async (placeholder) => {
-            try {
-                const imageUrl = await generateImage(getModelInstruction(placeholder.promptBase), module1ForApi);
-                return { ...placeholder, status: 'success' as const, imageUrl };
-            } catch (err) {
-                console.error(`Generation failed for ${placeholder.id}:`, err);
-                return { ...placeholder, status: 'failed' as const };
+        // 并发控制：一次最多9个并发请求，避免浏览器连接限制和服务器过载
+        const CONCURRENT_LIMIT = 9;
+        const finalResults: GeneratedImage[] = [];
+
+        // 分批处理，每批9个
+        for (let i = 0; i < placeholders.length; i += CONCURRENT_LIMIT) {
+            const batch = placeholders.slice(i, i + CONCURRENT_LIMIT);
+            
+            // 处理当前批次
+            const batchResults = await Promise.all(batch.map(async (placeholder) => {
+                try {
+                    const imageUrl = await generateImage(
+                        getModelInstruction(placeholder.promptBase), 
+                        module1ForApi
+                    );
+                    return { ...placeholder, status: 'success' as const, imageUrl };
+                } catch (err) {
+                    console.error(`Generation failed for ${placeholder.id}:`, err);
+                    return { ...placeholder, status: 'failed' as const };
+                }
+            }));
+            
+            // 添加到总结果
+            finalResults.push(...batchResults);
+            
+            // 实时更新UI，显示已完成的图片
+            const remainingPlaceholders = placeholders.slice(finalResults.length).map(p => ({ 
+                ...p, 
+                status: 'pending' as const 
+            }));
+            setGeneratedImages([...finalResults, ...remainingPlaceholders]);
+            
+            // 在批次之间添加小延迟，避免API限流
+            if (i + CONCURRENT_LIMIT < placeholders.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
-        }));
+        }
     
+        // 最终更新
         setGeneratedImages(finalResults);
     
         const newBatch: GenerationBatch = {
