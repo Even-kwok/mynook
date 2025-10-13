@@ -238,10 +238,10 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
 const MAIN_CATEGORIES = [
   { id: 'interior', label: '室内设计 (Interior Design)', value: 'Interior Design' },
   { id: 'exterior', label: '建筑设计 (Exterior Design)', value: 'Exterior Design' },
-  { id: 'festive', label: '节日装饰 (Festive Decor)', value: 'Festive Decor' },
   { id: 'wall-paint', label: '墙面涂料 (Wall Paint)', value: 'Wall Paint' },
   { id: 'floor', label: '地板风格 (Floor Style)', value: 'Floor Style' },
-  { id: 'garden', label: '花园设计 (Garden)', value: 'Exterior Design', subCategory: 'Garden' },
+  { id: 'garden', label: '花园设计 (Garden & Backyard Design)', value: 'Garden & Backyard Design' },
+  { id: 'festive', label: '节日装饰 (Festive Decor)', value: 'Festive Decor' },
 ];
 
 // 节日装饰子分类
@@ -252,12 +252,78 @@ const FESTIVE_SUB_CATEGORIES = [
   { id: 'easter', label: '复活节 (Easter)', value: 'Easter' },
 ];
 
+// 墙面涂料子分类
+const WALL_PAINT_SUB_CATEGORIES = [
+  { id: 'blue', label: '蓝色调 (Blue Tones)', value: 'Blue Tones' },
+  { id: 'gray', label: '灰色调 (Gray Tones)', value: 'Gray Tones' },
+  { id: 'green', label: '绿色调 (Green Tones)', value: 'Green Tones' },
+  { id: 'white', label: '白色调 (White & Off-White)', value: 'White & Off-White' },
+  { id: 'beige', label: '米色调 (Beige & Taupe)', value: 'Beige & Taupe' },
+  { id: 'pink', label: '粉色调 (Pink Tones)', value: 'Pink Tones' },
+  { id: 'yellow', label: '黄色调 (Yellow Tones)', value: 'Yellow Tones' },
+  { id: 'orange', label: '橙色调 (Orange Tones)', value: 'Orange Tones' },
+  { id: 'purple', label: '紫色调 (Purple Tones)', value: 'Purple Tones' },
+  { id: 'brown', label: '棕色调 (Brown Tones)', value: 'Brown Tones' },
+  { id: 'black', label: '深色调 (Black & Dark)', value: 'Black & Dark' },
+  { id: 'neutral', label: '中性色 (Neutral Tones)', value: 'Neutral Tones' },
+  { id: 'warm', label: '暖色调 (Warm Tones)', value: 'Warm Tones' },
+  { id: 'cool', label: '冷色调 (Cool Tones)', value: 'Cool Tones' },
+  { id: 'accent', label: '装饰色 (Accent Colors)', value: 'Accent Colors' },
+  { id: 'bold', label: '大胆色彩 (Bold Colors)', value: 'Bold Colors' },
+  { id: 'two-tone', label: '双色设计 (Two-Tone Design)', value: 'Two-Tone Design' },
+  { id: 'special', label: '特殊效果 (Special Effects)', value: 'Special Effects' },
+  { id: 'gradient', label: '渐变效果 (Gradient Effect)', value: 'Gradient Effect' },
+];
+
+// 地板风格子分类
+const FLOOR_STYLE_SUB_CATEGORIES = [
+  { id: 'hardwood', label: '实木地板 (Hardwood Flooring)', value: 'Hardwood Flooring' },
+  { id: 'tile', label: '瓷砖地板 (Tile Flooring)', value: 'Tile Flooring' },
+  { id: 'marble', label: '大理石地板 (Marble Flooring)', value: 'Marble Flooring' },
+  { id: 'carpet', label: '地毯 (Carpet)', value: 'Carpet' },
+  { id: 'pattern', label: '图案地板 (Pattern Flooring)', value: 'Pattern Flooring' },
+  { id: 'concrete', label: '混凝土地板 (Concrete Flooring)', value: 'Concrete Flooring' },
+  { id: 'bamboo', label: '竹地板 (Bamboo Flooring)', value: 'Bamboo Flooring' },
+  { id: 'cork', label: '软木地板 (Cork Flooring)', value: 'Cork Flooring' },
+  { id: 'vinyl', label: '乙烯基地板 (Vinyl & Laminate)', value: 'Vinyl & Laminate' },
+  { id: 'stone', label: '石材地板 (Stone Flooring)', value: 'Stone Flooring' },
+  { id: 'brick', label: '砖地板 (Brick Flooring)', value: 'Brick Flooring' },
+  { id: 'epoxy', label: '环氧地板 (Epoxy Flooring)', value: 'Epoxy Flooring' },
+  { id: 'rubber', label: '橡胶地板 (Rubber Flooring)', value: 'Rubber Flooring' },
+];
+
+// 花园设计子分类
+const GARDEN_SUB_CATEGORIES = [
+  { id: 'backyard', label: '后院 (Backyard)', value: 'Backyard' },
+  { id: 'patio', label: '露台庭院 (Patio & Deck)', value: 'Patio & Deck' },
+  { id: 'pool', label: '泳池区 (Pool Area)', value: 'Pool Area' },
+  { id: 'outdoor-dining', label: '户外用餐 (Outdoor Dining)', value: 'Outdoor Dining' },
+  { id: 'outdoor-kitchen', label: '户外厨房 (Outdoor Kitchen)', value: 'Outdoor Kitchen' },
+  { id: 'fire-pit', label: '火坑区 (Fire Pit Area)', value: 'Fire Pit Area' },
+  { id: 'courtyard', label: '庭院 (Courtyard)', value: 'Courtyard' },
+  { id: 'front-yard', label: '前院 (Front Yard)', value: 'Front Yard' },
+  { id: 'side-yard', label: '侧院 (Side Yard)', value: 'Side Yard' },
+  { id: 'rooftop', label: '屋顶花园 (Rooftop Garden)', value: 'Rooftop Garden' },
+  { id: 'vegetable', label: '菜园 (Vegetable Garden)', value: 'Vegetable Garden' },
+  { id: 'greenhouse', label: '温室 (Greenhouse)', value: 'Greenhouse' },
+  { id: 'water-features', label: '水景 (Water Features)', value: 'Water Features' },
+  { id: 'children', label: '儿童游乐区 (Children Play Area)', value: 'Children Play Area' },
+  { id: 'pet', label: '宠物区 (Pet Area)', value: 'Pet Area' },
+  { id: 'meditation', label: '冥想空间 (Meditation Space)', value: 'Meditation Space' },
+  { id: 'reading', label: '阅读角 (Reading Nook)', value: 'Reading Nook' },
+  { id: 'shed', label: '花园小屋 (Garden Shed Area)', value: 'Garden Shed Area' },
+  { id: 'driveway', label: '车道入口 (Driveway & Entrance)', value: 'Driveway & Entrance' },
+];
+
 export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen, onClose, onSuccess }) => {
   const [templates, setTemplates] = useState<ParsedTemplate[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(MAIN_CATEGORIES[0]);
   const [selectedFestiveSub, setSelectedFestiveSub] = useState(FESTIVE_SUB_CATEGORIES[0]);
+  const [selectedWallPaintSub, setSelectedWallPaintSub] = useState(WALL_PAINT_SUB_CATEGORIES[0]);
+  const [selectedFloorSub, setSelectedFloorSub] = useState(FLOOR_STYLE_SUB_CATEGORIES[0]);
+  const [selectedGardenSub, setSelectedGardenSub] = useState(GARDEN_SUB_CATEGORIES[0]);
 
   // 处理文件选择
   // 压缩图片到 150x150
@@ -354,7 +420,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
             roomTypeId: 'living-room',
           };
         }
-      } else if (selectedCategory.value === 'Exterior Design' && !selectedCategory.subCategory) {
+      } else if (selectedCategory.value === 'Exterior Design') {
         // 建筑设计：自动识别建筑类型
         const buildingMatch = BUILDING_TYPE_PATTERNS.find(building => building.pattern.test(nameWithoutExt));
         if (buildingMatch) {
@@ -375,6 +441,27 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
             roomTypeId: 'modern-house',
           };
         }
+      } else if (selectedCategory.value === 'Wall Paint') {
+        // 墙面涂料：使用选择的子分类
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Wall Paint',
+          subCategory: selectedWallPaintSub.value,
+        };
+      } else if (selectedCategory.value === 'Floor Style') {
+        // 地板风格：使用选择的子分类
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Floor Style',
+          subCategory: selectedFloorSub.value,
+        };
+      } else if (selectedCategory.value === 'Garden & Backyard Design') {
+        // 花园设计：使用选择的子分类
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Garden & Backyard Design',
+          subCategory: selectedGardenSub.value,
+        };
       } else if (selectedCategory.value === 'Festive Decor') {
         // 节日装饰：使用选择的子分类
         parsed = {
@@ -383,11 +470,11 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
           subCategory: selectedFestiveSub.value,
         };
       } else {
-        // 其他分类（Wall Paint, Floor Style, Garden）
+        // 默认
         parsed = {
           name: nameWithoutExt,
           mainCategory: selectedCategory.value,
-          subCategory: selectedCategory.subCategory || selectedCategory.value.replace(/\s+/g, ' '),
+          subCategory: selectedCategory.value,
         };
       }
       
@@ -408,7 +495,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
     }
     
     setTemplates(prev => [...prev, ...newTemplates]);
-  }, [selectedCategory, selectedFestiveSub]);
+  }, [selectedCategory, selectedFestiveSub, selectedWallPaintSub, selectedFloorSub, selectedGardenSub]);
 
   // 拖放处理
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -621,6 +708,87 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
                 </select>
               </div>
               
+              {/* Wall Paint Sub-category */}
+              {selectedCategory.value === 'Wall Paint' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择色调
+                  </label>
+                  <select
+                    value={selectedWallPaintSub.id}
+                    onChange={(e) => {
+                      const sub = WALL_PAINT_SUB_CATEGORIES.find(s => s.id === e.target.value);
+                      if (sub) {
+                        setSelectedWallPaintSub(sub);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {WALL_PAINT_SUB_CATEGORIES.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* Floor Style Sub-category */}
+              {selectedCategory.value === 'Floor Style' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择地板类型
+                  </label>
+                  <select
+                    value={selectedFloorSub.id}
+                    onChange={(e) => {
+                      const sub = FLOOR_STYLE_SUB_CATEGORIES.find(s => s.id === e.target.value);
+                      if (sub) {
+                        setSelectedFloorSub(sub);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {FLOOR_STYLE_SUB_CATEGORIES.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* Garden Sub-category */}
+              {selectedCategory.value === 'Garden & Backyard Design' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择花园类型
+                  </label>
+                  <select
+                    value={selectedGardenSub.id}
+                    onChange={(e) => {
+                      const sub = GARDEN_SUB_CATEGORIES.find(s => s.id === e.target.value);
+                      if (sub) {
+                        setSelectedGardenSub(sub);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {GARDEN_SUB_CATEGORIES.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {/* Festive Decor Sub-category */}
               {selectedCategory.value === 'Festive Decor' && (
                 <div>
@@ -656,14 +824,17 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
                 {selectedCategory.id === 'exterior' && (
                   <p>💡 文件名中包含建筑类型会自动识别，如 "Modern House.png"</p>
                 )}
-                {selectedCategory.id === 'festive' && (
-                  <p>💡 将创建节日装饰模板，主题为 {selectedFestiveSub.label}</p>
+                {selectedCategory.id === 'wall-paint' && (
+                  <p>💡 所有模板将归类到 {selectedWallPaintSub.label}，可根据需要更换色调</p>
+                )}
+                {selectedCategory.id === 'floor' && (
+                  <p>💡 所有模板将归类到 {selectedFloorSub.label}，可根据需要更换地板类型</p>
                 )}
                 {selectedCategory.id === 'garden' && (
-                  <p>💡 将创建花园与庭院设计模板</p>
+                  <p>💡 所有模板将归类到 {selectedGardenSub.label}，可根据需要更换花园类型</p>
                 )}
-                {(selectedCategory.id === 'wall-paint' || selectedCategory.id === 'floor') && (
-                  <p>💡 将创建 {selectedCategory.label.split('(')[0].trim()} 模板</p>
+                {selectedCategory.id === 'festive' && (
+                  <p>💡 所有模板将归类到 {selectedFestiveSub.label}，可根据需要更换节日主题</p>
                 )}
               </div>
             </div>
