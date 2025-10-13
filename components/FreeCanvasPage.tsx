@@ -184,14 +184,13 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
             const batch = generationHistory.find(b => b.id === image.batchInfo.id);
             if (!batch) continue;
 
-            // 构建文件名：type_roomTypeId_templateId_batchId_imageIndex.png
-            // 例如：style_living-room_modern-minimalist_1697123456_0.png
+            // 构建文件名：type_roomTypeId_templateName_timestamp.png
+            // 例如：style_living-room_modern-minimalist_1697123456.png
             const parts = [
                 batch.type,
                 batch.roomTypeId || batch.buildingTypeId || 'no-room',
-                image.templateId || 'no-template',
+                image.id,  // image.id 就是模板名称，已经是易读的
                 batch.id,
-                image.id,
             ];
             
             const fileName = parts

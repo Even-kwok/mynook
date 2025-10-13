@@ -35,9 +35,8 @@ const DRY_RUN = false;
 interface ParsedFileName {
     type: string;
     roomTypeId: string;
-    templateId: string;
-    batchId: string;
-    imageId: string;
+    templateName: string;
+    timestamp: string;
     originalName: string;
 }
 
@@ -61,7 +60,7 @@ function parseFileName(fileName: string): ParsedFileName | null {
     // 按下划线分割
     const parts = baseName.split('_');
     
-    if (parts.length < 5) {
+    if (parts.length < 4) {
         console.warn(`⚠️  无效的文件名格式: ${fileName}`);
         return null;
     }
@@ -69,9 +68,8 @@ function parseFileName(fileName: string): ParsedFileName | null {
     return {
         type: parts[0],           // 'style', 'exterior', 'garden', etc.
         roomTypeId: parts[1],     // 'living-room', 'house', 'no-room'
-        templateId: parts[2],     // 'modern-minimalist', 'contemporary'
-        batchId: parts[3],        // 时间戳
-        imageId: parts[4],        // 图片ID
+        templateName: parts[2],   // 'modern-minimalist', 'contemporary'
+        timestamp: parts[3],      // 时间戳
         originalName: fileName
     };
 }
@@ -88,19 +86,19 @@ async function uploadFile(
         // 读取文件
         const fileBuffer = fs.readFileSync(filePath);
         
-        // 构建 Storage 路径: {type}/{roomTypeId}/{templateId}_{batchId}.png
-        const storagePath = `${parsed.type}/${parsed.roomTypeId}/${parsed.templateId}_${parsed.batchId}.png`;
+        // 构建 Storage 路径: {type}/{roomTypeId}/{templateName}_{timestamp}.png
+        const storagePath = `${parsed.type}/${parsed.roomTypeId}/${parsed.templateName}_${parsed.timestamp}.png`;
         
         console.log(`📤 上传: ${parsed.originalName} → ${storagePath}`);
         
         if (DRY_RUN) {
             console.log(`   [测试模式] 跳过实际上传`);
-            return {
-                fileName: parsed.originalName,
-                templateId: parsed.templateId,
-                success: true,
-                storageUrl: `[DRY_RUN] ${storagePath}`
-            };
+        return {
+            fileName: parsed.originalName,
+            templateId: parsed.templateName,
+            success: true,
+            storageUrl: `[DRY_RUN] ${storagePath}`
+        };
         }
         
         // 上传到 Supabase Storage
@@ -126,7 +124,7 @@ async function uploadFile(
         
         return {
             fileName: parsed.originalName,
-            templateId: parsed.templateId,
+            templateId: parsed.templateName,
             success: true,
             storageUrl: publicUrl
         };
@@ -135,7 +133,7 @@ async function uploadFile(
         console.error(`   ❌ 上传失败:`, error.message);
         return {
             fileName: parsed.originalName,
-            templateId: parsed.templateId,
+            templateId: parsed.templateName,
             success: false,
             error: error.message
         };
@@ -250,7 +248,7 @@ async function main() {
         console.log(`   📋 元数据:`);
         console.log(`      - 功能类型: ${parsed.type}`);
         console.log(`      - 房间类型: ${parsed.roomTypeId}`);
-        console.log(`      - 模板ID: ${parsed.templateId}`);
+        console.log(`      - 模板名称: ${parsed.templateName}`);
         
         // 上传文件
         const filePath = path.join(IMAGES_FOLDER, fileName);
