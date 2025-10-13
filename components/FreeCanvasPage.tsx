@@ -164,6 +164,60 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         return parts.join(' → ');
     };
 
+    // 批量下载所有图片 - 根据路径信息命名
+    const handleBatchDownload = async () => {
+        const allImages = allGalleryImages.filter(img => img.status === 'success' && img.imageUrl);
+        
+        if (allImages.length === 0) {
+            alert('没有可下载的图片');
+            return;
+        }
+
+        // 确认下载
+        if (!confirm(`准备下载 ${allImages.length} 张图片，确定继续吗？`)) {
+            return;
+        }
+
+        let downloadCount = 0;
+        
+        for (const image of allImages) {
+            const batch = generationHistory.find(b => b.id === image.batchInfo.id);
+            if (!batch) continue;
+
+            // 构建文件名：type_roomTypeId_templateId_batchId_imageIndex.png
+            // 例如：style_living-room_modern-minimalist_1697123456_0.png
+            const parts = [
+                batch.type,
+                batch.roomTypeId || batch.buildingTypeId || 'no-room',
+                image.templateId || 'no-template',
+                batch.id,
+                image.id,
+            ];
+            
+            const fileName = parts
+                .map(p => String(p).toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+                .join('_') + '.png';
+
+            try {
+                // 延迟下载以避免浏览器阻止
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const link = document.createElement('a');
+                link.href = image.imageUrl!;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                downloadCount++;
+            } catch (err) {
+                console.error(`下载失败: ${fileName}`, err);
+            }
+        }
+
+        alert(`成功下载 ${downloadCount} / ${allImages.length} 张图片`);
+    };
+
     return (
         <div className="relative flex-shrink-0">
             <button
@@ -182,7 +236,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 className="h-full overflow-hidden bg-white border-l border-slate-200"
             >
                 <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
-                    <div className="flex justify-between items-center mb-4 px-2 flex-shrink-0">
+                    <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-slate-800">My Designs</h2>
                         <div className="flex items-center gap-1 p-0.5 bg-slate-200 rounded-xl">
                             {(['lg', 'md', 'sm'] as const).map(size => (
@@ -199,6 +253,18 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             ))}
                         </div>
                     </div>
+                    {/* 批量下载按钮 */}
+                    {allGalleryImages.length > 0 && (
+                        <div className="px-2 mb-4 flex-shrink-0">
+                            <button
+                                onClick={handleBatchDownload}
+                                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                                <IconDownload className="w-4 h-4" />
+                                批量下载全部 ({allGalleryImages.length})
+                            </button>
+                        </div>
+                    )}
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {allGalleryImages.length > 0 ? (
                             <div className="space-y-2">
