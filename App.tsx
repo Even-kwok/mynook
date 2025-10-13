@@ -2487,27 +2487,18 @@ const App: React.FC = () => {
         
         let categories: PromptTemplateCategory[] = [];
         if (activePage === 'Interior Design') {
-            // ✅ 从数据库加载 Interior Design 数据，按 sub_category 分组显示
+            // ✅ 从数据库加载 Interior Design 数据
             const interiorData = adminTemplateData["Interior Design"];
             if (interiorData) {
                 // 查找当前选择的房间类型
                 const roomCategory = interiorData.find(sc => sc.name === selectedRoomType);
                 if (roomCategory && roomCategory.templates.length > 0) {
-                    // 按 sub_category 重新分组
-                    const groupedBySubCategory: { [key: string]: PromptTemplate[] } = {};
-                    roomCategory.templates.forEach(template => {
-                        const subCat = template.subCategory || 'Other Styles';
-                        if (!groupedBySubCategory[subCat]) {
-                            groupedBySubCategory[subCat] = [];
-                        }
-                        groupedBySubCategory[subCat].push(template);
-                    });
-                    
-                    // 转换为前端需要的格式
-                    categories = Object.entries(groupedBySubCategory).map(([subCatName, templates]) => ({
-                        name: subCatName,
-                        templates: templates
-                    }));
+                    // 不按 sub_category 分组，直接显示所有模板
+                    // sub_category 是技术性的固定值（"Style"），不需要显示
+                    categories = [{
+                        name: selectedRoomType, // 使用房间类型名称
+                        templates: roomCategory.templates
+                    }];
                 }
             }
         } else if (activePage === 'Wall Paint') {
@@ -2517,6 +2508,8 @@ const App: React.FC = () => {
         } else if (activePage === 'Garden & Backyard Design') {
             categories = adminTemplateData["Garden & Backyard Design"] || [];
         } else if (activePage === 'Exterior Design') {
+            // ✅ Exterior Design 数据已按建筑类型（room_type）分组
+            // sub_category 是固定值（"Architectural Styles"），前端不显示
             categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
             categories = adminTemplateData["Festive Decor"] || [];

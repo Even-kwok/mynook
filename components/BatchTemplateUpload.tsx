@@ -59,9 +59,37 @@ const ROOM_TYPE_PATTERNS = [
   { pattern: /\bbathroom\b/i, roomTypeId: 'bathroom', displayName: 'Bathroom' },
 ];
 
+// 建筑类型模式（用于 Exterior Design）
+const BUILDING_TYPE_PATTERNS = [
+  { pattern: /modern[- ]?house/i, buildingTypeId: 'modern-house', displayName: 'Modern House' },
+  { pattern: /a[- ]?frame/i, buildingTypeId: 'a-frame', displayName: 'A-Frame' },
+  { pattern: /apartment[- ]?building/i, buildingTypeId: 'apartment-building', displayName: 'Apartment Building' },
+  { pattern: /art[- ]?deco[- ]?house/i, buildingTypeId: 'art-deco-house', displayName: 'Art Deco House' },
+  { pattern: /beach[- ]?house/i, buildingTypeId: 'beach-house', displayName: 'Beach House' },
+  { pattern: /\bbungalow\b/i, buildingTypeId: 'bungalow', displayName: 'Bungalow' },
+  { pattern: /cape[- ]?cod/i, buildingTypeId: 'cape-cod', displayName: 'Cape Cod' },
+  { pattern: /\bchateau\b/i, buildingTypeId: 'chateau', displayName: 'Chateau' },
+  { pattern: /colonial[- ]?house/i, buildingTypeId: 'colonial-house', displayName: 'Colonial House' },
+  { pattern: /container[- ]?home/i, buildingTypeId: 'container-home', displayName: 'Container Home' },
+  { pattern: /\bcottage\b/i, buildingTypeId: 'cottage', displayName: 'Cottage' },
+  { pattern: /\bfarmhouse\b/i, buildingTypeId: 'farmhouse', displayName: 'Farmhouse' },
+  { pattern: /\bgeorgian\b/i, buildingTypeId: 'georgian', displayName: 'Georgian' },
+  { pattern: /greek[- ]?revival/i, buildingTypeId: 'greek-revival', displayName: 'Greek Revival' },
+  { pattern: /log[- ]?cabin/i, buildingTypeId: 'log-cabin', displayName: 'Log Cabin' },
+  { pattern: /\bmansion\b/i, buildingTypeId: 'mansion', displayName: 'Mansion' },
+  { pattern: /mediterranean[- ]?villa/i, buildingTypeId: 'mediterranean-villa', displayName: 'Mediterranean Villa' },
+  { pattern: /mid[- ]?century[- ]?modern/i, buildingTypeId: 'mid-century-modern', displayName: 'Mid-Century Modern' },
+  { pattern: /prairie[- ]?style/i, buildingTypeId: 'prairie-style', displayName: 'Prairie Style' },
+  { pattern: /ranch[- ]?house/i, buildingTypeId: 'ranch-house', displayName: 'Ranch House' },
+  { pattern: /spanish[- ]?colonial/i, buildingTypeId: 'spanish-colonial', displayName: 'Spanish Colonial' },
+  { pattern: /tiny[- ]?house/i, buildingTypeId: 'tiny-house', displayName: 'Tiny House' },
+  { pattern: /\btownhouse\b/i, buildingTypeId: 'townhouse', displayName: 'Townhouse' },
+  { pattern: /tudor[- ]?house/i, buildingTypeId: 'tudor-house', displayName: 'Tudor House' },
+  { pattern: /victorian[- ]?house/i, buildingTypeId: 'victorian-house', displayName: 'Victorian House' },
+];
+
 // 其他分类模式
 const CATEGORY_PATTERNS = [
-  { pattern: /\bexterior\b|\bfacade\b|\bhouse\b|\bvilla\b|\bbungalow\b/i, mainCategory: 'Exterior Design', subCategory: 'Architectural Styles' },
   { pattern: /\bgarden\b|\blandscape\b|\bbackyard\b|\boutdoor\b/i, mainCategory: 'Exterior Design', subCategory: 'Garden' },
   { pattern: /\bwall\b.*\bpaint\b|\bpaint\b.*\bcolor\b/i, mainCategory: 'Wall Paint', subCategory: 'Color Palettes' },
   { pattern: /\bfloor\b|\bflooring\b/i, mainCategory: 'Floor Style', subCategory: 'Flooring Materials' },
@@ -166,6 +194,21 @@ const parseFileName = (fileName: string): Omit<ParsedTemplate, 'file' | 'preview
         subCategory: 'Style', // 固定值，不创建额外层级
         roomType: room.displayName,
         roomTypeId: room.roomTypeId,
+      };
+    }
+  }
+  
+  // 检查建筑类型（Exterior Design）
+  for (const building of BUILDING_TYPE_PATTERNS) {
+    if (building.pattern.test(nameWithoutExt)) {
+      // 对于 Exterior Design，sub_category 设置为固定值 "Architectural Styles"
+      // room_type 存储建筑类型，与 Interior Design 逻辑统一
+      return {
+        name: nameWithoutExt,
+        mainCategory: 'Exterior Design',
+        subCategory: 'Architectural Styles', // 固定值
+        roomType: building.displayName,
+        roomTypeId: building.buildingTypeId,
       };
     }
   }
@@ -355,9 +398,16 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
         console.log(`🗜️ Compressing: ${template.file.name}`);
         const compressedFile = await compressImage(template.file);
         
-        const storagePath = template.roomTypeId
-          ? `interior-design/${template.roomTypeId}/${sanitizedName}-${timestamp}.jpg`
-          : `${template.mainCategory.toLowerCase().replace(/\s+/g, '-')}/${sanitizedName}-${timestamp}.jpg`;
+        // 构建存储路径
+        let storagePath: string;
+        if (template.roomTypeId) {
+          // Interior Design 或 Exterior Design（有 roomTypeId/buildingTypeId）
+          const categoryPrefix = template.mainCategory.toLowerCase().replace(/\s+/g, '-');
+          storagePath = `${categoryPrefix}/${template.roomTypeId}/${sanitizedName}-${timestamp}.jpg`;
+        } else {
+          // 其他分类（没有 roomTypeId）
+          storagePath = `${template.mainCategory.toLowerCase().replace(/\s+/g, '-')}/${sanitizedName}-${timestamp}.jpg`;
+        }
 
         console.log(`📤 Uploading to: ${storagePath}`);
 
