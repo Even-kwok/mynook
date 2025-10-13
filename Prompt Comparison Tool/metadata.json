@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Copy of 效率工具v.单方案多提示词同步输出-方便对比提示词结果（自测试场景图用）",
+  "description": "An AI-powered photo studio that transforms your pictures into various creative themes like different decades, professional headshots, fashion lookbooks, and more, using the power of Gemini.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
