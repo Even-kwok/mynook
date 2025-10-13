@@ -1,13 +1,14 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconLogo, IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom } from './Icons';
+import { IconLogo, IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload } from './Icons';
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
 import { HeroBannerManager } from './HeroBannerManager';
+import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
@@ -280,6 +281,7 @@ const TemplateManagement: React.FC<{
     const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(new Set());
     const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
     const [isSorting, setIsSorting] = useState(false);
+    const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -768,6 +770,13 @@ const TemplateManagement: React.FC<{
                         Add Category
                     </Button>
                     <Button 
+                        onClick={() => setIsBatchUploadOpen(true)}
+                        className="!bg-purple-50 hover:!bg-purple-100 !text-purple-600 !border-purple-200"
+                    >
+                        <IconUpload className="w-4 h-4 mr-1" />
+                        Batch Upload
+                    </Button>
+                    <Button 
                         onClick={handleImportTemplates} 
                         disabled={isImporting}
                         className="!bg-green-50 hover:!bg-green-100 !text-green-600 !border-green-200"
@@ -983,6 +992,19 @@ const TemplateManagement: React.FC<{
                     }
                     setIsCategoryModalOpen(false);
                     alert(`"${categoryName}" added! Now you can add templates to it.`);
+                }}
+            />
+            <BatchTemplateUpload
+                isOpen={isBatchUploadOpen}
+                onClose={() => setIsBatchUploadOpen(false)}
+                onSuccess={async () => {
+                    // 刷新模板列表
+                    const freshTemplates = await getAllTemplates();
+                    setTemplateData(freshTemplates);
+                    setCategoryOrder(Object.keys(freshTemplates));
+                    if (onTemplatesUpdated) {
+                        await onTemplatesUpdated();
+                    }
                 }}
             />
         </div>
