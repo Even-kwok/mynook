@@ -762,7 +762,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     };
 
     // 渲染单个 Section（支持图片/视频/对比图）
-    const renderSection = (section: HomeSection, index: number) => {
+    const renderSection = useCallback((section: HomeSection, index: number) => {
         const isLeftImage = section.layout_direction === 'left-image';
         
         // 媒体卡片
@@ -875,7 +875,13 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 )}
             </div>
         );
-    };
+    }, [onNavigate]); // useCallback 依赖项
+
+    // 使用 useMemo 缓存渲染的 sections，避免重复触发动画
+    const renderedSections = useMemo(() => {
+        if (sectionsLoading) return null;
+        return homeSections.map((section) => renderSection(section, 0));
+    }, [homeSections, sectionsLoading, renderSection]);
 
     return (
         <main className="min-h-screen bg-black relative overflow-y-auto">
@@ -1004,8 +1010,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                     </div>
                 )}
                 
-                {/* Dynamically Rendered Sections 2-5 from Database */}
-                {!sectionsLoading && homeSections.map((section, index) => renderSection(section, index))}
+                {/* Dynamically Rendered Sections 2-6 from Database */}
+                {renderedSections}
                 
                 {/* LEGACY: Hardcoded Sections - Hidden */}
                 {false && <>
