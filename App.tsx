@@ -723,8 +723,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 </div>
                 
                 {/* Content Container */}
-                <div className="relative z-10 px-8 md:px-12 lg:px-20 pt-24 pb-16">
-                    <div className="max-w-[1536px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                <div className="relative z-10 px-8 md:px-12 lg:px-20 pt-32 pb-16">
+                    <div className="max-w-[1536px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         {/* Left Side: Hero Section */}
                         <div className="space-y-6 pt-8">
                             <motion.h1 
@@ -754,7 +754,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </div>
                         
                         {/* Right Side: Preview Card and Stats */}
-                        <div className="flex flex-col items-end gap-6 w-full mt-8">
+                        <div className="flex flex-col items-end gap-6 w-full">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
