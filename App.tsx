@@ -533,10 +533,10 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-0 left-0 right-0 flex items-center justify-between p-4 bg-white/70 backdrop-blur-xl z-40 border-b border-slate-900/10 shadow-sm">
+        <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 h-[72px] bg-slate-900/95 backdrop-blur-xl z-40 border-b border-slate-700/50 shadow-sm">
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent animate-gradient-pan">MyNook.AI</span>
+                    <span className="text-xl font-bold text-[#00BCD4] tracking-tight">MYNOOK.AI</span>
                 </button>
             </div>
             <div className="flex items-center gap-4">
@@ -545,10 +545,10 @@ const Header: React.FC<{
                     <div className="relative" ref={designToolsRef}>
                         <button
                             onClick={() => setDesignToolsOpen(o => !o)}
-                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30' : 'text-slate-700 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200'}`}
+                            className={`px-4 py-2 rounded-lg text-base font-normal transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-slate-800' : 'text-white bg-slate-800 hover:bg-slate-700'}`}
                         >
-                            <IconSparkles className={`w-4 h-4 ${isDesignToolActive ? 'text-yellow-300 animate-pulse' : 'text-purple-500'}`} />
-                            <span>{activeDesignToolLabel}</span>
+                            <IconSparkles className="w-4 h-4 text-white" />
+                            <span>Start Design My Room</span>
                             <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
                         </button>
                         <AnimatePresence>
@@ -561,12 +561,18 @@ const Header: React.FC<{
                            key={item} 
                            href="#" 
                            onClick={(e) => { e.preventDefault(); onNavigate(item); }}
-                           className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors relative ${activeItem === item ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                           className={`px-3 py-2 text-base font-normal transition-colors ${activeItem === item ? 'text-white' : 'text-slate-300 hover:text-white'}`}
                         >
                            {item}
-                           {activeItem === item && <motion.div className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-500" layoutId="nav-underline" />}
                         </a>
                     ))}
+                    <a 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); onLoginClick(); }}
+                        className="px-3 py-2 text-base font-normal text-slate-300 hover:text-white transition-colors"
+                    >
+                        Login
+                    </a>
                 </nav>
                 {user && (
                     <div className="flex items-center gap-2">
@@ -590,7 +596,15 @@ const Header: React.FC<{
                     </div>
                 )}
 
-                {upgradeButton.visible && (
+                {!user && (
+                    <button
+                        onClick={onLoginClick}
+                        className="px-6 py-2.5 rounded-xl text-base font-medium bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/30 hidden md:flex items-center"
+                    >
+                        REGISTER for FREE
+                    </button>
+                )}
+                {user && upgradeButton.visible && (
                     <Button 
                         primary 
                         className="rounded-full !px-4 !py-2 text-sm font-bold hidden md:flex" 
@@ -691,166 +705,100 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 }
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
-    const [galleryItems, setGalleryItems] = useState<GeneratedImage[]>([]);
-    const [displayedCount, setDisplayedCount] = useState(20);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [heroBanners, setHeroBanners] = useState<any[]>([]);
-    const [isBannersLoading, setIsBannersLoading] = useState(true);
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-    const ITEMS_PER_LOAD = 20;
-    const TOTAL_ITEMS = galleryItems.length;
-
-    // Load gallery items from Supabase
-    useEffect(() => {
-        const loadGalleryItems = async () => {
-            setIsInitialLoading(true);
-            try {
-                const { fetchGalleryItems } = await import('./services/galleryService');
-                const items = await fetchGalleryItems();
-                setGalleryItems(items as any);
-            } catch (error) {
-                console.error('Failed to load gallery items:', error);
-                // Fallback to static data if Supabase fails
-                setGalleryItems(EXPLORE_GALLERY_ITEMS as any);
-            } finally {
-                setIsInitialLoading(false);
-            }
-        };
-
-        loadGalleryItems();
-    }, []);
-
-    // Load Hero Banners from Supabase
-    useEffect(() => {
-        const loadHeroBanners = async () => {
-            setIsBannersLoading(true);
-            try {
-                const { fetchHeroBanners } = await import('./services/galleryService');
-                const banners = await fetchHeroBanners();
-                setHeroBanners(banners);
-            } catch (error) {
-                console.error('Failed to load hero banners:', error);
-                // Empty array will show default banner in HeroBannerCarousel
-            } finally {
-                setIsBannersLoading(false);
-            }
-        };
-
-        loadHeroBanners();
-    }, []);
-
-    // Infinite scroll with Intersection Observer
-    useEffect(() => {
-        const currentRef = loadMoreRef.current;
-        if (!currentRef || isInitialLoading) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const firstEntry = entries[0];
-                if (firstEntry.isIntersecting && !isLoading && displayedCount < TOTAL_ITEMS) {
-                    setIsLoading(true);
-                    
-                    // Simulate loading delay for better UX
-                    setTimeout(() => {
-                        setDisplayedCount((prev) => Math.min(prev + ITEMS_PER_LOAD, TOTAL_ITEMS));
-                        setIsLoading(false);
-                    }, 500);
-                }
-            },
-            { threshold: 0.1, rootMargin: '100px' }
-        );
-
-        observer.observe(currentRef);
-
-        return () => {
-            if (currentRef) {
-                observer.unobserve(currentRef);
-            }
-        };
-    }, [displayedCount, isLoading, TOTAL_ITEMS, isInitialLoading]);
-
-    const displayedItems = galleryItems.slice(0, displayedCount);
-    const hasMore = displayedCount < TOTAL_ITEMS;
-
     return (
-        <main className="flex-1 overflow-y-auto text-slate-800 scrollbar-hide flex flex-col">
-            {/* Hero Banner Carousel */}
-            {!isBannersLoading && (
-                <HeroBannerCarousel
-                    banners={heroBanners}
-                    autoplay={true}
-                    pauseOnHover={true}
-                    showIndicators={true}
-                    showControls={true}
+        <main className="relative min-h-screen flex items-center px-8 md:px-12 lg:px-20 py-16 overflow-hidden">
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Mountain background" 
+                    className="w-full h-full object-cover"
                 />
-            )}
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90" />
+            </div>
             
-            {/* Only show gallery section when loading or when there are items */}
-            {(isInitialLoading || displayedItems.length > 0) && (
-                <section className="flex-shrink-0 bg-white px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
-                    {isInitialLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                            <p className="text-slate-600 text-lg">Loading gallery...</p>
+            {/* Content Container */}
+            <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-[1400px] mx-auto">
+                {/* Left Side: Hero Section */}
+                <div className="space-y-8">
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight"
+                    >
+                        Start Ultimate Interior Design Journey Today
+                    </motion.h1>
+                    
+                    <motion.button
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        onClick={() => onNavigate('Interior Design')}
+                        className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+                    >
+                        Get Started
+                        <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                    </motion.button>
+                </div>
+                
+                {/* Right Side: Preview Card and Stats */}
+                <div className="flex flex-col items-end gap-8 w-full">
+                    {/* Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="w-full max-w-[480px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl"
+                    >
+                        {/* Card Header */}
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-sm tracking-wider text-slate-400 uppercase">AI DESIGN PREVIEW</span>
+                            <span className="text-base text-white">Alpine Interior Adventure</span>
                         </div>
-                    ) : (
-                        <>
-                            <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
-                                {displayedItems.map((item) => (
-                            <div 
-                                key={item.id} 
-                                onClick={() => onNavigate(item.toolPage)}
-                                className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
-                                style={{
-                                    aspectRatio: (item.width && item.height) ? `${item.width} / ${item.height}` : 'auto'
-                                }}
-                            >
-                                {item.type === 'image' ? (
-                                    <img 
-                                        src={item.src} 
-                                        alt={item.title} 
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <video 
-                                        src={item.src} 
-                                        autoPlay 
-                                        loop 
-                                        muted 
-                                        playsInline
-                                        className="w-full h-full object-cover" 
-                                    />
-                                )}
-                                {/* Hover overlay with category info */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                        <p className="text-white font-semibold text-sm mb-1">{item.categoryName}</p>
-                                        <p className="text-white/80 text-xs">Click to use this tool</p>
-                                    </div>
-                                </div>
-                            </div>
-                                ))}
-                            </div>
-
-                            {/* Loading indicator */}
-                            <div ref={loadMoreRef} className="flex justify-center items-center py-12">
-                                {isLoading && hasMore && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="flex flex-col items-center gap-3"
-                                    >
-                                        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                                        <p className="text-slate-500 text-sm">Loading more images...</p>
-                                    </motion.div>
-                                )}
-                            </div>
-                        </>
-                    )}
-                </section>
-            )}
+                        
+                        {/* Preview Area */}
+                        <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
+                            <img 
+                                src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2000&auto=format&fit=crop" 
+                                alt="Preview" 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        
+                        {/* Generate Button */}
+                        <button className="w-full py-4 rounded-2xl text-lg font-medium bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg">
+                            Generate AI Design
+                        </button>
+                    </motion.div>
+                    
+                    {/* Stats Cards */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        className="flex gap-6 lg:gap-8 w-full max-w-[480px]"
+                    >
+                        {/* Design Styles */}
+                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <div className="text-4xl lg:text-5xl font-bold text-[#00BCD4] mb-2">50+</div>
+                            <div className="text-base text-slate-300">Design Styles</div>
+                        </div>
+                        
+                        {/* Room Types */}
+                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <div className="text-4xl lg:text-5xl font-bold text-[#7C3AED] mb-2">10+</div>
+                            <div className="text-base text-slate-300">Room Types</div>
+                        </div>
+                        
+                        {/* Generation Time */}
+                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <div className="text-4xl lg:text-5xl font-bold text-[#3B82F6] mb-2">&lt;30s</div>
+                            <div className="text-base text-slate-300">Generation Time</div>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
         </main>
     );
 };
