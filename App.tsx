@@ -13,8 +13,9 @@ import { PricingPage } from './components/PricingPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { ImageComparison } from './components/ImageComparison';
-import { HomeSection } from './types';
+import { HomeSection, HeroSection } from './types';
 import { getAllHomeSections } from './services/homeSectionService';
+import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
 import { useAuth } from './context/AuthContext';
@@ -730,19 +731,31 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 }
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
+    const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
     const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
     const [sectionsLoading, setSectionsLoading] = useState(true);
+    const [loadedRef] = useState({ current: false }); // 防止重复加载
 
     useEffect(() => {
-        loadHomeSections();
+        // 防止重复加载
+        if (loadedRef.current) return;
+        loadedRef.current = true;
+        
+        loadAllSections();
     }, []);
 
-    const loadHomeSections = async () => {
+    const loadAllSections = async () => {
         try {
-            const sections = await getAllHomeSections();
+            // 并行加载 Hero Section 和 Home Sections
+            const [hero, sections] = await Promise.all([
+                getHeroSection(),
+                getAllHomeSections()
+            ]);
+            
+            setHeroSection(hero);
             setHomeSections(sections);
         } catch (error) {
-            console.error('Error loading home sections:', error);
+            console.error('Error loading sections:', error);
         } finally {
             setSectionsLoading(false);
         }
@@ -878,10 +891,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             
             {/* Unified Content Container */}
             <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
-                {/* Section 1 - Hero Area */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                    {/* Left Side: Hero Title */}
-                    <div className="space-y-6">
+                {/* Section 1 - Hero Area (Dynamic from Database) */}
+                {!sectionsLoading && heroSection && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                        {/* Left Side: Hero Title */}
+                        <div className="space-y-6">
                             <motion.h1 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -898,27 +912,27 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     MozOsxFontSmoothing: 'grayscale'
                                 }}
                             >
-                                <span className="block">Start Ultimate</span>
-                                <span className="block">Interior Design</span>
-                                <span className="block">Journey</span>
-                                <span className="block">Today</span>
+                                <span className="block">{heroSection.title_line_1}</span>
+                                <span className="block">{heroSection.title_line_2}</span>
+                                <span className="block">{heroSection.title_line_3}</span>
+                                <span className="block">{heroSection.title_line_4}</span>
                             </motion.h1>
                             
                             <motion.button
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
-                                onClick={() => onNavigate('Interior Design')}
+                                onClick={() => onNavigate(heroSection.button_link)}
                                 className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
                                 style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
                             >
-                                Get Started
+                                {heroSection.button_text}
                                 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
                             </motion.button>
                         </div>
                         
-                    {/* Right Side: Preview Card and Stats */}
-                    <div className="flex flex-col items-end gap-6 w-full">
+                        {/* Right Side: Preview Card and Stats */}
+                        <div className="flex flex-col items-end gap-6 w-full">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -928,17 +942,37 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             >
                                 {/* Card Header */}
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
-                                    <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Alpine Interior Adventure</span>
+                                    <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{heroSection.preview_title}</span>
+                                    <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{heroSection.preview_subtitle}</span>
                                 </div>
                                 
                                 {/* Preview Area */}
                                 <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
-                                    <img 
-                                        src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2000&auto=format&fit=crop" 
-                                        alt="Preview" 
-                                        className="w-full h-full object-cover"
-                                    />
+                                    {heroSection.preview_media_type === 'image' && (
+                                        <img 
+                                            src={heroSection.preview_media_url} 
+                                            alt="Preview" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    )}
+                                    {heroSection.preview_media_type === 'video' && (
+                                        <video 
+                                            src={heroSection.preview_media_url}
+                                            className="w-full h-full object-cover"
+                                            autoPlay
+                                            loop
+                                            muted
+                                            playsInline
+                                        />
+                                    )}
+                                    {heroSection.preview_media_type === 'comparison' && 
+                                     heroSection.preview_comparison_before_url && 
+                                     heroSection.preview_comparison_after_url && (
+                                        <ImageComparison
+                                            beforeImage={heroSection.preview_comparison_before_url}
+                                            afterImage={heroSection.preview_comparison_after_url}
+                                        />
+                                    )}
                                 </div>
                                 
                                 {/* Generate Button */}
@@ -946,7 +980,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     Generate AI Design
                                 </button>
                             </motion.div>
-                            {/* Stats Bar */}
+                            {/* Stats Bar - 固定数据 */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -967,7 +1001,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                             </motion.div>
                         </div>
-                </div>
+                    </div>
+                )}
                 
                 {/* Dynamically Rendered Sections 2-5 from Database */}
                 {!sectionsLoading && homeSections.map((section, index) => renderSection(section, index))}
