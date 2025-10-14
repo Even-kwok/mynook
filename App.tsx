@@ -893,6 +893,302 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             </button>
                         </motion.div>
                 </div>
+                
+                {/* Section 3 - Wall Paint (Right Card, Left Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Perfect Wall Colors<br />
+                            for Every Room
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Transform your space with AI-powered color recommendations. Get personalized paint suggestions that match your style and lighting conditions.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Wall Paint')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+
+                    {/* Right Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="w-full max-w-[704px] lg:ml-auto"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Paint Design</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Wall Paint Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* Section 4 - Floor Style (Left Card, Right Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="w-full max-w-[704px]"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Floor Style Design</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Floor Style Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+
+                    {/* Right Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Stunning Flooring<br />
+                            Options & Styles
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Discover the perfect flooring for your space. From hardwood to tile, our AI helps you visualize different materials and patterns instantly.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Floor Style')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+                </div>
+
+                {/* Section 5 - Garden & Backyard (Right Card, Left Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Beautiful Gardens<br />
+                            & Outdoor Spaces
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Transform your backyard into a stunning oasis. Get AI-powered landscaping ideas and garden designs tailored to your outdoor space.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Garden & Backyard Design')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+
+                    {/* Right Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="w-full max-w-[704px] lg:ml-auto"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Garden Design</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1558904541-efa843a96f01?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Garden Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* Section 6 - Festive Decor (Left Card, Right Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="w-full max-w-[704px]"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Festive Decoration</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Festive Decor Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+
+                    {/* Right Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Magical Festive<br />
+                            Decorations
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Celebrate in style with AI-designed festive decorations. From holidays to special occasions, create the perfect atmosphere for any celebration.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Festive Decor')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+                </div>
             </div>
         </main>
     );
