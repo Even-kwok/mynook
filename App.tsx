@@ -731,7 +731,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6 }}
-                                className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight"
+                                className="text-white"
+                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 60, lineHeight: '75px', letterSpacing: '0px' }}
                             >
                                 <span className="block">Start Ultimate</span>
                                 <span className="block">Interior Design</span>
@@ -744,7 +745,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
                                 onClick={() => onNavigate('Interior Design')}
-                                className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+                                className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                                style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
                             >
                                 Get Started
                                 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
@@ -752,7 +754,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </div>
                         
                         {/* Right Side: Preview Card and Stats */}
-                        <div className="flex flex-col items-end gap-6 w-full">
+                        <div className="flex flex-col items-end gap-6 w-full mt-8">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -788,16 +790,16 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 className="w-full max-w-[704px] grid grid-cols-3 gap-4 p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20"
                             >
                                 <div className="text-center">
-                                    <div className="text-xl font-bold text-cyan-300">50+</div>
-                                    <div className="text-xs text-slate-300">Design Styles</div>
+                                    <div className="text-cyan-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>50+</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Design Styles</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xl font-bold text-purple-300">10+</div>
-                                    <div className="text-xs text-slate-300">Room Types</div>
+                                    <div className="text-purple-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>10+</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Room Types</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xl font-bold text-blue-300">&lt;30s</div>
-                                    <div className="text-xs text-slate-300">Generation Time</div>
+                                    <div className="text-blue-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>&lt;30s</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Generation Time</div>
                                 </div>
                             </motion.div>
                         </div>
