@@ -36,8 +36,8 @@ export const Button: React.FC<ButtonProps> = ({
     const themeClass = locked 
         ? "" // 锁定状态使用独立样式
         : primary 
-        ? "bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400" 
-        : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:bg-slate-100 disabled:text-slate-500";
+        ? "relative bg-gradient-to-r from-indigo-600/90 to-cyan-600/90 backdrop-blur-md text-white border-2 border-indigo-400/50 hover:border-indigo-400/80 disabled:opacity-50 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all duration-300" 
+        : "bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 disabled:bg-white/5 disabled:text-slate-500";
     
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         if (locked && onLockedClick) {

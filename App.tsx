@@ -1356,8 +1356,9 @@ const MyRendersPage: React.FC<{
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
             </div>
             
-            <div className="flex flex-1 overflow-hidden h-full pt-[72px] relative z-10">
-            <aside className="w-[280px] bg-white/10 backdrop-blur-md p-4 border-r border-white/20 flex flex-col overflow-y-auto scrollbar-hide">
+            <div className="flex flex-1 overflow-hidden h-full relative z-10">
+            <aside className="w-[280px] bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 ml-8 rounded-3xl border border-white/20 flex flex-col overflow-hidden">
+                <div className="h-full p-4 overflow-y-auto scrollbar-hide">
                 <h2 className="text-white px-2 pb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '18px', lineHeight: '24px', letterSpacing: '0px' }}>My Albums</h2>
                 <div className="space-y-1">
                     <button 
@@ -1378,8 +1379,9 @@ const MyRendersPage: React.FC<{
                         </button>
                     ))}
                 </div>
+                </div>
             </aside>
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div className="flex-1 p-8 pt-[104px] pr-8 overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>
                         {selectedAlbum === 'all' ? 'All Designs' : albumTypeLabels[selectedAlbum]}
@@ -3081,8 +3083,8 @@ const App: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
                 </div>
                 
-                <aside className="w-[380px] bg-white/10 backdrop-blur-md px-6 pb-6 pt-24 border-r border-white/20 flex-shrink-0 relative z-10">
-                    <div className="h-full overflow-y-auto scrollbar-hide pr-2 -mr-2">
+                <aside className="w-[380px] bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 ml-8 rounded-3xl border border-white/20 flex-shrink-0 relative z-10 overflow-hidden">
+                    <div className="h-full px-6 py-6 overflow-y-auto scrollbar-hide">
                         <div className="flex flex-col gap-6">
                             {currentPageInfo && (
                                 <div className="space-y-3">
@@ -3254,7 +3256,7 @@ const App: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="sticky bottom-0 bg-white/10 backdrop-blur-md -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-white/20">
+                            <div className="sticky bottom-0 bg-white/10 backdrop-blur-md -mx-6 px-6 pt-4 pb-6 border-t border-white/20">
                                 {isAIAdvisor ? (
                                     <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
@@ -3285,9 +3287,9 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </aside>
-                <main className="flex-1 overflow-y-auto pt-[72px] relative z-10">
+                <main className="flex-1 p-8 pt-[104px] pr-8 overflow-y-auto relative z-10">
                     {generatedImages.length > 0 ? (
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {generatedImages.map((image, i) => (
                                 image.status === 'success' && image.imageUrl ? (
                                     <PhotoDisplay
@@ -3319,7 +3321,7 @@ const App: React.FC = () => {
                                     }]
                                     : [];
                             return (
-                                <div className="p-8">
+                                <div>
                                     <div className="max-w-4xl mx-auto space-y-6">
                                         <div className="flex justify-end">
                                             <div className="max-w-xl bg-indigo-600 text-white rounded-3xl rounded-tr-sm shadow-lg p-5">
