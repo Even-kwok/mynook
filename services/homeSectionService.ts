@@ -55,6 +55,26 @@ export async function getHomeSectionByNumber(sectionNumber: number): Promise<Hom
 }
 
 /**
+ * 创建新的 Home Section
+ */
+export async function createHomeSection(
+  data: Omit<HomeSection, 'id' | 'created_at' | 'updated_at'>
+): Promise<HomeSection> {
+  const { data: newSection, error } = await supabase
+    .from('home_sections')
+    .insert([data])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating home section:', error);
+    throw error;
+  }
+
+  return newSection;
+}
+
+/**
  * 更新 Home Section
  */
 export async function updateHomeSection(
@@ -72,6 +92,42 @@ export async function updateHomeSection(
   if (error) {
     console.error('Error updating home section:', error);
     throw error;
+  }
+}
+
+/**
+ * 删除 Home Section
+ */
+export async function deleteHomeSection(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('home_sections')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting home section:', error);
+    throw error;
+  }
+}
+
+/**
+ * 重新排序 Home Sections
+ */
+export async function reorderHomeSections(sections: { id: string; sort_order: number }[]): Promise<void> {
+  // 批量更新排序
+  const updates = sections.map(({ id, sort_order }) =>
+    supabase
+      .from('home_sections')
+      .update({ sort_order, updated_at: new Date().toISOString() })
+      .eq('id', id)
+  );
+
+  const results = await Promise.all(updates);
+  
+  const errors = results.filter(result => result.error);
+  if (errors.length > 0) {
+    console.error('Error reordering sections:', errors);
+    throw new Error('Failed to reorder sections');
   }
 }
 
