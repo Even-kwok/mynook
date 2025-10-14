@@ -291,6 +291,14 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
         alert('Subtitle is required');
         return;
       }
+      if (!formData.card_title.trim()) {
+        alert('Card title is required');
+        return;
+      }
+      if (!formData.card_subtitle.trim()) {
+        alert('Card subtitle is required');
+        return;
+      }
       if (!formData.button_text.trim()) {
         alert('Button text is required');
         return;
@@ -311,6 +319,8 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
         media_type: formData.media_type,
         comparison_before_url: formData.comparison_before_url,
         comparison_after_url: formData.comparison_after_url,
+        card_title: formData.card_title,
+        card_subtitle: formData.card_subtitle,
         button_text: formData.button_text,
         button_link: formData.button_link,
         layout_direction: formData.layout_direction,
@@ -456,6 +466,34 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
               rows={3}
               placeholder="Enter section subtitle"
             />
+          </div>
+
+          {/* Card Titles */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Card Title (Left)
+              </label>
+              <input
+                type="text"
+                value={formData.card_title}
+                onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., AI DESIGN PREVIEW"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Card Subtitle (Right)
+              </label>
+              <input
+                type="text"
+                value={formData.card_subtitle}
+                onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., Interior Design"
+              />
+            </div>
           </div>
 
           {/* Button Text */}

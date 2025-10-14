@@ -218,6 +218,8 @@ export interface HomeSection {
   media_type: HomeSectionMediaType;
   comparison_before_url: string | null;  // 对比图：改造前
   comparison_after_url: string | null;   // 对比图：改造后
+  card_title: string;                    // 预览卡片左侧标题
+  card_subtitle: string;                 // 预览卡片右侧标题
   button_text: string;
   button_link: string;
   layout_direction: HomeSectionLayout;
