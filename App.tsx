@@ -748,6 +748,122 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
         }
     };
 
+    // 渲染单个 Section（支持图片/视频/对比图）
+    const renderSection = (section: HomeSection, index: number) => {
+        const isLeftImage = section.layout_direction === 'left-image';
+        
+        // 媒体卡片
+        const MediaCard = () => (
+            <motion.div
+                initial={{ opacity: 0, x: isLeftImage ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className={`w-full max-w-[704px] ${!isLeftImage ? 'lg:ml-auto' : ''}`}
+            >
+                <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                    <div className="flex justify-between items-center mb-4">
+                        <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                        <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{section.button_link}</span>
+                    </div>
+                    
+                    {/* 媒体显示区域 */}
+                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 overflow-hidden">
+                        {section.media_type === 'image' && (
+                            <img 
+                                src={section.media_url} 
+                                alt={section.title}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                        {section.media_type === 'video' && (
+                            <video 
+                                src={section.media_url}
+                                className="w-full h-full object-cover"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                            />
+                        )}
+                        {section.media_type === 'comparison' && section.comparison_before_url && section.comparison_after_url && (
+                            <ImageComparison
+                                beforeImage={section.comparison_before_url}
+                                afterImage={section.comparison_after_url}
+                            />
+                        )}
+                    </div>
+                    
+                    <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                        Generate AI Design
+                    </button>
+                </div>
+            </motion.div>
+        );
+        
+        // 文字内容
+        const TextContent = () => (
+            <motion.div
+                initial={{ opacity: 0, x: isLeftImage ? 20 : -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="space-y-6"
+            >
+                <h2 
+                    className="text-white whitespace-pre-line"
+                    style={{ 
+                        fontFamily: 'Arial, sans-serif', 
+                        fontWeight: 400, 
+                        fontSize: '48px', 
+                        lineHeight: '60px', 
+                        letterSpacing: '0px'
+                    }}
+                >
+                    {section.title}
+                </h2>
+                
+                <p 
+                    className="text-slate-300"
+                    style={{ 
+                        fontFamily: 'Arial, sans-serif', 
+                        fontWeight: 400, 
+                        fontSize: '16px', 
+                        lineHeight: '24px', 
+                        letterSpacing: '0px'
+                    }}
+                >
+                    {section.subtitle}
+                </p>
+
+                <button
+                    onClick={() => onNavigate(section.button_link)}
+                    className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                    style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                >
+                    {section.button_text}
+                    <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </button>
+            </motion.div>
+        );
+        
+        return (
+            <div key={section.id} className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                {isLeftImage ? (
+                    <>
+                        <MediaCard />
+                        <TextContent />
+                    </>
+                ) : (
+                    <>
+                        <TextContent />
+                        <MediaCard />
+                    </>
+                )}
+            </div>
+        );
+    };
+
     return (
         <main className="min-h-screen bg-black relative overflow-y-auto">
             {/* Background Image Layer */}
@@ -853,6 +969,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </div>
                 </div>
                 
+                {/* Dynamically Rendered Sections 2-5 from Database */}
+                {!sectionsLoading && homeSections.map((section, index) => renderSection(section, index))}
+                
+                {/* LEGACY: Hardcoded Sections - Hidden */}
+                {false && <>
                 {/* Section 2 - Exterior Design Feature Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
                         {/* Left Side: Preview Card */}
@@ -1229,6 +1350,9 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </button>
                     </motion.div>
                 </div>
+                {/* Section 6 end */}
+                </>}
+                {/* END LEGACY Hardcoded Sections */}
             </div>
         </main>
     );
