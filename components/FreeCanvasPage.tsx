@@ -232,7 +232,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 initial={false}
                 animate={{ width: isGalleryOpen ? 320 : 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                className="h-full overflow-hidden bg-white/10 backdrop-blur-md border-l border-white/20 relative z-10"
+                className="h-full overflow-hidden bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 mr-8 rounded-3xl border border-white/20 relative z-10"
             >
                 <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
                     <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
@@ -1552,8 +1552,8 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
                 </div>
                 
-                <aside className="w-[380px] bg-white/10 backdrop-blur-md flex flex-col overflow-hidden flex-shrink-0 border-r border-white/20 relative z-10">
-                    <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
+                <aside className="w-[380px] bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 ml-8 rounded-3xl border border-white/20 flex-shrink-0 relative z-10 overflow-hidden">
+                    <div className="h-full px-6 py-6 overflow-y-auto scrollbar-hide">
                         <div className="flex flex-col gap-6">
                             <div className="space-y-3">
                                 <h2 className="text-xl font-bold text-white">Free Canvas</h2>
@@ -1624,7 +1624,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </div>
                     </div>
 
-                    <div className="p-6 pt-4 border-t border-white/20">
+                    <div className="px-6 pb-6 pt-4 border-t border-white/20">
                         <Button 
                             onClick={handleGenerate} 
                             disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)} 

@@ -55,7 +55,7 @@ const PromptTemplates: React.FC<{
                                             </div>
                                         )}
                                     </div>
-                                    <p className={`text-center text-xs mt-2 font-medium transition-colors ${isSelected ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-800'}`}>{template.name}</p>
+                                    <p className={`text-center text-xs mt-2 font-medium transition-colors ${isSelected ? 'text-white' : 'text-white group-hover:text-slate-200'}`}>{template.name}</p>
                                 </div>
                             );
                         })}
@@ -1548,7 +1548,7 @@ const CustomSelect: React.FC<{
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute z-10 top-full mt-2 w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden max-h-60 overflow-y-auto"
+                            className="absolute z-10 top-full mt-2 w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-60 overflow-y-auto"
                             role="listbox"
                         >
                             {options.map(option => (
@@ -1556,12 +1556,12 @@ const CustomSelect: React.FC<{
                                     <button
                                         type="button"
                                         onClick={() => handleSelect(option.id)}
-                                        className="w-full text-left p-4 text-white hover:bg-white/10 flex items-center justify-between"
+                                        className="w-full text-left p-4 text-slate-800 hover:bg-slate-100 flex items-center justify-between"
                                         role="option"
                                         aria-selected={value === option.id}
                                     >
                                         <span>{option.name}</span>
-                                        {value === option.id && <IconCheck className="w-5 h-5 text-indigo-400" />}
+                                        {value === option.id && <IconCheck className="w-5 h-5 text-indigo-600" />}
                                     </button>
                                 </li>
                             ))}
@@ -3212,14 +3212,16 @@ const App: React.FC = () => {
                             )}
 
                             {isStyleBased && categories.length > 0 && (
-                                <div className="space-y-4">
+                                <div className="space-y-4 flex-1 min-h-0">
                                     <h3 className="text-lg font-semibold text-white">Choose a Style</h3>
-                                    <PromptTemplates 
-                                        categories={categories} 
-                                        onTemplateSelect={handleTemplateSelect} 
-                                        selectedTemplateIds={selectedTemplateIds}
-                                        maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
-                                    />
+                                    <div className="overflow-y-auto pr-2 -mr-2 max-h-[calc(100vh-32rem)]">
+                                        <PromptTemplates 
+                                            categories={categories} 
+                                            onTemplateSelect={handleTemplateSelect} 
+                                            selectedTemplateIds={selectedTemplateIds}
+                                            maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                        />
+                                    </div>
                                 </div>
                             )}
                             {isAIAdvisor && (
@@ -3289,7 +3291,8 @@ const App: React.FC = () => {
                 </aside>
                 <main className="flex-1 p-8 pt-[104px] pr-8 overflow-y-auto relative z-10">
                     {generatedImages.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {generatedImages.map((image, i) => (
                                 image.status === 'success' && image.imageUrl ? (
                                     <PhotoDisplay
@@ -3307,6 +3310,7 @@ const App: React.FC = () => {
                                     <ErrorCard key={`${image.id}-${i}-error`} onRegenerate={() => handleRegenerate(image)} />
                                 )
                             ))}
+                            </div>
                         </div>
                     ) : currentAdvisorResponse ? (
                         (() => {
