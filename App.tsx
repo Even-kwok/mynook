@@ -806,67 +806,6 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                     </div>
                 </div>
             </section>
-            
-            {/* Second Section: Instant Design Variations */}
-            <section className="relative py-20 bg-black">
-                <div className="px-8 md:px-12 lg:px-20">
-                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        {/* Left Side: Preview Card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <div className="max-w-[480px] bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
-                                {/* Card Header */}
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
-                                    <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Alpine Interior Adventure</span>
-                                </div>
-                                
-                                {/* Preview Area */}
-                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
-                                    <img 
-                                        src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop" 
-                                        alt="Interior design preview" 
-                                        className="w-full h-full object-cover"
-                                    />
-                                    </div>
-                                
-                                {/* Generate Button */}
-                                <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
-                                    Generate AI Design
-                                </button>
-                                </div>
-                        </motion.div>
-
-                        {/* Right Side: Text Content */}
-                                    <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="space-y-6"
-                        >
-                            <h2 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
-                                Instant Design Variations at Your Fingertips
-                            </h2>
-                            <p className="text-lg text-slate-300 leading-relaxed">
-                                Our advanced AI technology analyzes your space and creates multiple design
-                                options in seconds. Choose your favorite style and let the magic happen.
-                            </p>
-                            <button 
-                                onClick={() => onNavigate('Interior Design')}
-                                className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
-                            >
-                                Get Started
-                                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-                            </button>
-                                    </motion.div>
-                            </div>
-                </div>
-                </section>
         </main>
     );
 };
