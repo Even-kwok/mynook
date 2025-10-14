@@ -721,7 +721,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </div>
             
             {/* Unified Content Container */}
-            <div className="container mx-auto px-8 pt-[128px] pb-20 relative z-10">
+            <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
                 {/* Section 1 - Hero Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                     {/* Left Side: Hero Title */}
