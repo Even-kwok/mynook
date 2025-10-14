@@ -221,11 +221,11 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         <div className="relative flex-shrink-0">
             <button
                 onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-white/20 backdrop-blur-sm border border-r-0 border-white/20 rounded-l-lg flex items-center justify-center text-white hover:bg-white/30 transition-colors focus:outline-none"
+                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-8 h-16 bg-white/10 backdrop-blur-md rounded-l-xl flex items-center justify-center text-white hover:bg-white/20 transition-all focus:outline-none shadow-lg"
                 aria-label={isGalleryOpen ? 'Collapse gallery' : 'Expand gallery'}
             >
                 <motion.div animate={{ rotate: isGalleryOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <IconChevronRight className="w-4 h-4" />
+                    <IconChevronRight className="w-5 h-5" />
                 </motion.div>
             </button>
             <motion.aside
@@ -234,7 +234,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                 className="h-full overflow-hidden bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 mr-8 rounded-3xl border border-white/20 relative z-10"
             >
-                <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
+                <div className="w-[320px] h-full px-4 pb-4 pt-6 flex flex-col">
                     <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-white">My Designs</h2>
                         <div className="flex items-center gap-1 p-0.5 bg-white/5 rounded-xl">

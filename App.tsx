@@ -32,7 +32,7 @@ const PromptTemplates: React.FC<{
         <div className="space-y-6">
             {categories.map(category => (
                 <div key={category.name}>
-                    <h2 className="text-lg font-semibold text-slate-800 mb-3">{category.name}</h2>
+                    <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: 'Arial, sans-serif' }}>{category.name}</h2>
                     <div className="grid grid-cols-3 gap-3">
                         {category.templates.map((template) => {
                             const isSelected = selectedTemplateIds.includes(template.id);
@@ -657,48 +657,27 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
         <motion.div 
             initial="hidden"
             animate="visible"
-            className="w-full h-full flex items-center justify-center p-4"
+            className="w-full h-full flex items-center justify-center"
         >
-            <div className="w-full max-w-md text-center flex flex-col items-center">
-                <div className="relative w-48 h-40 mb-8 flex items-center justify-center">
-                    {/* These are decorative cards */}
-                    <motion.div
-                        custom={0}
-                        variants={cardVariants}
-                        className="absolute w-40 h-44 bg-white rounded-3xl border border-slate-200 shadow-sm"
-                        style={{ rotate: `8deg`, transformOrigin: 'bottom center' }}
-                    />
-                     <motion.div
-                        custom={1}
-                        variants={cardVariants}
-                        className="absolute w-40 h-44 bg-white rounded-3xl border border-slate-200 shadow-md"
-                        style={{ rotate: `-5deg`, transformOrigin: 'bottom center' }}
-                    />
-                    {/* Top card with icon */}
-                    <motion.div
-                        custom={2}
-                        variants={cardVariants}
-                        className="absolute w-40 h-44 bg-white rounded-3xl border border-slate-300 shadow-lg flex flex-col items-center justify-center p-4"
-                    >
-                        <IconSparkles className="w-12 h-12 text-indigo-500" />
-                        <div className="w-24 h-2 bg-slate-200 rounded-full mt-4"></div>
-                        <div className="w-16 h-2 bg-slate-200 rounded-full mt-2"></div>
-                    </motion.div>
+            <div className="w-full max-w-2xl mx-auto bg-white/5 border border-white/20 shadow-inner rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+                <div className="p-8 bg-white/10 backdrop-blur-sm rounded-full border-2 border-white/20 mb-6">
+                    <IconSparkles className="w-16 h-16 text-slate-400" />
                 </div>
-
                 <motion.h2 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.4 }}
-                    className="text-2xl font-bold text-slate-800"
+                    transition={{ delay: 0.1, duration: 0.4 }}
+                    className="text-2xl font-bold text-white"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
                 >
                     {isAdvisor ? "Your advisor's response will appear here" : "Your generated designs will appear here"}
                 </motion.h2>
                 <motion.p 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.4 }}
-                    className="text-slate-500 mt-2 max-w-sm"
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                    className="text-slate-300 mt-3 max-w-md"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
                 >
                     {isAdvisor ? "Ask a design question in the left panel to get expert advice." : "Get started by uploading a photo of your room and describing a style in the left panel."}
                 </motion.p>
@@ -3212,9 +3191,9 @@ const App: React.FC = () => {
                             )}
 
                             {isStyleBased && categories.length > 0 && (
-                                <div className="space-y-4 flex-1 min-h-0">
-                                    <h3 className="text-lg font-semibold text-white">Choose a Style</h3>
-                                    <div className="overflow-y-auto pr-2 -mr-2 max-h-[calc(100vh-32rem)]">
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-white" style={{ fontFamily: 'Arial, sans-serif' }}>Choose a Style</h3>
+                                    <div className="overflow-y-auto pr-2 -mr-2" style={{ maxHeight: 'calc(100vh - 38rem)' }}>
                                         <PromptTemplates 
                                             categories={categories} 
                                             onTemplateSelect={handleTemplateSelect} 
@@ -3258,7 +3237,7 @@ const App: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="sticky bottom-0 bg-white/10 backdrop-blur-md -mx-6 px-6 pt-4 pb-6 border-t border-white/20">
+                            <div className="sticky bottom-0 -mx-6 px-6 pt-4 pb-6 border-t border-white/20">
                                 {isAIAdvisor ? (
                                     <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
