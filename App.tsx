@@ -10,7 +10,6 @@ import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX,
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
-import { BlogPage } from './components/BlogPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
@@ -531,7 +530,7 @@ const Header: React.FC<{
         }
     }, [user]);
 
-    const navItems = ['Terms', 'Pricing', 'News'];
+    const navItems = ['Terms', 'Pricing'];
 
     return (
         <header className="fixed top-0 left-0 right-0 flex items-center justify-between p-4 bg-white/70 backdrop-blur-xl z-40 border-b border-slate-900/10 shadow-sm">
@@ -775,7 +774,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     const hasMore = displayedCount < TOTAL_ITEMS;
 
     return (
-        <main className="flex-1 overflow-y-auto bg-white text-slate-800 scrollbar-hide flex flex-col">
+        <main className="flex-1 overflow-y-auto text-slate-800 scrollbar-hide flex flex-col">
             {/* Hero Banner Carousel */}
             {!isBannersLoading && (
                 <HeroBannerCarousel
@@ -789,7 +788,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             
             {/* Only show gallery section when loading or when there are items */}
             {(isInitialLoading || displayedItems.length > 0) && (
-                <section className="flex-shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
+                <section className="flex-shrink-0 bg-white px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
                     {isInitialLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
                             <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
@@ -1423,6 +1422,10 @@ const App: React.FC = () => {
     const [selectedRoomType, setSelectedRoomType] = useState<string>(ROOM_TYPES[0].id);
     const [selectedBuildingType, setSelectedBuildingType] = useState<string>(BUILDING_TYPES[0].id);
     const [selectedItemType, setSelectedItemType] = useState<string>(ITEM_TYPES[0].id);
+    const [selectedFestiveType, setSelectedFestiveType] = useState<string>('');
+    const [selectedWallPaintType, setSelectedWallPaintType] = useState<string>('');
+    const [selectedFloorType, setSelectedFloorType] = useState<string>('');
+    const [selectedGardenType, setSelectedGardenType] = useState<string>('');
     
     // AI Advisor State
     const [advisorChat, setAdvisorChat] = useState<Chat | null>(null);
@@ -1480,11 +1483,11 @@ const App: React.FC = () => {
 
     const designTools = [
         { key: 'Interior Design', label: 'Interior Design', requiresPremium: false },
-        { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Exterior Design', label: 'Exterior Design', requiresPremium: false },
         { key: 'Wall Paint', label: 'Wall Paint', requiresPremium: false },
         { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
+        { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
         { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true, comingSoon: true },
         { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
@@ -1602,15 +1605,90 @@ const App: React.FC = () => {
         return roomTypeOptions;
     }, [adminTemplateData, templatesLoading]);
     
-    // 确保当前选择的房间类型在可用列表中，否则选择第一个
+    // Festive Decor 子分类选项
+    const availableFestiveTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const festiveData = adminTemplateData["Festive Decor"];
+        if (!festiveData || festiveData.length === 0) return [];
+        return festiveData
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Exterior Design 建筑类型选项
+    const availableBuildingTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const exteriorData = adminTemplateData["Exterior Design"];
+        if (!exteriorData || exteriorData.length === 0) return [];
+        return exteriorData
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Wall Paint 色调选项
+    const availableWallPaintTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Wall Paint"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Floor Style 地板类型选项
+    const availableFloorTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Floor Style"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+
+    // Garden & Backyard Design 花园类型选项
+    const availableGardenTypes = useMemo(() => {
+        if (templatesLoading) return [];
+        const data = adminTemplateData["Garden & Backyard Design"];
+        if (!data || data.length === 0) return [];
+        return data
+            .filter(sc => sc.templates.length > 0)
+            .map(sc => ({ id: sc.name, name: sc.name }));
+    }, [adminTemplateData, templatesLoading]);
+    
+    // 确保当前选择的类型在可用列表中，否则选择第一个
     useEffect(() => {
-        if ((activePage === 'Interior Design' || activePage === 'Festive Decor') && availableRoomTypes.length > 0) {
+        if (activePage === 'Interior Design' && availableRoomTypes.length > 0) {
             const isCurrentRoomTypeAvailable = availableRoomTypes.some(rt => rt.id === selectedRoomType);
             if (!isCurrentRoomTypeAvailable) {
                 setSelectedRoomType(availableRoomTypes[0].id);
             }
+        } else if (activePage === 'Festive Decor' && availableFestiveTypes.length > 0) {
+            if (!selectedFestiveType || !availableFestiveTypes.some(ft => ft.id === selectedFestiveType)) {
+                setSelectedFestiveType(availableFestiveTypes[0].id);
+            }
+        } else if (activePage === 'Exterior Design' && availableBuildingTypes.length > 0) {
+            if (!selectedBuildingType || !availableBuildingTypes.some(bt => bt.id === selectedBuildingType)) {
+                setSelectedBuildingType(availableBuildingTypes[0].id);
+            }
+        } else if (activePage === 'Wall Paint' && availableWallPaintTypes.length > 0) {
+            if (!selectedWallPaintType || !availableWallPaintTypes.some(wt => wt.id === selectedWallPaintType)) {
+                setSelectedWallPaintType(availableWallPaintTypes[0].id);
+            }
+        } else if (activePage === 'Floor Style' && availableFloorTypes.length > 0) {
+            if (!selectedFloorType || !availableFloorTypes.some(ft => ft.id === selectedFloorType)) {
+                setSelectedFloorType(availableFloorTypes[0].id);
+            }
+        } else if (activePage === 'Garden & Backyard Design' && availableGardenTypes.length > 0) {
+            if (!selectedGardenType || !availableGardenTypes.some(gt => gt.id === selectedGardenType)) {
+                setSelectedGardenType(availableGardenTypes[0].id);
+            }
         }
-    }, [availableRoomTypes, selectedRoomType, activePage]);
+    }, [availableRoomTypes, selectedRoomType, activePage, 
+        availableFestiveTypes, selectedFestiveType,
+        availableBuildingTypes, selectedBuildingType,
+        availableWallPaintTypes, selectedWallPaintType,
+        availableFloorTypes, selectedFloorType,
+        availableGardenTypes, selectedGardenType]);
 
     // --- Image Handling ---
     
@@ -1855,21 +1933,55 @@ const App: React.FC = () => {
                     : isExteriorDesign
                         ? `A ${buildingTypeName}, ${templatePrompt}`
                         : `A ${roomTypeName}, ${templatePrompt}`,
+                // 保存模板元数据以便后续显示完整路径
+                templateId: template.id,
+                templateName: template.name,
+                templateCategory: template.category,
+                templateSubCategory: template.subCategory,
             };
         });
         
         setGeneratedImages(placeholders);
     
-        const finalResults = await Promise.all(placeholders.map(async (placeholder) => {
-            try {
-                const imageUrl = await generateImage(getModelInstruction(placeholder.promptBase), module1ForApi);
-                return { ...placeholder, status: 'success' as const, imageUrl };
-            } catch (err) {
-                console.error(`Generation failed for ${placeholder.id}:`, err);
-                return { ...placeholder, status: 'failed' as const };
+        // 并发控制：一次最多9个并发请求，避免浏览器连接限制和服务器过载
+        const CONCURRENT_LIMIT = 9;
+        const finalResults: GeneratedImage[] = [];
+
+        // 分批处理，每批9个
+        for (let i = 0; i < placeholders.length; i += CONCURRENT_LIMIT) {
+            const batch = placeholders.slice(i, i + CONCURRENT_LIMIT);
+            
+            // 处理当前批次
+            const batchResults = await Promise.all(batch.map(async (placeholder) => {
+                try {
+                    const imageUrl = await generateImage(
+                        getModelInstruction(placeholder.promptBase), 
+                        module1ForApi
+                    );
+                    return { ...placeholder, status: 'success' as const, imageUrl };
+                } catch (err) {
+                    console.error(`Generation failed for ${placeholder.id}:`, err);
+                    return { ...placeholder, status: 'failed' as const };
+                }
+            }));
+            
+            // 添加到总结果
+            finalResults.push(...batchResults);
+            
+            // 实时更新UI，显示已完成的图片
+            const remainingPlaceholders = placeholders.slice(finalResults.length).map(p => ({ 
+                ...p, 
+                status: 'pending' as const 
+            }));
+            setGeneratedImages([...finalResults, ...remainingPlaceholders]);
+            
+            // 在批次之间添加小延迟，避免API限流
+            if (i + CONCURRENT_LIMIT < placeholders.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
-        }));
+        }
     
+        // 最终更新
         setGeneratedImages(finalResults);
     
         const newBatch: GenerationBatch = {
@@ -1882,12 +1994,23 @@ const App: React.FC = () => {
             results: finalResults,
             templateIds: selectedTemplateIds,
             ...(isExteriorDesign && { buildingTypeId: selectedBuildingType }),
+            // 保存房间类型ID以便后续显示完整路径
+            roomTypeId: selectedRoomType,
             userId: currentUser.id,
         };
         setGenerationHistory(prev => [newBatch, ...prev]);
     
         // 图片生成完成后，刷新用户信用点显示
         await handleUpdateUser(currentUser.id, { credits: currentUser.credits - creditsNeeded });
+    
+        // 根据生成结果决定是否清除选中状态
+        const hasAnySuccess = finalResults.some(result => result.status === 'success');
+        
+        if (hasAnySuccess) {
+            // 至少有一个生成成功，清除选中状态，避免下次重复生成
+            setSelectedTemplateIds([]);
+        }
+        // 如果全部失败，保持选中状态，方便用户重试
     
         setIsLoading(false);
     };
@@ -2233,6 +2356,25 @@ const App: React.FC = () => {
             const newImageUrl = await generateImage(getModelInstruction(image.promptBase), module1ForApi);
             setGeneratedImages(prev => prev.map(img => img.id === image.id ? { ...img, status: 'success', imageUrl: newImageUrl } : img));
             
+            // 同步更新 generationHistory 中的对应图片
+            setGenerationHistory(prevHistory => 
+                prevHistory.map(batch => {
+                    // 检查这个批次是否包含当前重新生成的图片
+                    const hasImage = batch.results.some(img => img.id === image.id);
+                    if (hasImage) {
+                        return {
+                            ...batch,
+                            results: batch.results.map(img => 
+                                img.id === image.id 
+                                    ? { ...img, status: 'success', imageUrl: newImageUrl }
+                                    : img
+                            )
+                        };
+                    }
+                    return batch;
+                })
+            );
+            
             // 图片生成完成后，刷新用户信用点显示
             await handleUpdateUser(currentUser.id, { credits: currentUser.credits - 1 });
         } catch (err) {
@@ -2264,9 +2406,31 @@ const App: React.FC = () => {
     };
 
     const handleDownload = (imageUrl: string, baseName: string) => {
+        // 从 generationHistory 中查找这张图片的完整信息，使用统一的命名格式
+        let fileName = `${baseName.replace(/\s+/g, '_')}_${Date.now()}.png`;
+        
+        // 尝试找到对应的 batch 和 image
+        for (const batch of generationHistory) {
+            const image = batch.results.find(r => r.imageUrl === imageUrl);
+            if (image) {
+                // 使用与批量下载相同的命名格式: type_roomTypeId_templateName_timestamp
+                const parts = [
+                    batch.type,
+                    batch.roomTypeId || batch.buildingTypeId || 'no-room',
+                    image.id,
+                    batch.id,
+                ];
+                
+                fileName = parts
+                    .map(p => String(p).toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+                    .join('_') + '.png';
+                break;
+            }
+        }
+        
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = `${baseName.replace(/\s+/g, '_')}_${Date.now()}.png`;
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -2320,7 +2484,6 @@ const App: React.FC = () => {
         switch (activePage) {
             case 'Explore': return <ExplorePage onNavigate={setActivePage} />;
             case 'Pricing': return <PricingPage />;
-            case 'News': return <BlogPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
             case 'Free Canvas':
@@ -2409,31 +2572,69 @@ const App: React.FC = () => {
                 // 查找当前选择的房间类型
                 const roomCategory = interiorData.find(sc => sc.name === selectedRoomType);
                 if (roomCategory && roomCategory.templates.length > 0) {
-                    // 转换为前端需要的格式
+                    // 不按 sub_category 分组，直接显示所有模板
+                    // sub_category 是技术性的固定值（"Style"），不需要显示
                     categories = [{
-                        name: "Choose a Style",
+                        name: selectedRoomType, // 使用房间类型名称
                         templates: roomCategory.templates
                     }];
                 }
             }
-        } else if (activePage === 'Wall Paint') {
-             categories = adminTemplateData["Wall Paint"] || [];
-        } else if (activePage === 'Floor Style') {
-            categories = adminTemplateData["Floor Style"] || [];
-        } else if (activePage === 'Garden & Backyard Design') {
-            categories = adminTemplateData["Garden"] || [];
-        } else if (activePage === 'Exterior Design') {
-            categories = adminTemplateData["Exterior Design"] || [];
         } else if (activePage === 'Festive Decor') {
-            categories = adminTemplateData["Festive Decor"] || [];
-        }
-        
-        // 统一修改类别名称为 "Choose a Style"（除了 Festive Decor）
-        if (activePage !== 'Festive Decor' && categories.length > 0) {
-            categories = categories.map(cat => ({
-                ...cat,
-                name: "Choose a Style"
-            }));
+            const festiveData = adminTemplateData["Festive Decor"];
+            if (festiveData) {
+                const festiveCategory = festiveData.find(sc => sc.name === selectedFestiveType);
+                if (festiveCategory && festiveCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedFestiveType,
+                        templates: festiveCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Exterior Design') {
+            const exteriorData = adminTemplateData["Exterior Design"];
+            if (exteriorData) {
+                const buildingCategory = exteriorData.find(sc => sc.name === selectedBuildingType);
+                if (buildingCategory && buildingCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedBuildingType,
+                        templates: buildingCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Wall Paint') {
+            const wallPaintData = adminTemplateData["Wall Paint"];
+            if (wallPaintData) {
+                const wallPaintCategory = wallPaintData.find(sc => sc.name === selectedWallPaintType);
+                if (wallPaintCategory && wallPaintCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedWallPaintType,
+                        templates: wallPaintCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Floor Style') {
+            const floorData = adminTemplateData["Floor Style"];
+            if (floorData) {
+                const floorCategory = floorData.find(sc => sc.name === selectedFloorType);
+                if (floorCategory && floorCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedFloorType,
+                        templates: floorCategory.templates
+                    }];
+                }
+            }
+        } else if (activePage === 'Garden & Backyard Design') {
+            const gardenData = adminTemplateData["Garden & Backyard Design"];
+            if (gardenData) {
+                const gardenCategory = gardenData.find(sc => sc.name === selectedGardenType);
+                if (gardenCategory && gardenCategory.templates.length > 0) {
+                    categories = [{
+                        name: selectedGardenType,
+                        templates: gardenCategory.templates
+                    }];
+                }
+            }
         }
 
         const isGenerateDisabled = isLoading || !hasModule1Image || (!isAIAdvisor && !hasSelection && !isItemReplace && !isStyleMatch && !isMultiItem);
@@ -2511,7 +2712,7 @@ const App: React.FC = () => {
                                 />
                             )}
 
-                            {['Interior Design', 'Festive Decor'].includes(activePage) && (
+                            {activePage === 'Interior Design' && (
                                 <div>
                                     <CustomSelect
                                         label="Choose a Room Type"
@@ -2522,13 +2723,60 @@ const App: React.FC = () => {
                                     />
                                 </div>
                             )}
+                            {activePage === 'Festive Decor' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Festive Type"
+                                        options={availableFestiveTypes.length > 0 ? availableFestiveTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No festive types available'}]}
+                                        value={availableFestiveTypes.length > 0 ? selectedFestiveType : 'loading'}
+                                        onChange={setSelectedFestiveType}
+                                        disabled={templatesLoading || availableFestiveTypes.length === 0}
+                                    />
+                                </div>
+                            )}
                             {activePage === 'Exterior Design' && (
-                                <CustomSelect
-                                    label="Choose a Building Type"
-                                    options={BUILDING_TYPES}
-                                    value={selectedBuildingType}
-                                    onChange={setSelectedBuildingType}
-                                />
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Building Type"
+                                        options={availableBuildingTypes.length > 0 ? availableBuildingTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No building types available'}]}
+                                        value={availableBuildingTypes.length > 0 ? selectedBuildingType : 'loading'}
+                                        onChange={setSelectedBuildingType}
+                                        disabled={templatesLoading || availableBuildingTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Wall Paint' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Color Tone"
+                                        options={availableWallPaintTypes.length > 0 ? availableWallPaintTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No color tones available'}]}
+                                        value={availableWallPaintTypes.length > 0 ? selectedWallPaintType : 'loading'}
+                                        onChange={setSelectedWallPaintType}
+                                        disabled={templatesLoading || availableWallPaintTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Floor Style' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Floor Type"
+                                        options={availableFloorTypes.length > 0 ? availableFloorTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No floor types available'}]}
+                                        value={availableFloorTypes.length > 0 ? selectedFloorType : 'loading'}
+                                        onChange={setSelectedFloorType}
+                                        disabled={templatesLoading || availableFloorTypes.length === 0}
+                                    />
+                                </div>
+                            )}
+                            {activePage === 'Garden & Backyard Design' && (
+                                <div>
+                                    <CustomSelect
+                                        label="Choose a Garden Type"
+                                        options={availableGardenTypes.length > 0 ? availableGardenTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No garden types available'}]}
+                                        value={availableGardenTypes.length > 0 ? selectedGardenType : 'loading'}
+                                        onChange={setSelectedGardenType}
+                                        disabled={templatesLoading || availableGardenTypes.length === 0}
+                                    />
+                                </div>
                             )}
                             {isItemReplace && (
                                 <CustomSelect
@@ -2540,12 +2788,15 @@ const App: React.FC = () => {
                             )}
 
                             {isStyleBased && categories.length > 0 && (
-                                <PromptTemplates 
-                                    categories={categories} 
-                                    onTemplateSelect={handleTemplateSelect} 
-                                    selectedTemplateIds={selectedTemplateIds}
-                                    maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
-                                />
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
+                                    <PromptTemplates 
+                                        categories={categories} 
+                                        onTemplateSelect={handleTemplateSelect} 
+                                        selectedTemplateIds={selectedTemplateIds}
+                                        maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                    />
+                                </div>
                             )}
                             {isAIAdvisor && (
                                 <div className="space-y-4">

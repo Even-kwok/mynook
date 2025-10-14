@@ -1,0 +1,392 @@
+Room Type,Style Name,Full Name,Popularity,Image Status,Image URL
+attic,Scandinavian,Scandinavian Attic,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-scandinavian.png
+attic,Cottagecore,Cottagecore Attic,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-cottagecore.png
+attic,Modern,Modern Minimalist Attic,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-modern-minimalist.png
+attic,Bohemian,Bohemian Attic,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-bohemian.png
+attic,Contemporary,Contemporary Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-contemporary.png
+attic,Zen,Zen Minimalism Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-zen-minimalism.png
+attic,Eclectic,Eclectic Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-eclectic.png
+attic,Rustic,Rustic Modern Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-rustic-modern.png
+attic,Industrial,Industrial Loft Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-industrial-loft.png
+attic,Natural,Natural Biophilic Attic,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-attic-natural-biophilic.png
+balcony-terrace,Scandinavian,Scandinavian Balcony Terrace,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-scandinavian.png
+balcony-terrace,Modern,Modern Minimalist Balcony Terrace,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-modern-minimalist.png
+balcony-terrace,Coastal,Coastal Balcony Terrace,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-coastal.png
+balcony-terrace,Bohemian,Bohemian Balcony Terrace,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-bohemian.png
+balcony-terrace,Contemporary,Contemporary Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-contemporary.png
+balcony-terrace,Natural,Natural Biophilic Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-natural-biophilic.png
+balcony-terrace,Urban,Urban Modern Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-urban-modern.png
+balcony-terrace,Resort,Resort Style Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-resort-style.png
+balcony-terrace,Tropical,Tropical Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-tropical.png
+balcony-terrace,Mediterranean,Mediterranean Balcony Terrace,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-balcony-terrace-mediterranean.png
+basement,Scandinavian,Scandinavian Basement,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-scandinavian.png
+basement,Modern,Modern Farmhouse Basement,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-modern-farmhouse.png
+basement,Modern,Modern Minimalist Basement,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-modern-minimalist.png
+basement,Mid-Century,Mid-Century Modern Basement,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-mid-century-modern.png
+basement,Bohemian,Bohemian Basement,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-bohemian.png
+basement,Contemporary,Contemporary Basement,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-contemporary.png
+basement,Rustic,Rustic Modern Basement,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-rustic-modern.png
+basement,Industrial,Industrial Loft Basement,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-industrial-loft.png
+basement,Traditional,Traditional Basement,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-traditional.png
+basement,Urban,Urban Modern Basement,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-basement-urban-modern.png
+bathroom,Latte,Latte / Creamy Style Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-latte-creamy-style.png
+bathroom,Organic,Organic Modern Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-organic-modern.png
+bathroom,Quiet,Quiet Luxury Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-quiet-luxury.png
+bathroom,Scandinavian,Scandinavian Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-scandinavian.png
+bathroom,Japandi,Japandi Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-japandi.png
+bathroom,Modern,Modern Minimalist Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-modern-minimalist.png
+bathroom,Coastal,Coastal Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-coastal.png
+bathroom,Contemporary,Contemporary Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-contemporary.png
+bathroom,Art,Art Deco Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-art-deco.png
+bathroom,Zen,Zen Minimalism Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-zen-minimalism.png
+bathroom,Industrial,Industrial Loft Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-industrial-loft.png
+bathroom,Traditional,Traditional Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-traditional.png
+bathroom,Modern,Modern Luxury Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-modern-luxury.png
+bathroom,Mediterranean,Mediterranean Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bathroom-mediterranean.png
+bedroom,Latte,Latte / Creamy Style Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-latte-creamy-style.png
+bedroom,Organic,Organic Modern Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-organic-modern.png
+bedroom,Quiet,Quiet Luxury Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-quiet-luxury.png
+bedroom,Warm,Warm Minimalism Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-warm-minimalism.png
+bedroom,Scandinavian,Scandinavian Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-scandinavian.png
+bedroom,Japandi,Japandi Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-japandi.png
+bedroom,Cottagecore,Cottagecore Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-cottagecore.png
+bedroom,Modern,Modern Farmhouse Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-modern-farmhouse.png
+bedroom,Modern,Modern Minimalist Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-modern-minimalist.png
+bedroom,Coastal,Coastal Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-coastal.png
+bedroom,Grandmillennial,Grandmillennial Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-grandmillennial.png
+bedroom,Bohemian,Bohemian Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-bohemian.png
+bedroom,Contemporary,Contemporary Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-contemporary.png
+bedroom,Transitional,Transitional Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-transitional.png
+bedroom,Nordic,Nordic Light Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-nordic-light.png
+bedroom,Zen,Zen Minimalism Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-zen-minimalism.png
+bedroom,Traditional,Traditional Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-traditional.png
+bedroom,Natural,Natural Biophilic Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-bedroom-natural-biophilic.png
+craft-hobby-room,Dopamine,Dopamine Decor Craft Hobby Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-dopamine-decor.png
+craft-hobby-room,Scandinavian,Scandinavian Craft Hobby Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-scandinavian.png
+craft-hobby-room,Cottagecore,Cottagecore Craft Hobby Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-cottagecore.png
+craft-hobby-room,Modern,Modern Farmhouse Craft Hobby Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-modern-farmhouse.png
+craft-hobby-room,Bohemian,Bohemian Craft Hobby Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-bohemian.png
+craft-hobby-room,Contemporary,Contemporary Craft Hobby Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-contemporary.png
+craft-hobby-room,Nordic,Nordic Light Craft Hobby Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-nordic-light.png
+craft-hobby-room,Eclectic,Eclectic Craft Hobby Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-eclectic.png
+craft-hobby-room,Natural,Natural Biophilic Craft Hobby Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-natural-biophilic.png
+craft-hobby-room,Colorful,Colorful Contemporary Craft Hobby Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-craft-hobby-room-colorful-contemporary.png
+dining-room,Latte,Latte / Creamy Style Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-latte-creamy-style.png
+dining-room,Dopamine,Dopamine Decor Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-dopamine-decor.png
+dining-room,Scandinavian,Scandinavian Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-scandinavian.png
+dining-room,Maximalist,Maximalist Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-maximalist.png
+dining-room,Modern,Modern Farmhouse Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-modern-farmhouse.png
+dining-room,Mid-Century,Mid-Century Modern Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-mid-century-modern.png
+dining-room,Coastal,Coastal Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-coastal.png
+dining-room,Grandmillennial,Grandmillennial Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-grandmillennial.png
+dining-room,Bohemian,Bohemian Dining Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-bohemian.png
+dining-room,Contemporary,Contemporary Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-contemporary.png
+dining-room,Art,Art Deco Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-art-deco.png
+dining-room,Transitional,Transitional Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-transitional.png
+dining-room,Parisian,Parisian Chic Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-parisian-chic.png
+dining-room,Industrial,Industrial Loft Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-industrial-loft.png
+dining-room,Traditional,Traditional Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-traditional.png
+dining-room,Modern,Modern Luxury Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-modern-luxury.png
+dining-room,Mediterranean,Mediterranean Dining Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-mediterranean.png
+dining-room,Hollywood,Hollywood Regency Dining Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-dining-room-hollywood-regency.png
+game-room,Dopamine,Dopamine Decor Game Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-dopamine-decor.png
+game-room,Maximalist,Maximalist Game Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-maximalist.png
+game-room,Modern,Modern Minimalist Game Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-modern-minimalist.png
+game-room,Contemporary,Contemporary Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-contemporary.png
+game-room,Eclectic,Eclectic Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-eclectic.png
+game-room,Industrial,Industrial Loft Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-industrial-loft.png
+game-room,Retro,Retro Vintage Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-retro-vintage.png
+game-room,Colorful,Colorful Contemporary Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-colorful-contemporary.png
+game-room,Urban,Urban Modern Game Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-urban-modern.png
+game-room,Memphis,Memphis Design Game Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-game-room-memphis-design.png
+garage,Scandinavian,Scandinavian Garage,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-scandinavian.png
+garage,Modern,Modern Farmhouse Garage,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-modern-farmhouse.png
+garage,Modern,Modern Minimalist Garage,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-modern-minimalist.png
+garage,Contemporary,Contemporary Garage,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-contemporary.png
+garage,Transitional,Transitional Garage,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-transitional.png
+garage,Industrial,Industrial Loft Garage,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-industrial-loft.png
+garage,Urban,Urban Modern Garage,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-urban-modern.png
+garage,Brutalist,Brutalist Garage,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-garage-brutalist.png
+guest-bedroom,Latte,Latte / Creamy Style Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-latte-creamy-style.png
+guest-bedroom,Warm,Warm Minimalism Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-warm-minimalism.png
+guest-bedroom,Scandinavian,Scandinavian Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-scandinavian.png
+guest-bedroom,Japandi,Japandi Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-japandi.png
+guest-bedroom,Cottagecore,Cottagecore Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-cottagecore.png
+guest-bedroom,Modern,Modern Minimalist Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-modern-minimalist.png
+guest-bedroom,Coastal,Coastal Guest Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-coastal.png
+guest-bedroom,Contemporary,Contemporary Guest Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-contemporary.png
+guest-bedroom,Transitional,Transitional Guest Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-transitional.png
+guest-bedroom,Nordic,Nordic Light Guest Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-nordic-light.png
+guest-bedroom,Traditional,Traditional Guest Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-traditional.png
+guest-bedroom,Natural,Natural Biophilic Guest Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-guest-bedroom-natural-biophilic.png
+hallway-corridor,Scandinavian,Scandinavian Hallway Corridor,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-scandinavian.png
+hallway-corridor,Modern,Modern Minimalist Hallway Corridor,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-modern-minimalist.png
+hallway-corridor,Grandmillennial,Grandmillennial Hallway Corridor,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-grandmillennial.png
+hallway-corridor,Contemporary,Contemporary Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-contemporary.png
+hallway-corridor,Transitional,Transitional Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-transitional.png
+hallway-corridor,Parisian,Parisian Chic Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-parisian-chic.png
+hallway-corridor,Industrial,Industrial Loft Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-industrial-loft.png
+hallway-corridor,Traditional,Traditional Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-traditional.png
+hallway-corridor,Modern,Modern Luxury Hallway Corridor,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-modern-luxury.png
+hallway-corridor,Art,Art Gallery Hallway Corridor,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-hallway-corridor-art-gallery.png
+home-bar,Maximalist,Maximalist Home Bar,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-maximalist.png
+home-bar,Mid-Century,Mid-Century Modern Home Bar,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-mid-century-modern.png
+home-bar,Contemporary,Contemporary Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-contemporary.png
+home-bar,Art,Art Deco Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-art-deco.png
+home-bar,Parisian,Parisian Chic Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-parisian-chic.png
+home-bar,Industrial,Industrial Loft Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-industrial-loft.png
+home-bar,Traditional,Traditional Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-traditional.png
+home-bar,Urban,Urban Modern Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-urban-modern.png
+home-bar,Modern,Modern Luxury Home Bar,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-modern-luxury.png
+home-bar,Hollywood,Hollywood Regency Home Bar,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-bar-hollywood-regency.png
+home-gym,Organic,Organic Modern Home Gym,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-organic-modern.png
+home-gym,Scandinavian,Scandinavian Home Gym,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-scandinavian.png
+home-gym,Modern,Modern Minimalist Home Gym,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-modern-minimalist.png
+home-gym,Contemporary,Contemporary Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-contemporary.png
+home-gym,Zen,Zen Minimalism Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-zen-minimalism.png
+home-gym,Industrial,Industrial Loft Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-industrial-loft.png
+home-gym,Natural,Natural Biophilic Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-natural-biophilic.png
+home-gym,Urban,Urban Modern Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-urban-modern.png
+home-gym,Modern,Modern Luxury Home Gym,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-modern-luxury.png
+home-gym,Brutalist,Brutalist Home Gym,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-gym-brutalist.png
+home-office,Latte,Latte / Creamy Style Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-latte-creamy-style.png
+home-office,Organic,Organic Modern Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-organic-modern.png
+home-office,Quiet,Quiet Luxury Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-quiet-luxury.png
+home-office,Scandinavian,Scandinavian Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-scandinavian.png
+home-office,Japandi,Japandi Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-japandi.png
+home-office,Modern,Modern Minimalist Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-modern-minimalist.png
+home-office,Mid-Century,Mid-Century Modern Home Office,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-mid-century-modern.png
+home-office,Contemporary,Contemporary Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-contemporary.png
+home-office,Transitional,Transitional Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-transitional.png
+home-office,Zen,Zen Minimalism Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-zen-minimalism.png
+home-office,Industrial,Industrial Loft Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-industrial-loft.png
+home-office,Traditional,Traditional Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-traditional.png
+home-office,Natural,Natural Biophilic Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-natural-biophilic.png
+home-office,Urban,Urban Modern Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-urban-modern.png
+home-office,Modern,Modern Luxury Home Office,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-modern-luxury.png
+home-office,Art,Art Gallery Home Office,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-office-art-gallery.png
+home-theater,Quiet,Quiet Luxury Home Theater,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-quiet-luxury.png
+home-theater,Maximalist,Maximalist Home Theater,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-maximalist.png
+home-theater,Modern,Modern Minimalist Home Theater,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-modern-minimalist.png
+home-theater,Contemporary,Contemporary Home Theater,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-contemporary.png
+home-theater,Art,Art Deco Home Theater,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-art-deco.png
+home-theater,Industrial,Industrial Loft Home Theater,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-industrial-loft.png
+home-theater,Urban,Urban Modern Home Theater,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-urban-modern.png
+home-theater,Modern,Modern Luxury Home Theater,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-modern-luxury.png
+home-theater,Hollywood,Hollywood Regency Home Theater,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-hollywood-regency.png
+home-theater,Brutalist,Brutalist Home Theater,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-home-theater-brutalist.png
+kids-room,Latte,Latte / Creamy Style Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-latte-creamy-style.png
+kids-room,Dopamine,Dopamine Decor Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-dopamine-decor.png
+kids-room,Scandinavian,Scandinavian Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-scandinavian.png
+kids-room,Maximalist,Maximalist Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-maximalist.png
+kids-room,Cottagecore,Cottagecore Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-cottagecore.png
+kids-room,Modern,Modern Minimalist Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-modern-minimalist.png
+kids-room,Coastal,Coastal Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-coastal.png
+kids-room,Bohemian,Bohemian Kids Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-bohemian.png
+kids-room,Contemporary,Contemporary Kids Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-contemporary.png
+kids-room,Nordic,Nordic Light Kids Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-nordic-light.png
+kids-room,Natural,Natural Biophilic Kids Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-natural-biophilic.png
+kids-room,Retro,Retro Vintage Kids Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-retro-vintage.png
+kids-room,Colorful,Colorful Contemporary Kids Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kids-room-colorful-contemporary.png
+kitchen,Latte,Latte / Creamy Style Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-latte-creamy-style.png
+kitchen,Organic,Organic Modern Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-organic-modern.png
+kitchen,Scandinavian,Scandinavian Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-scandinavian.png
+kitchen,Japandi,Japandi Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-japandi.png
+kitchen,Modern,Modern Farmhouse Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-modern-farmhouse.png
+kitchen,Modern,Modern Minimalist Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-modern-minimalist.png
+kitchen,Mid-Century,Mid-Century Modern Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-mid-century-modern.png
+kitchen,Coastal,Coastal Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-coastal.png
+kitchen,Grandmillennial,Grandmillennial Kitchen,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-grandmillennial.png
+kitchen,Contemporary,Contemporary Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-contemporary.png
+kitchen,Art,Art Deco Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-art-deco.png
+kitchen,Transitional,Transitional Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-transitional.png
+kitchen,Rustic,Rustic Modern Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-rustic-modern.png
+kitchen,Industrial,Industrial Loft Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-industrial-loft.png
+kitchen,Traditional,Traditional Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-traditional.png
+kitchen,Urban,Urban Modern Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-urban-modern.png
+kitchen,Modern,Modern Luxury Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-modern-luxury.png
+kitchen,Mediterranean,Mediterranean Kitchen,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-mediterranean.png
+kitchen,Asian,Asian Fusion Kitchen,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-asian-fusion.png
+kitchen,English,English Country Kitchen,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-kitchen-english-country.png
+laundry-room,Organic,Organic Modern Laundry Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-organic-modern.png
+laundry-room,Scandinavian,Scandinavian Laundry Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-scandinavian.png
+laundry-room,Modern,Modern Farmhouse Laundry Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-modern-farmhouse.png
+laundry-room,Modern,Modern Minimalist Laundry Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-modern-minimalist.png
+laundry-room,Coastal,Coastal Laundry Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-coastal.png
+laundry-room,Contemporary,Contemporary Laundry Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-contemporary.png
+laundry-room,Transitional,Transitional Laundry Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-transitional.png
+laundry-room,Industrial,Industrial Loft Laundry Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-laundry-room-industrial-loft.png
+living-room,Latte,Latte / Creamy Style Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-latte-creamy-style.png
+living-room,Dopamine,Dopamine Decor Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-dopamine-decor.png
+living-room,Organic,Organic Modern Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-organic-modern.png
+living-room,Quiet,Quiet Luxury Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-quiet-luxury.png
+living-room,Warm,Warm Minimalism Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-warm-minimalism.png
+living-room,Scandinavian,Scandinavian Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-scandinavian.png
+living-room,Maximalist,Maximalist Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-maximalist.png
+living-room,Japandi,Japandi Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-japandi.png
+living-room,Modern,Modern Farmhouse Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-modern-farmhouse.png
+living-room,Modern,Modern Minimalist Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-modern-minimalist.png
+living-room,Mid-Century,Mid-Century Modern Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-mid-century-modern.png
+living-room,Coastal,Coastal Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-coastal.png
+living-room,Grandmillennial,Grandmillennial Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-grandmillennial.png
+living-room,Bohemian,Bohemian Living Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-bohemian.png
+living-room,Contemporary,Contemporary Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-contemporary.png
+living-room,Art,Art Deco Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-art-deco.png
+living-room,Transitional,Transitional Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-transitional.png
+living-room,Nordic,Nordic Light Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-nordic-light.png
+living-room,Parisian,Parisian Chic Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-parisian-chic.png
+living-room,Zen,Zen Minimalism Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-zen-minimalism.png
+living-room,Eclectic,Eclectic Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-eclectic.png
+living-room,Rustic,Rustic Modern Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-rustic-modern.png
+living-room,Industrial,Industrial Loft Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-industrial-loft.png
+living-room,Traditional,Traditional Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-traditional.png
+living-room,Natural,Natural Biophilic Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-natural-biophilic.png
+living-room,Retro,Retro Vintage Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-retro-vintage.png
+living-room,Colorful,Colorful Contemporary Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-colorful-contemporary.png
+living-room,Urban,Urban Modern Living Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-living-room-urban-modern.png
+master-bathroom,Latte,Latte / Creamy Style Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-latte-creamy-style.png
+master-bathroom,Organic,Organic Modern Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-organic-modern.png
+master-bathroom,Quiet,Quiet Luxury Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-quiet-luxury.png
+master-bathroom,Scandinavian,Scandinavian Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-scandinavian.png
+master-bathroom,Japandi,Japandi Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-japandi.png
+master-bathroom,Coastal,Coastal Master Bathroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-coastal.png
+master-bathroom,Contemporary,Contemporary Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-contemporary.png
+master-bathroom,Zen,Zen Minimalism Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-zen-minimalism.png
+master-bathroom,Modern,Modern Luxury Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-modern-luxury.png
+master-bathroom,Boutique,Boutique Hotel Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-boutique-hotel.png
+master-bathroom,Resort,Resort Style Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-resort-style.png
+master-bathroom,Mediterranean,Mediterranean Master Bathroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bathroom-mediterranean.png
+master-bedroom,Latte,Latte / Creamy Style Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-latte-creamy-style.png
+master-bedroom,Organic,Organic Modern Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-organic-modern.png
+master-bedroom,Quiet,Quiet Luxury Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-quiet-luxury.png
+master-bedroom,Warm,Warm Minimalism Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-warm-minimalism.png
+master-bedroom,Scandinavian,Scandinavian Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-scandinavian.png
+master-bedroom,Japandi,Japandi Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-japandi.png
+master-bedroom,Cottagecore,Cottagecore Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-cottagecore.png
+master-bedroom,Modern,Modern Minimalist Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-modern-minimalist.png
+master-bedroom,Coastal,Coastal Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-coastal.png
+master-bedroom,Grandmillennial,Grandmillennial Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-grandmillennial.png
+master-bedroom,Bohemian,Bohemian Master Bedroom,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-bohemian.png
+master-bedroom,Contemporary,Contemporary Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-contemporary.png
+master-bedroom,Transitional,Transitional Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-transitional.png
+master-bedroom,Nordic,Nordic Light Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-nordic-light.png
+master-bedroom,Parisian,Parisian Chic Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-parisian-chic.png
+master-bedroom,Zen,Zen Minimalism Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-zen-minimalism.png
+master-bedroom,Traditional,Traditional Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-traditional.png
+master-bedroom,Natural,Natural Biophilic Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-natural-biophilic.png
+master-bedroom,Modern,Modern Luxury Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-modern-luxury.png
+master-bedroom,Boutique,Boutique Hotel Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-boutique-hotel.png
+master-bedroom,Resort,Resort Style Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-resort-style.png
+master-bedroom,Tropical,Tropical Master Bedroom,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-master-bedroom-tropical.png
+mudroom-entryway,Scandinavian,Scandinavian Mudroom Entryway,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-scandinavian.png
+mudroom-entryway,Modern,Modern Farmhouse Mudroom Entryway,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-modern-farmhouse.png
+mudroom-entryway,Modern,Modern Minimalist Mudroom Entryway,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-modern-minimalist.png
+mudroom-entryway,Coastal,Coastal Mudroom Entryway,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-coastal.png
+mudroom-entryway,Contemporary,Contemporary Mudroom Entryway,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-contemporary.png
+mudroom-entryway,Transitional,Transitional Mudroom Entryway,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-transitional.png
+mudroom-entryway,Industrial,Industrial Loft Mudroom Entryway,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-industrial-loft.png
+mudroom-entryway,Traditional,Traditional Mudroom Entryway,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-mudroom-entryway-traditional.png
+music-room,Scandinavian,Scandinavian Music Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-scandinavian.png
+music-room,Maximalist,Maximalist Music Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-maximalist.png
+music-room,Modern,Modern Minimalist Music Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-modern-minimalist.png
+music-room,Mid-Century,Mid-Century Modern Music Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-mid-century-modern.png
+music-room,Bohemian,Bohemian Music Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-bohemian.png
+music-room,Contemporary,Contemporary Music Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-contemporary.png
+music-room,Eclectic,Eclectic Music Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-eclectic.png
+music-room,Industrial,Industrial Loft Music Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-industrial-loft.png
+music-room,Urban,Urban Modern Music Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-urban-modern.png
+music-room,Art,Art Gallery Music Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-music-room-art-gallery.png
+nursery,Latte,Latte / Creamy Style Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-latte-creamy-style.png
+nursery,Organic,Organic Modern Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-organic-modern.png
+nursery,Warm,Warm Minimalism Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-warm-minimalism.png
+nursery,Scandinavian,Scandinavian Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-scandinavian.png
+nursery,Cottagecore,Cottagecore Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-cottagecore.png
+nursery,Modern,Modern Minimalist Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-modern-minimalist.png
+nursery,Coastal,Coastal Nursery,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-coastal.png
+nursery,Contemporary,Contemporary Nursery,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-contemporary.png
+nursery,Nordic,Nordic Light Nursery,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-nordic-light.png
+nursery,Natural,Natural Biophilic Nursery,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-nursery-natural-biophilic.png
+pantry,Scandinavian,Scandinavian Pantry,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-scandinavian.png
+pantry,Modern,Modern Farmhouse Pantry,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-modern-farmhouse.png
+pantry,Modern,Modern Minimalist Pantry,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-modern-minimalist.png
+pantry,Coastal,Coastal Pantry,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-coastal.png
+pantry,Contemporary,Contemporary Pantry,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-contemporary.png
+pantry,Transitional,Transitional Pantry,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-transitional.png
+pantry,Traditional,Traditional Pantry,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-traditional.png
+pantry,English,English Country Pantry,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-pantry-english-country.png
+powder-room,Maximalist,Maximalist Powder Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-maximalist.png
+powder-room,Coastal,Coastal Powder Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-coastal.png
+powder-room,Grandmillennial,Grandmillennial Powder Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-grandmillennial.png
+powder-room,Bohemian,Bohemian Powder Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-bohemian.png
+powder-room,Contemporary,Contemporary Powder Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-contemporary.png
+powder-room,Art,Art Deco Powder Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-art-deco.png
+powder-room,Parisian,Parisian Chic Powder Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-parisian-chic.png
+powder-room,Modern,Modern Luxury Powder Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-modern-luxury.png
+powder-room,Mediterranean,Mediterranean Powder Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-mediterranean.png
+powder-room,Hollywood,Hollywood Regency Powder Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-powder-room-hollywood-regency.png
+staircase,Scandinavian,Scandinavian Staircase,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-scandinavian.png
+staircase,Modern,Modern Minimalist Staircase,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-modern-minimalist.png
+staircase,Mid-Century,Mid-Century Modern Staircase,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-mid-century-modern.png
+staircase,Contemporary,Contemporary Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-contemporary.png
+staircase,Art,Art Deco Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-art-deco.png
+staircase,Transitional,Transitional Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-transitional.png
+staircase,Parisian,Parisian Chic Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-parisian-chic.png
+staircase,Industrial,Industrial Loft Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-industrial-loft.png
+staircase,Traditional,Traditional Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-traditional.png
+staircase,Modern,Modern Luxury Staircase,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-staircase-modern-luxury.png
+study-library,Quiet,Quiet Luxury Study Library,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-quiet-luxury.png
+study-library,Modern,Modern Minimalist Study Library,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-modern-minimalist.png
+study-library,Mid-Century,Mid-Century Modern Study Library,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-mid-century-modern.png
+study-library,Grandmillennial,Grandmillennial Study Library,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-grandmillennial.png
+study-library,Contemporary,Contemporary Study Library,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-contemporary.png
+study-library,Transitional,Transitional Study Library,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-transitional.png
+study-library,Parisian,Parisian Chic Study Library,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-parisian-chic.png
+study-library,Industrial,Industrial Loft Study Library,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-industrial-loft.png
+study-library,Traditional,Traditional Study Library,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-traditional.png
+study-library,Victorian,Victorian Modern Study Library,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-victorian-modern.png
+study-library,Art,Art Gallery Study Library,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-art-gallery.png
+study-library,English,English Country Study Library,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-study-library-english-country.png
+sunroom-conservatory,Organic,Organic Modern Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-organic-modern.png
+sunroom-conservatory,Scandinavian,Scandinavian Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-scandinavian.png
+sunroom-conservatory,Cottagecore,Cottagecore Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-cottagecore.png
+sunroom-conservatory,Modern,Modern Farmhouse Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-modern-farmhouse.png
+sunroom-conservatory,Coastal,Coastal Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-coastal.png
+sunroom-conservatory,Bohemian,Bohemian Sunroom Conservatory,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-bohemian.png
+sunroom-conservatory,Contemporary,Contemporary Sunroom Conservatory,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-contemporary.png
+sunroom-conservatory,Natural,Natural Biophilic Sunroom Conservatory,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-natural-biophilic.png
+sunroom-conservatory,Resort,Resort Style Sunroom Conservatory,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-resort-style.png
+sunroom-conservatory,Tropical,Tropical Sunroom Conservatory,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-tropical.png
+sunroom-conservatory,Mediterranean,Mediterranean Sunroom Conservatory,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-mediterranean.png
+sunroom-conservatory,English,English Country Sunroom Conservatory,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-sunroom-conservatory-english-country.png
+teen-room,Dopamine,Dopamine Decor Teen Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-dopamine-decor.png
+teen-room,Scandinavian,Scandinavian Teen Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-scandinavian.png
+teen-room,Maximalist,Maximalist Teen Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-maximalist.png
+teen-room,Modern,Modern Minimalist Teen Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-modern-minimalist.png
+teen-room,Bohemian,Bohemian Teen Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-bohemian.png
+teen-room,Contemporary,Contemporary Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-contemporary.png
+teen-room,Eclectic,Eclectic Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-eclectic.png
+teen-room,Industrial,Industrial Loft Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-industrial-loft.png
+teen-room,Retro,Retro Vintage Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-retro-vintage.png
+teen-room,Colorful,Colorful Contemporary Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-colorful-contemporary.png
+teen-room,Urban,Urban Modern Teen Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-urban-modern.png
+teen-room,Memphis,Memphis Design Teen Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-teen-room-memphis-design.png
+walk-in-closet,Quiet,Quiet Luxury Walk In Closet,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-quiet-luxury.png
+walk-in-closet,Scandinavian,Scandinavian Walk In Closet,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-scandinavian.png
+walk-in-closet,Modern,Modern Minimalist Walk In Closet,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-modern-minimalist.png
+walk-in-closet,Contemporary,Contemporary Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-contemporary.png
+walk-in-closet,Art,Art Deco Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-art-deco.png
+walk-in-closet,Transitional,Transitional Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-transitional.png
+walk-in-closet,Parisian,Parisian Chic Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-parisian-chic.png
+walk-in-closet,Modern,Modern Luxury Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-modern-luxury.png
+walk-in-closet,Boutique,Boutique Hotel Walk In Closet,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-boutique-hotel.png
+walk-in-closet,Hollywood,Hollywood Regency Walk In Closet,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-walk-in-closet-hollywood-regency.png
+yoga-meditation-room,Organic,Organic Modern Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-organic-modern.png
+yoga-meditation-room,Warm,Warm Minimalism Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-warm-minimalism.png
+yoga-meditation-room,Scandinavian,Scandinavian Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-scandinavian.png
+yoga-meditation-room,Japandi,Japandi Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-japandi.png
+yoga-meditation-room,Modern,Modern Minimalist Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-modern-minimalist.png
+yoga-meditation-room,Coastal,Coastal Yoga Meditation Room,high,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-coastal.png
+yoga-meditation-room,Zen,Zen Minimalism Yoga Meditation Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-zen-minimalism.png
+yoga-meditation-room,Natural,Natural Biophilic Yoga Meditation Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-natural-biophilic.png
+yoga-meditation-room,Resort,Resort Style Yoga Meditation Room,medium,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-resort-style.png
+yoga-meditation-room,Asian,Asian Fusion Yoga Meditation Room,low,pending,https://storage.googleapis.com/aistudio-hosting/templates/placeholder-yoga-meditation-room-asian-fusion.png

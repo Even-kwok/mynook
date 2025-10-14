@@ -1,14 +1,15 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconLogo, IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX } from './Icons';
+import { IconLogo, IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload } from './Icons';
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { GalleryManager } from './GalleryManager';
 import { HeroBannerManager } from './HeroBannerManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB } from '../services/templateService';
+import { BatchTemplateUpload } from './BatchTemplateUpload';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
 // --- Component Props ---
@@ -216,6 +217,53 @@ const DesignManagement: React.FC<{
     );
 };
 
+// --- Sort Controls Component ---
+const SortControls: React.FC<{
+    onMoveUp: () => void;
+    onMoveDown: () => void;
+    onMoveToTop: () => void;
+    onMoveToBottom: () => void;
+    isFirst: boolean;
+    isLast: boolean;
+}> = ({ onMoveUp, onMoveDown, onMoveToTop, onMoveToBottom, isFirst, isLast }) => {
+    return (
+        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            <button
+                onClick={onMoveToTop}
+                disabled={isFirst}
+                className="p-1 hover:bg-white rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="移到最前"
+            >
+                <IconMoveToTop className="w-3.5 h-3.5 text-slate-600" />
+            </button>
+            <button
+                onClick={onMoveUp}
+                disabled={isFirst}
+                className="p-1 hover:bg-white rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="上移"
+            >
+                <IconMoveUp className="w-3.5 h-3.5 text-slate-600" />
+            </button>
+            <button
+                onClick={onMoveDown}
+                disabled={isLast}
+                className="p-1 hover:bg-white rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="下移"
+            >
+                <IconMoveDown className="w-3.5 h-3.5 text-slate-600" />
+            </button>
+            <button
+                onClick={onMoveToBottom}
+                disabled={isLast}
+                className="p-1 hover:bg-white rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="移到最后"
+            >
+                <IconMoveToBottom className="w-3.5 h-3.5 text-slate-600" />
+            </button>
+        </div>
+    );
+};
+
 const TemplateManagement: React.FC<{
     templateData: ManagedTemplateData;
     setTemplateData: React.Dispatch<React.SetStateAction<ManagedTemplateData>>;
@@ -232,6 +280,8 @@ const TemplateManagement: React.FC<{
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
     const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(new Set());
     const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
+    const [isSorting, setIsSorting] = useState(false);
+    const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -549,6 +599,164 @@ const TemplateManagement: React.FC<{
         }
     };
 
+    // 排序处理函数
+    const handleSortMainCategory = async (category: string, action: 'up' | 'down' | 'top' | 'bottom') => {
+        if (isSorting) return;
+        setIsSorting(true);
+        
+        try {
+            const currentIndex = categoryOrder.indexOf(category);
+            const newOrder = [...categoryOrder];
+            
+            switch(action) {
+                case 'up':
+                    if (currentIndex > 0) {
+                        [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
+                    }
+                    break;
+                case 'down':
+                    if (currentIndex < newOrder.length - 1) {
+                        [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
+                    }
+                    break;
+                case 'top':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.unshift(category);
+                    break;
+                case 'bottom':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.push(category);
+                    break;
+            }
+            
+            setCategoryOrder(newOrder);
+            await reorderMainCategories(newOrder);
+            
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
+        } catch (error) {
+            console.error('Failed to sort main category:', error);
+            alert('排序失败，请重试');
+        } finally {
+            setIsSorting(false);
+        }
+    };
+
+    const handleSortSubCategory = async (mainCategory: string, subCategory: string, action: 'up' | 'down' | 'top' | 'bottom') => {
+        if (isSorting) return;
+        setIsSorting(true);
+        
+        try {
+            const subCategories = templateData[mainCategory] || [];
+            const subCategoryNames = subCategories.map((sc: ManagedPromptTemplateCategory) => sc.name);
+            const currentIndex = subCategoryNames.indexOf(subCategory);
+            const newOrder = [...subCategoryNames];
+            
+            switch(action) {
+                case 'up':
+                    if (currentIndex > 0) {
+                        [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
+                    }
+                    break;
+                case 'down':
+                    if (currentIndex < newOrder.length - 1) {
+                        [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
+                    }
+                    break;
+                case 'top':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.unshift(subCategory);
+                    break;
+                case 'bottom':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.push(subCategory);
+                    break;
+            }
+            
+            // 更新本地状态
+            setTemplateData(prevData => {
+                const newData = { ...prevData };
+                const reorderedSubCategories = newOrder.map(name => 
+                    subCategories.find((sc: ManagedPromptTemplateCategory) => sc.name === name)
+                ).filter(Boolean);
+                newData[mainCategory] = reorderedSubCategories;
+                return newData;
+            });
+            
+            await reorderSubCategories(mainCategory, newOrder);
+            
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
+        } catch (error) {
+            console.error('Failed to sort sub category:', error);
+            alert('排序失败，请重试');
+        } finally {
+            setIsSorting(false);
+        }
+    };
+
+    const handleSortTemplate = async (mainCategory: string, subCategory: string, templateId: string, action: 'up' | 'down' | 'top' | 'bottom') => {
+        if (isSorting) return;
+        setIsSorting(true);
+        
+        try {
+            const subCategories = templateData[mainCategory] || [];
+            const subCat = subCategories.find((sc: ManagedPromptTemplateCategory) => sc.name === subCategory);
+            if (!subCat) return;
+            
+            const templates = subCat.templates;
+            const templateIds = templates.map(t => t.id);
+            const currentIndex = templateIds.indexOf(templateId);
+            const newOrder = [...templateIds];
+            
+            switch(action) {
+                case 'up':
+                    if (currentIndex > 0) {
+                        [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
+                    }
+                    break;
+                case 'down':
+                    if (currentIndex < newOrder.length - 1) {
+                        [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
+                    }
+                    break;
+                case 'top':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.unshift(templateId);
+                    break;
+                case 'bottom':
+                    newOrder.splice(currentIndex, 1);
+                    newOrder.push(templateId);
+                    break;
+            }
+            
+            // 更新本地状态
+            setTemplateData(prevData => {
+                const newData = JSON.parse(JSON.stringify(prevData));
+                const subCat = newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === subCategory);
+                if (subCat) {
+                    subCat.templates = newOrder.map(id => 
+                        templates.find(t => t.id === id)
+                    ).filter(Boolean);
+                }
+                return newData;
+            });
+            
+            await reorderTemplates(newOrder);
+            
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
+        } catch (error) {
+            console.error('Failed to sort template:', error);
+            alert('排序失败，请重试');
+        } finally {
+            setIsSorting(false);
+        }
+    };
+
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -560,6 +768,13 @@ const TemplateManagement: React.FC<{
                     >
                         <IconPlus className="w-4 h-4 mr-1" />
                         Add Category
+                    </Button>
+                    <Button 
+                        onClick={() => setIsBatchUploadOpen(true)}
+                        className="!bg-purple-50 hover:!bg-purple-100 !text-purple-600 !border-purple-200"
+                    >
+                        <IconUpload className="w-4 h-4 mr-1" />
+                        Batch Upload
                     </Button>
                     <Button 
                         onClick={handleImportTemplates} 
@@ -581,6 +796,8 @@ const TemplateManagement: React.FC<{
                     
                     const isMainCollapsed = collapsedMainCategories.has(mainCategory);
                     
+                    const mainCategoryIndex = categoryOrder.indexOf(mainCategory);
+                    
                     return (
                         <div key={mainCategory} className="p-4 border border-slate-200 rounded-xl">
                         <div className="flex items-center justify-between mb-3">
@@ -593,6 +810,14 @@ const TemplateManagement: React.FC<{
                                     <IconChevronDown className={`w-5 h-5 text-slate-600 transition-transform ${isMainCollapsed ? '-rotate-90' : ''}`} />
                                 </button>
                                 <h4 className="font-semibold text-slate-900">{mainCategory}</h4>
+                                <SortControls 
+                                    onMoveUp={() => handleSortMainCategory(mainCategory, 'up')}
+                                    onMoveDown={() => handleSortMainCategory(mainCategory, 'down')}
+                                    onMoveToTop={() => handleSortMainCategory(mainCategory, 'top')}
+                                    onMoveToBottom={() => handleSortMainCategory(mainCategory, 'bottom')}
+                                    isFirst={mainCategoryIndex === 0}
+                                    isLast={mainCategoryIndex === categoryOrder.length - 1}
+                                />
                                 <button 
                                     onClick={() => handleDeleteMainCategory(mainCategory)}
                                     className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -613,7 +838,7 @@ const TemplateManagement: React.FC<{
                         </div>
                         {!isMainCollapsed && (
                         <div className="mt-3 space-y-3">
-                            {subCategories.map((subCategory: ManagedPromptTemplateCategory) => {
+                            {subCategories.map((subCategory: ManagedPromptTemplateCategory, subIndex: number) => {
                                 const subKey = `${mainCategory}::${subCategory.name}`;
                                 const isSubCollapsed = collapsedSubCategories.has(subKey);
                                 
@@ -629,6 +854,14 @@ const TemplateManagement: React.FC<{
                                                 <IconChevronDown className={`w-4 h-4 text-slate-600 transition-transform ${isSubCollapsed ? '-rotate-90' : ''}`} />
                                             </button>
                                             <h5 className="font-medium text-sm text-slate-700">{subCategory.name}</h5>
+                                            <SortControls 
+                                                onMoveUp={() => handleSortSubCategory(mainCategory, subCategory.name, 'up')}
+                                                onMoveDown={() => handleSortSubCategory(mainCategory, subCategory.name, 'down')}
+                                                onMoveToTop={() => handleSortSubCategory(mainCategory, subCategory.name, 'top')}
+                                                onMoveToBottom={() => handleSortSubCategory(mainCategory, subCategory.name, 'bottom')}
+                                                isFirst={subIndex === 0}
+                                                isLast={subIndex === subCategories.length - 1}
+                                            />
                                             <button 
                                                 onClick={() => handleDeleteSubCategory(mainCategory, subCategory.name)}
                                                 className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
@@ -644,15 +877,53 @@ const TemplateManagement: React.FC<{
                                     </div>
                                     {!isSubCollapsed && (
                                     <div className="grid grid-cols-8 gap-2 mt-2">
-                                        {subCategory.templates.map(template => (
+                                        {subCategory.templates.map((template, templateIndex) => (
                                             <div key={template.id} className="group relative">
                                                 <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
                                                     <img src={template.imageUrl} alt={template.name} className="w-full h-full object-cover" />
                                                 </div>
                                                 <p className="text-[10px] text-center mt-1 text-slate-600 truncate">{template.name}</p>
-                                                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleEditTemplate(template, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white"><IconPencil className="w-3 h-3" /></button>
-                                                    <button onClick={() => handleDeleteTemplate(template.id, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white text-red-500"><IconTrash className="w-3 h-3" /></button>
+                                                <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex flex-col items-center justify-center h-full gap-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <button onClick={() => handleEditTemplate(template, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white"><IconPencil className="w-3 h-3" /></button>
+                                                            <button onClick={() => handleDeleteTemplate(template.id, mainCategory, subCategory.name)} className="p-1.5 bg-white/80 rounded-full hover:bg-white text-red-500"><IconTrash className="w-3 h-3" /></button>
+                                                        </div>
+                                                        <div className="flex items-center gap-0.5 bg-white/90 rounded-md p-0.5">
+                                                            <button 
+                                                                onClick={() => handleSortTemplate(mainCategory, subCategory.name, template.id, 'top')}
+                                                                disabled={templateIndex === 0}
+                                                                className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                title="移到最前"
+                                                            >
+                                                                <IconMoveToTop className="w-2.5 h-2.5 text-slate-700" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleSortTemplate(mainCategory, subCategory.name, template.id, 'up')}
+                                                                disabled={templateIndex === 0}
+                                                                className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                title="上移"
+                                                            >
+                                                                <IconMoveUp className="w-2.5 h-2.5 text-slate-700" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleSortTemplate(mainCategory, subCategory.name, template.id, 'down')}
+                                                                disabled={templateIndex === subCategory.templates.length - 1}
+                                                                className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                title="下移"
+                                                            >
+                                                                <IconMoveDown className="w-2.5 h-2.5 text-slate-700" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleSortTemplate(mainCategory, subCategory.name, template.id, 'bottom')}
+                                                                disabled={templateIndex === subCategory.templates.length - 1}
+                                                                className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                title="移到最后"
+                                                            >
+                                                                <IconMoveToBottom className="w-2.5 h-2.5 text-slate-700" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -721,6 +992,19 @@ const TemplateManagement: React.FC<{
                     }
                     setIsCategoryModalOpen(false);
                     alert(`"${categoryName}" added! Now you can add templates to it.`);
+                }}
+            />
+            <BatchTemplateUpload
+                isOpen={isBatchUploadOpen}
+                onClose={() => setIsBatchUploadOpen(false)}
+                onSuccess={async () => {
+                    // 刷新模板列表
+                    const freshTemplates = await getAllTemplates();
+                    setTemplateData(freshTemplates);
+                    setCategoryOrder(Object.keys(freshTemplates));
+                    if (onTemplatesUpdated) {
+                        await onTemplatesUpdated();
+                    }
                 }}
             />
         </div>

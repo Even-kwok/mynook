@@ -80,7 +80,8 @@ export async function getAllTemplates(): Promise<ManagedTemplateData> {
         imageUrl: template.image_url,
         prompt: template.prompt,
         category: template.main_category,
-        roomType: template.room_type
+        roomType: template.room_type,
+        subCategory: template.sub_category // 添加 sub_category 字段用于前端重新分组
       });
       
       // 更新子分类的 enabled 状态：如果有任何模板是启用的，子分类就是启用的
@@ -388,7 +389,8 @@ export async function getAllTemplatesPublic(): Promise<ManagedTemplateData> {
         imageUrl: template.image_url,
         prompt: '', // 前端不需要看到，将在生成时动态获取
         category: template.main_category,
-        roomType: template.room_type
+        roomType: template.room_type,
+        subCategory: template.sub_category // 添加 sub_category 字段用于前端重新分组
       });
     });
 
@@ -491,6 +493,121 @@ export async function deleteSubCategory(
   } catch (error) {
     console.error('Error deleting sub-category:', error);
     throw error;
+  }
+}
+
+// ============================================
+// 排序功能
+// ============================================
+
+/**
+ * 批量更新主分类排序
+ * @param categories - 主分类名称数组，数组顺序即为显示顺序
+ */
+export async function reorderMainCategories(categories: string[]): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('reorder_main_categories', {
+      p_categories: categories
+    });
+    
+    if (error) throw error;
+    
+    console.log(`✅ Reordered main categories:`, categories);
+  } catch (error) {
+    console.error('Error reordering main categories:', error);
+    throw error;
+  }
+}
+
+/**
+ * 批量更新子分类排序
+ * @param mainCategory - 主分类名称
+ * @param subCategories - 子分类名称数组，数组顺序即为显示顺序
+ */
+export async function reorderSubCategories(
+  mainCategory: string,
+  subCategories: string[]
+): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('reorder_sub_categories', {
+      p_main_category: mainCategory,
+      p_sub_categories: subCategories
+    });
+    
+    if (error) throw error;
+    
+    console.log(`✅ Reordered sub-categories for ${mainCategory}:`, subCategories);
+  } catch (error) {
+    console.error('Error reordering sub-categories:', error);
+    throw error;
+  }
+}
+
+/**
+ * 批量更新模板排序
+ * @param templateIds - 模板ID数组，数组顺序即为显示顺序
+ */
+export async function reorderTemplates(templateIds: string[]): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('reorder_templates', {
+      p_template_ids: templateIds
+    });
+    
+    if (error) throw error;
+    
+    console.log(`✅ Reordered templates:`, templateIds);
+  } catch (error) {
+    console.error('Error reordering templates:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取主分类排序配置
+ * @returns 主分类排序配置的Map，key为分类名，value为sort_order
+ */
+export async function getMainCategoryOrder(): Promise<Map<string, number>> {
+  try {
+    const { data, error } = await supabase
+      .from('main_category_order')
+      .select('main_category, sort_order')
+      .order('sort_order');
+    
+    if (error) throw error;
+    
+    const orderMap = new Map<string, number>();
+    if (data) {
+      data.forEach(item => {
+        orderMap.set(item.main_category, item.sort_order);
+      });
+    }
+    
+    return orderMap;
+  } catch (error) {
+    console.error('Error fetching main category order:', error);
+    throw error;
+  }
+}
+
+/**
+ * 增加模板使用次数（为未来的自动排序功能预留）
+ * @param templateId - 模板ID
+ */
+export async function incrementTemplateUsage(templateId: string): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('increment_template_usage', {
+      p_template_id: templateId
+    });
+    
+    if (error) {
+      // 不抛出错误，避免影响主要功能
+      console.warn('Failed to increment template usage:', error);
+      return;
+    }
+    
+    console.log(`✅ Incremented usage count for template: ${templateId}`);
+  } catch (error) {
+    console.warn('Error incrementing template usage:', error);
   }
 }
 

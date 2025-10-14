@@ -98,11 +98,11 @@ export const MEMBERSHIP_CONFIG = {
   business: {
     name: 'Business',
     credits: 25000, // Business 用户 25000 点
-    maxTemplates: 16, // Business 可以选择16个模板，生成16张图片
+    maxTemplates: 50, // Business 可以选择50个模板，生成50张图片
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
     icon: '💼',
-    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低', '每次生成最多16张图片'],
+    features: ['专属低价', 'Free Canvas 功能', '25000 信用点', '综合单价更低', '每次生成最多50张图片'],
   },
 } as const;
 

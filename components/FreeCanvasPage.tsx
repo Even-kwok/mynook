@@ -8,6 +8,7 @@ import { Button } from './Button';
 import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
+import { ROOM_TYPES, BUILDING_TYPES } from '../constants';
 
 
 interface FreeCanvasPageProps {
@@ -128,6 +129,94 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         }
     }, [galleryViewSize]);
 
+    // 生成完整路径：功能类型 → 房间类型 → 风格分类 → 模板名称
+    const getImageDisplayPath = (image: typeof allGalleryImages[0]) => {
+        const parts: string[] = [];
+        const batch = generationHistory.find(b => b.id === image.batchInfo.id);
+        
+        // 1. 功能类型
+        parts.push(albumTypeLabels[image.batchInfo.type] || 'Unknown');
+        
+        // 2. 房间类型或建筑类型
+        if (batch?.roomTypeId) {
+            const roomType = ROOM_TYPES.find(r => r.id === batch.roomTypeId);
+            if (roomType) parts.push(roomType.name);
+        } else if (batch?.buildingTypeId) {
+            const buildingType = BUILDING_TYPES.find(b => b.id === batch.buildingTypeId);
+            if (buildingType) parts.push(buildingType.name);
+        }
+        
+        // 3. 风格分类（优先使用 subCategory，然后是 category）
+        if (image.templateSubCategory) {
+            parts.push(image.templateSubCategory);
+        } else if (image.templateCategory) {
+            parts.push(image.templateCategory);
+        }
+        
+        // 4. 模板名称
+        if (image.templateName) {
+            parts.push(image.templateName);
+        } else {
+            // 如果没有模板名称，使用 prompt 作为后备
+            parts.push(image.batchInfo.prompt);
+        }
+        
+        return parts.join(' → ');
+    };
+
+    // Batch download all images - named by path info
+    const handleBatchDownload = async () => {
+        const allImages = allGalleryImages.filter(img => img.status === 'success' && img.imageUrl);
+        
+        if (allImages.length === 0) {
+            alert('No images available for download');
+            return;
+        }
+
+        // Confirm download
+        if (!confirm(`Ready to download ${allImages.length} image${allImages.length > 1 ? 's' : ''}. Continue?`)) {
+            return;
+        }
+
+        let downloadCount = 0;
+        
+        for (const image of allImages) {
+            const batch = generationHistory.find(b => b.id === image.batchInfo.id);
+            if (!batch) continue;
+
+            // 构建文件名：type_roomTypeId_templateName_timestamp.png
+            // 例如：style_living-room_modern-minimalist_1697123456.png
+            const parts = [
+                batch.type,
+                batch.roomTypeId || batch.buildingTypeId || 'no-room',
+                image.id,  // image.id 就是模板名称，已经是易读的
+                batch.id,
+            ];
+            
+            const fileName = parts
+                .map(p => String(p).toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+                .join('_') + '.png';
+
+            try {
+                // 延迟下载以避免浏览器阻止
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const link = document.createElement('a');
+                link.href = image.imageUrl!;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                downloadCount++;
+            } catch (err) {
+                console.error(`下载失败: ${fileName}`, err);
+            }
+        }
+
+        alert(`Successfully downloaded ${downloadCount} / ${allImages.length} image${allImages.length > 1 ? 's' : ''}`);
+    };
+
     return (
         <div className="relative flex-shrink-0">
             <button
@@ -146,7 +235,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 className="h-full overflow-hidden bg-white border-l border-slate-200"
             >
                 <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
-                    <div className="flex justify-between items-center mb-4 px-2 flex-shrink-0">
+                    <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-slate-800">My Designs</h2>
                         <div className="flex items-center gap-1 p-0.5 bg-slate-200 rounded-xl">
                             {(['lg', 'md', 'sm'] as const).map(size => (
@@ -163,6 +252,18 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             ))}
                         </div>
                     </div>
+                    {/* Batch Download Button */}
+                    {allGalleryImages.length > 0 && (
+                        <div className="px-2 mb-4 flex-shrink-0">
+                            <button
+                                onClick={handleBatchDownload}
+                                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                                <IconDownload className="w-4 h-4" />
+                                Download All ({allGalleryImages.length})
+                            </button>
+                        </div>
+                    )}
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {allGalleryImages.length > 0 ? (
                             <div className="space-y-2">
@@ -211,8 +312,12 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                                                         onDragStart={(e) => onImageDragStart?.(e, image.imageUrl!)}
                                                                     />
                                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-2 flex flex-col justify-end">
-                                                                        <h4 className="text-white text-xs font-semibold truncate">{image.batchInfo.prompt}</h4>
-                                                                        <p className="text-white/80 text-xs truncate">{albumTypeLabels[image.batchInfo.type]}</p>
+                                                                        <h4 className="text-white text-xs font-semibold truncate" title={getImageDisplayPath(image)}>
+                                                                            {getImageDisplayPath(image)}
+                                                                        </h4>
+                                                                        <p className="text-white/80 text-[10px] truncate">
+                                                                            {new Date(image.batchInfo.timestamp).toLocaleString()}
+                                                                        </p>
                                                                     </div>
                                                                     <button
                                                                         onClick={() => onDownload(image.imageUrl!, image.id)}
