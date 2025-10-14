@@ -538,23 +538,24 @@ const Header: React.FC<{
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
                 </button>
+                {/* Moved and restyled Start Design button */}
+                <div className="relative hidden md:block" ref={designToolsRef}>
+                    <button
+                        onClick={() => setDesignToolsOpen(o => !o)}
+                        className={`px-5 h-12 rounded-full text-base font-normal transition-all flex items-center gap-2 ring-1 ring-white/10 shadow-md ${isDesignToolActive ? 'text-white bg-[#2b2f34]' : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f]'}`}
+                    >
+                        <IconSparkles className="w-4 h-4 text-white" />
+                        <span>Start Design My Room</span>
+                        <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
+                    </AnimatePresence>
+                </div>
             </div>
             <div className="flex items-center gap-4">
-                {/* Design Tools Menu */}
+                {/* Right-side nav items (moved button removed) */}
                 <nav className="hidden md:flex items-center gap-2">
-                    <div className="relative" ref={designToolsRef}>
-                        <button
-                            onClick={() => setDesignToolsOpen(o => !o)}
-                            className={`px-4 py-2 rounded-lg text-base font-normal transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-slate-800' : 'text-white bg-slate-800 hover:bg-slate-700'}`}
-                        >
-                            <IconSparkles className="w-4 h-4 text-white" />
-                            <span>Start Design My Room</span>
-                            <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                            {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
-                        </AnimatePresence>
-                    </div>
 
                     {navItems.map(item => (
                          <a 
