@@ -221,7 +221,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         <div className="relative flex-shrink-0">
             <button
                 onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-white border border-r-0 border-slate-300 rounded-l-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors focus:outline-none"
+                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-white/20 backdrop-blur-sm border border-r-0 border-white/20 rounded-l-lg flex items-center justify-center text-white hover:bg-white/30 transition-colors focus:outline-none"
                 aria-label={isGalleryOpen ? 'Collapse gallery' : 'Expand gallery'}
             >
                 <motion.div animate={{ rotate: isGalleryOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -232,17 +232,17 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 initial={false}
                 animate={{ width: isGalleryOpen ? 320 : 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                className="h-full overflow-hidden bg-white border-l border-slate-200"
+                className="h-full overflow-hidden bg-white/10 backdrop-blur-md border-l border-white/20 relative z-10"
             >
                 <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
                     <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
-                        <h2 className="text-lg font-semibold text-slate-800">My Designs</h2>
-                        <div className="flex items-center gap-1 p-0.5 bg-slate-200 rounded-xl">
+                        <h2 className="text-lg font-semibold text-white">My Designs</h2>
+                        <div className="flex items-center gap-1 p-0.5 bg-white/5 rounded-xl">
                             {(['lg', 'md', 'sm'] as const).map(size => (
                                 <button
                                     key={size}
                                     onClick={() => setGalleryViewSize(size)}
-                                    className={`p-1.5 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-300'}`}
+                                    className={`p-1.5 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:bg-white/20'}`}
                                     aria-label={`${size} view`}
                                 >
                                     {size === 'lg' && <IconViewLarge className="w-4 h-4" />}
@@ -394,11 +394,11 @@ const ClearConfirmationModal: React.FC<ClearConfirmationModalProps> = ({ isOpen,
                     transition={{ duration: 0.15, ease: 'easeOut' }}
                     className="absolute bottom-12 right-28 z-30 w-full max-w-xs"
                 >
-                    <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-slate-200">
-                        <div className="absolute top-1/2 -right-[7px] transform -translate-y-1/2 w-4 h-4 bg-white/90 border-t border-r border-slate-200 rotate-45 z-0 rounded-sm"></div>
+                    <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/20">
+                        <div className="absolute top-1/2 -right-[7px] transform -translate-y-1/2 w-4 h-4 bg-white/10 border-t border-r border-white/20 rotate-45 z-0 rounded-sm"></div>
                         <div className="relative z-10">
-                            <h3 className="text-lg font-semibold mb-2 text-slate-800">Clear Canvas?</h3>
-                            <p className="text-sm text-slate-600 mb-6">
+                            <h3 className="text-lg font-semibold mb-2 text-white">Clear Canvas?</h3>
+                            <p className="text-sm text-slate-300 mb-6">
                                 Are you sure you want to clear everything on the canvas? This action cannot be undone.
                             </p>
                             <div className="flex justify-between">
@@ -1541,13 +1541,23 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 requiredTier="premium"
                 onUpgrade={onUpgrade}
             />
-            <div className="flex flex-1 overflow-hidden">
-                <aside className="w-[380px] bg-white flex flex-col overflow-hidden flex-shrink-0 border-r border-slate-200">
+            <div className="flex flex-1 overflow-hidden bg-black relative">
+                {/* Background Image Layer */}
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                        alt="Mountain background" 
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+                </div>
+                
+                <aside className="w-[380px] bg-white/10 backdrop-blur-md flex flex-col overflow-hidden flex-shrink-0 border-r border-white/20 relative z-10">
                     <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
                         <div className="flex flex-col gap-6">
                             <div className="space-y-3">
-                                <h2 className="text-xl font-bold text-slate-800">Free Canvas</h2>
-                                <p className="text-sm text-slate-500">Combine images, draw annotations, and use a prompt to generate a new creation.</p>
+                                <h2 className="text-xl font-bold text-white">Free Canvas</h2>
+                                <p className="text-sm text-slate-300">Combine images, draw annotations, and use a prompt to generate a new creation.</p>
                             </div>
 
                             <Button onClick={() => fileInputRef.current?.click()} disabled={!!uploadProgress && !uploadProgress.includes('✨')}>
@@ -1557,37 +1567,37 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
                             
                             {uploadProgress && (
-                                <div className={`text-xs px-3 py-2 rounded-lg ${uploadProgress.includes('✨') ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'} animate-fade-in`}>
+                                <div className={`text-xs px-3 py-2 rounded-lg border ${uploadProgress.includes('✨') ? 'bg-green-500/20 border-green-400/30 text-green-300' : 'bg-blue-500/20 border-blue-400/30 text-blue-300'} animate-fade-in`}>
                                     {uploadProgress}
                                 </div>
                             )}
                             
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-4">
-                                <h3 className="text-base font-semibold text-slate-800">Tools</h3>
-                                <div className="flex gap-2 p-1 bg-slate-200 rounded-xl">
-                                    <button onClick={() => setActiveTool('select')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'select' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 space-y-4">
+                                <h3 className="text-base font-semibold text-white">Tools</h3>
+                                <div className="flex gap-2 p-1 bg-white/5 rounded-xl">
+                                    <button onClick={() => setActiveTool('select')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'select' ? 'bg-white text-indigo-600 shadow-sm' : 'text-white hover:bg-white/20'}`}>
                                         <IconCursorArrow className="w-5 h-5"/> Select
                                     </button>
-                                     <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
+                                     <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-white text-indigo-600 shadow-sm' : 'text-white hover:bg-white/20'}`}>
                                         <IconBrush className="w-5 h-5"/> Draw
                                     </button>
                                 </div>
                                 {activeTool === 'draw' && (
                                     <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
                                         <div className="space-y-2">
-                                            <label htmlFor="brushColor" className="text-sm font-medium text-slate-700 flex justify-between">
+                                            <label htmlFor="brushColor" className="text-sm font-medium text-slate-300 flex justify-between">
                                                 Brush Color <span>{brushColor}</span>
                                             </label>
-                                            <input id="brushColor" type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} className="w-full h-10 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer" />
+                                            <input id="brushColor" type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} className="w-full h-10 p-1 bg-white border border-white/20 rounded-lg cursor-pointer" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="brushSize" className="text-sm font-medium text-slate-700 flex justify-between">
+                                            <label htmlFor="brushSize" className="text-sm font-medium text-slate-300 flex justify-between">
                                                 Brush Size <span>{brushSize}px</span>
                                             </label>
-                                            <input id="brushSize" type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                                            <input id="brushSize" type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                                         </div>
-                                        <div className="space-y-2 pt-2 border-t border-slate-200">
-                                            <h4 className="text-sm font-medium text-slate-700">Drawing Actions</h4>
+                                        <div className="space-y-2 pt-2 border-t border-white/20">
+                                            <h4 className="text-sm font-medium text-slate-300">Drawing Actions</h4>
                                             <div className="flex gap-2">
                                                 <Button onClick={handleUndo} disabled={paths.length === 0} className="w-full !py-2 !px-3 text-sm">
                                                     <IconUndo className="w-4 h-4" />
@@ -1603,18 +1613,18 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 )}
                             </div>
 
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-                                <h3 className="text-base font-semibold text-slate-800">Prompt</h3>
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 space-y-3">
+                                <h3 className="text-base font-semibold text-white">Prompt</h3>
                                 <textarea 
                                     value={prompt} 
                                     onChange={(e) => setPrompt(e.target.value)} 
                                     placeholder="Describe what you want to create..." 
-                                    className="w-full p-3 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                                    className="w-full p-3 h-32 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-6 pt-4 border-t border-slate-200">
+                    <div className="p-6 pt-4 border-t border-white/20">
                         <Button 
                             onClick={handleGenerate} 
                             disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)} 
@@ -1628,24 +1638,24 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </Button>
                     </div>
                 </aside>
-                <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
+                <main className="flex-1 p-8 pt-[104px] flex items-center justify-center relative z-10">
                      {isLoading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
-                            <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm z-20">
+                            <div className="flex flex-col items-center space-y-4 bg-white/10 backdrop-blur-md border border-white/20 px-8 py-6 rounded-2xl shadow-2xl">
                                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
                                 {generationProgress && (
-                                    <p className="text-base text-gray-800 font-semibold animate-pulse">
+                                    <p className="text-base text-white font-semibold animate-pulse">
                                         {generationProgress}
                                     </p>
                                 )}
                                 <div className="text-center space-y-1">
-                                    <p className="text-sm text-gray-600 font-medium">
+                                    <p className="text-sm text-slate-300 font-medium">
                                         ⚡ Optimizing image for faster processing...
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-slate-400">
                                         Usually takes 20-60 seconds
                                     </p>
-                                    <p className="text-xs text-indigo-600 font-medium mt-2">
+                                    <p className="text-xs text-indigo-400 font-medium mt-2">
                                         💡 Tip: Smaller images process faster!
                                     </p>
                                 </div>
@@ -1673,12 +1683,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         onConfirm={handleConfirmClear}
                         clearButtonRef={clearButtonRef}
                      />
-                    <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
+                    <div className="w-full max-h-full aspect-[4/5] bg-white/5 border border-white/20 shadow-inner rounded-3xl relative overflow-hidden">
                         <>
                             {images.length === 0 && paths.length === 0 && !cropState && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500">
                                     <IconPhoto className="w-16 h-16" />
-                                    <h3 className="text-xl font-semibold mt-4 text-slate-600">Your Creative Canvas</h3>
+                                    <h3 className="text-xl font-semibold mt-4 text-white">Your Creative Canvas</h3>
                                     <p className="mt-1">Upload images and start bringing your ideas to life.</p>
                                 </div>
                             )}

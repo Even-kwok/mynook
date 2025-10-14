@@ -1524,7 +1524,7 @@ const CustomSelect: React.FC<{
 
     return (
         <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-slate-800">{label}</h3>
+            <h3 className="text-lg font-semibold text-white">{label}</h3>
             <div className="relative" ref={selectRef}>
                 <button
                     type="button"
@@ -1532,8 +1532,8 @@ const CustomSelect: React.FC<{
                     disabled={disabled}
                     className={`w-full flex items-center justify-between p-4 backdrop-blur-xl border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                         disabled 
-                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
-                            : 'bg-white/50 border-slate-300 text-slate-800'
+                            ? 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed' 
+                            : 'bg-white/10 border-white/20 text-white'
                     }`}
                 >
                     <span className="truncate">{selectedOption?.name || 'Select...'}</span>
@@ -1546,7 +1546,7 @@ const CustomSelect: React.FC<{
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute z-10 top-full mt-2 w-full bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 overflow-hidden max-h-60 overflow-y-auto"
+                            className="absolute z-10 top-full mt-2 w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden max-h-60 overflow-y-auto"
                             role="listbox"
                         >
                             {options.map(option => (
@@ -1554,12 +1554,12 @@ const CustomSelect: React.FC<{
                                     <button
                                         type="button"
                                         onClick={() => handleSelect(option.id)}
-                                        className="w-full text-left p-4 text-slate-800 hover:bg-indigo-500/10 flex items-center justify-between"
+                                        className="w-full text-left p-4 text-white hover:bg-white/10 flex items-center justify-between"
                                         role="option"
                                         aria-selected={value === option.id}
                                     >
                                         <span>{option.name}</span>
-                                        {value === option.id && <IconCheck className="w-5 h-5 text-indigo-600" />}
+                                        {value === option.id && <IconCheck className="w-5 h-5 text-indigo-400" />}
                                     </button>
                                 </li>
                             ))}
@@ -3070,14 +3070,24 @@ const App: React.FC = () => {
         const currentPageInfo = pageInfo[activePage];
 
         return (
-            <div className="flex-1 flex overflow-hidden">
-                <aside className="w-[380px] bg-white px-6 pb-6 pt-24 border-r border-slate-200 flex-shrink-0">
+            <div className="flex-1 flex overflow-hidden bg-black relative">
+                {/* Background Image Layer */}
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                        alt="Mountain background" 
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+                </div>
+                
+                <aside className="w-[380px] bg-white/10 backdrop-blur-md px-6 pb-6 pt-24 border-r border-white/20 flex-shrink-0 relative z-10">
                     <div className="h-full overflow-y-auto scrollbar-hide pr-2 -mr-2">
                         <div className="flex flex-col gap-6">
                             {currentPageInfo && (
                                 <div className="space-y-3">
-                                    <h2 className="text-xl font-bold text-slate-800">{currentPageInfo.title}</h2>
-                                    <p className="text-sm text-slate-500">{currentPageInfo.description}</p>
+                                    <h2 className="text-xl font-bold text-white">{currentPageInfo.title}</h2>
+                                    <p className="text-sm text-slate-300">{currentPageInfo.description}</p>
                                 </div>
                             )}
                             <ImageUploader
@@ -3201,7 +3211,7 @@ const App: React.FC = () => {
 
                             {isStyleBased && categories.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
+                                    <h3 className="text-lg font-semibold text-white">Choose a Style</h3>
                                     <PromptTemplates 
                                         categories={categories} 
                                         onTemplateSelect={handleTemplateSelect} 
@@ -3213,29 +3223,29 @@ const App: React.FC = () => {
                             {isAIAdvisor && (
                                 <div className="space-y-4">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-800">Ask an AI Advisor</h3>
+                                        <h3 className="text-lg font-semibold text-white">Ask an AI Advisor</h3>
                                         <textarea
                                             value={advisorQuestion}
                                             onChange={(e) => setAdvisorQuestion(e.target.value)}
                                             placeholder="Ask about your design, e.g., 'What color curtains would match this sofa?'"
-                                            className="w-full mt-2 p-3 bg-white border border-slate-300 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                            className="w-full mt-2 p-3 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                                             rows={4}
                                         />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-800 mb-2">Choose a Persona</h3>
+                                        <h3 className="text-lg font-semibold text-white mb-2">Choose a Persona</h3>
                                         <div className="grid grid-cols-2 gap-3">
                                             {ALL_ADVISORS.map(persona => {
                                                  const isSelected = selectedAdvisorIds.includes(persona.id);
                                                  return (
-                                                    <div key={persona.id} onClick={() => handleAdvisorSelect(persona.id)} className={`p-3 border-2 rounded-2xl cursor-pointer transition-all ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                    <div key={persona.id} onClick={() => handleAdvisorSelect(persona.id)} className={`p-3 border-2 rounded-2xl cursor-pointer transition-all ${isSelected ? 'border-indigo-400 bg-indigo-500/20' : 'border-white/20 hover:border-white/30'}`}>
                                                         <div className="flex items-center gap-3">
                                                             <img src={persona.imageUrl} alt={persona.name} className="w-12 h-12 rounded-full" />
                                                             <div>
-                                                                <p className="font-semibold text-slate-800">{persona.name}</p>
+                                                                <p className="font-semibold text-white">{persona.name}</p>
                                                             </div>
                                                         </div>
-                                                        <p className="text-xs text-slate-500 mt-2">{persona.description}</p>
+                                                        <p className="text-xs text-slate-400 mt-2">{persona.description}</p>
                                                     </div>
                                                 );
                                             })}
@@ -3244,7 +3254,7 @@ const App: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200">
+                            <div className="sticky bottom-0 bg-white/10 backdrop-blur-md -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-white/20">
                                 {isAIAdvisor ? (
                                     <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
@@ -3275,7 +3285,7 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </aside>
-                <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
+                <main className="flex-1 overflow-y-auto pt-[72px] relative z-10">
                     {generatedImages.length > 0 ? (
                         <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {generatedImages.map((image, i) => (
@@ -3330,12 +3340,12 @@ const App: React.FC = () => {
                                                             {personaName.slice(0, 1)}
                                                         </div>
                                                     )}
-                                                    <div className="max-w-xl bg-white border border-slate-200 rounded-3xl rounded-tl-sm shadow-sm p-5">
+                                                    <div className="max-w-xl bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl rounded-tl-sm shadow-lg p-5">
                                                         <div className="flex items-center gap-2 mb-2">
-                                                            <span className="font-semibold text-slate-800">{personaName}</span>
-                                                            <span className="text-xs text-slate-400 uppercase tracking-wide">AI Designer</span>
+                                                            <span className="font-semibold text-white">{personaName}</span>
+                                                            <span className="text-xs text-slate-500 uppercase tracking-wide">AI Designer</span>
                                                         </div>
-                                                        <p className="text-sm sm:text-base leading-relaxed text-slate-600 whitespace-pre-wrap">{response.text}</p>
+                                                        <p className="text-sm sm:text-base leading-relaxed text-slate-300 whitespace-pre-wrap">{response.text}</p>
                                                     </div>
                                                 </div>
                                             );
