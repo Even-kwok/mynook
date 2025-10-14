@@ -10,6 +10,7 @@ import { GalleryManager } from './GalleryManager';
 import { HeroBannerManager } from './HeroBannerManager';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { HomeSectionManager } from './HomeSectionManager';
+import { HeroSectionManager } from './HeroSectionManager';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
 import { ADMIN_PAGE_CATEGORIES } from '../constants';
 
@@ -1297,8 +1298,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
-        { id: 'hero-banner', name: 'Hero Banner', icon: IconSparkles },
+        { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
+        { id: 'hero-banner', name: 'Hero Banner', icon: IconSparkles },
         { id: 'gallery', name: 'Gallery', icon: IconPhoto },
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
@@ -1317,10 +1319,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
-            case 'hero-banner':
-                return <HeroBannerManager />;
+            case 'hero-section':
+                return <HeroSectionManager onUpdate={onTemplatesUpdated} />;
             case 'home-sections':
                 return <HomeSectionManager onUpdate={onTemplatesUpdated} />;
+            case 'hero-banner':
+                return <HeroBannerManager />;
             case 'gallery':
                 return <GalleryManager />;
             default:

@@ -208,7 +208,7 @@ export type HomeSectionMediaType = 'image' | 'video' | 'comparison';
 // Home Section 布局方向
 export type HomeSectionLayout = 'left-image' | 'right-image';
 
-// Home Section 接口（首页 Section 2-5）
+// Home Section 接口（首页 Section 2-6）
 export interface HomeSection {
   id: string;
   section_number: number;
@@ -223,6 +223,26 @@ export interface HomeSection {
   layout_direction: HomeSectionLayout;
   is_active: boolean;
   sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Hero Section 接口（首页 Section 1）
+export interface HeroSection {
+  id: string;
+  title_line_1: string;
+  title_line_2: string;
+  title_line_3: string;
+  title_line_4: string;
+  button_text: string;
+  button_link: string;
+  preview_media_url: string;
+  preview_media_type: HomeSectionMediaType;
+  preview_comparison_before_url: string | null;
+  preview_comparison_after_url: string | null;
+  preview_title: string;
+  preview_subtitle: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
