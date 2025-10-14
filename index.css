@@ -5,6 +5,28 @@
   box-sizing: border-box;
 }
 
+/* Gradient animation for logo */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.logo-gradient {
+  background: linear-gradient(90deg, #00D3F2, #7B68EE, #4169E1, #00D3F2);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease-in-out infinite;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;

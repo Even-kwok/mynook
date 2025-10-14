@@ -8,7 +8,7 @@ export default function FigmaHomePrototype(): JSX.Element {
     <div className="figma-home-proto">
       <header className="proto-header">
         <div className="left">
-          <div className="brand">MYNOOK.AI</div>
+          <div className="brand logo-gradient">MyNook.AI</div>
           <button className="btn primary small">
             <span className="icon" aria-hidden />
             <span>Start Design My Room</span>

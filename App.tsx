@@ -547,7 +547,7 @@ const Header: React.FC<{
         <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
-                    <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
+                    <span className="logo-gradient" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px' }}>MyNook.AI</span>
                 </button>
                 {/* Moved and restyled Start Design button */}
                 <div className="relative hidden md:block" ref={designToolsRef}>
