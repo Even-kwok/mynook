@@ -83,9 +83,6 @@ export const ImageComparison: React.FC<ImageComparisonProps> = ({
           className="w-full h-full object-cover"
           draggable={false}
         />
-        <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg">
-          After
-        </div>
       </div>
 
       {/* Before Image (上层，带裁剪) */}
@@ -99,9 +96,6 @@ export const ImageComparison: React.FC<ImageComparisonProps> = ({
           className="w-full h-full object-cover"
           draggable={false}
         />
-        <div className="absolute top-4 left-4 bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg">
-          Before
-        </div>
       </div>
 
       {/* Slider Line and Handle */}
