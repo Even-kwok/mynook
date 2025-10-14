@@ -222,7 +222,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
             {/* Toggle Button with Enhanced Design */}
             <motion.button
                 onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-4 z-30 w-10 h-20 bg-gradient-to-r from-indigo-600/90 to-indigo-500/90 backdrop-blur-xl rounded-l-2xl flex items-center justify-center text-white hover:from-indigo-500 hover:to-indigo-400 transition-all duration-300 focus:outline-none shadow-2xl border border-white/20 group"
+                className="absolute top-[calc(50%-60px)] -left-4 z-30 w-10 h-20 bg-gradient-to-r from-indigo-600/90 to-indigo-500/90 backdrop-blur-xl rounded-l-2xl flex items-center justify-center text-white hover:from-indigo-500 hover:to-indigo-400 transition-all duration-300 focus:outline-none shadow-2xl border border-white/20 group"
                 aria-label={isGalleryOpen ? 'Hide My Designs' : 'Show My Designs'}
                 whileHover={{ scale: 1.05, x: -2 }}
                 whileTap={{ scale: 0.95 }}
@@ -268,7 +268,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                 className="h-full overflow-hidden bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 mr-8 rounded-3xl border border-white/20 relative z-10"
             >
-                <div className="w-[320px] h-full px-4 pb-4 pt-6 flex flex-col">
+                <div className="w-[320px] h-full px-4 pb-4 pt-6 flex flex-col rounded-3xl overflow-hidden">
                     <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-white">My Designs</h2>
                         <div className="flex items-center gap-1 p-0.5 bg-white/5 rounded-xl">
@@ -298,9 +298,9 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             </button>
                         </div>
                     )}
-                    <div className="flex-1 overflow-y-auto scrollbar-hide rounded-2xl">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {allGalleryImages.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-2 pb-4">
                                 {albumOrder.map(albumType => {
                                     const imagesInAlbum = groupedImages[albumType];
                                     const isExpanded = expandedAlbums.has(albumType);
@@ -378,7 +378,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                 })}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4 rounded-2xl">
+                            <div className="flex flex-col items-center justify-start h-full text-center text-slate-400 p-4 pt-20">
                                 <IconPhoto className="w-12 h-12 text-slate-300" />
                                 <p className="mt-4 text-sm font-medium text-slate-500">No Designs Yet</p>
                             </div>
