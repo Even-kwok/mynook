@@ -716,7 +716,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         alt="Mountain background" 
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
                 </div>
                 
                 {/* Content Container */}
@@ -803,7 +803,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </section>
             
             {/* Second Section: Instant Design Variations */}
-            <section className="relative py-20 bg-slate-900">
+            <section className="relative py-20 bg-black">
                 <div className="px-8 md:px-12 lg:px-20">
                     <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                         {/* Left Side: Preview Card */}
