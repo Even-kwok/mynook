@@ -161,16 +161,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <div className="p-8">
             {/* Title */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-800 mb-2">
-                {mode === 'signin' && 'Welcome Back'}
-                {mode === 'signup' && 'Create Account'}
+              <h2 className="text-3xl font-bold text-slate-800">
+                {mode === 'signin' && 'Sign In'}
+                {mode === 'signup' && 'Sign Up'}
                 {mode === 'forgot-password' && 'Reset Password'}
               </h2>
-              <p className="text-slate-500">
-                {mode === 'signin' && 'Sign in to continue using AI design tool'}
-                {mode === 'signup' && 'Sign up to start your design journey'}
-                {mode === 'forgot-password' && 'Enter your email address and we\'ll send you a link to reset your password'}
-              </p>
             </div>
 
             {/* Error message */}

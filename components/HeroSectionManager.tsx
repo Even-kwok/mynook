@@ -252,9 +252,23 @@ const EditHeroModal: React.FC<EditHeroModalProps> = ({ heroSection, onClose, onS
       }
 
       alert('Upload successful!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
+      
+      // 显示详细的错误信息
+      let errorMessage = 'Upload failed. ';
+      
+      if (error?.message) {
+        errorMessage += `Error: ${error.message}`;
+      } else if (error?.error_description) {
+        errorMessage += `Error: ${error.error_description}`;
+      } else if (typeof error === 'string') {
+        errorMessage += error;
+      } else {
+        errorMessage += 'Please check:\n1. You are logged in as admin\n2. Storage policies are configured\n3. File is less than 10MB';
+      }
+      
+      alert(errorMessage);
     } finally {
       setUploading(false);
     }
