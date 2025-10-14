@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconPencil, IconX, IconUpload, IconPhoto, IconVideo, IconPlus, IconTrash, IconMoveUp, IconMoveDown } from './Icons';
+import { IconPencil, IconX, IconUpload, IconPhoto, IconVideo, IconPlus, IconTrash, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom } from './Icons';
 import { HomeSection, HomeSectionMediaType, HomeSectionLayout } from '../types';
 import {
   getAllHomeSectionsForAdmin,
@@ -84,6 +84,26 @@ export const HomeSectionManager: React.FC<HomeSectionManagerProps> = ({ onUpdate
     await reorderSections(newSections);
   };
 
+  const handleMoveToTop = async (index: number) => {
+    if (index === 0) return;
+    
+    const newSections = [...sections];
+    const [removed] = newSections.splice(index, 1);
+    newSections.unshift(removed);
+    
+    await reorderSections(newSections);
+  };
+
+  const handleMoveToBottom = async (index: number) => {
+    if (index === sections.length - 1) return;
+    
+    const newSections = [...sections];
+    const [removed] = newSections.splice(index, 1);
+    newSections.push(removed);
+    
+    await reorderSections(newSections);
+  };
+
   const reorderSections = async (newSections: HomeSection[]) => {
     try {
       setSections(newSections);
@@ -150,6 +170,8 @@ export const HomeSectionManager: React.FC<HomeSectionManagerProps> = ({ onUpdate
             onDelete={() => handleDelete(section)}
             onMoveUp={() => handleMoveUp(index)}
             onMoveDown={() => handleMoveDown(index)}
+            onMoveToTop={() => handleMoveToTop(index)}
+            onMoveToBottom={() => handleMoveToBottom(index)}
           />
         ))}
       </div>
@@ -196,9 +218,11 @@ interface SectionCardProps {
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onMoveToTop: () => void;
+  onMoveToBottom: () => void;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ section, index, total, onEdit, onDelete, onMoveUp, onMoveDown }) => {
+const SectionCard: React.FC<SectionCardProps> = ({ section, index, total, onEdit, onDelete, onMoveUp, onMoveDown, onMoveToTop, onMoveToBottom }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:border-indigo-200 transition-colors">
       <div className="p-4">
@@ -217,6 +241,18 @@ const SectionCard: React.FC<SectionCardProps> = ({ section, index, total, onEdit
             
             {/* 排序按钮 */}
             <div className="flex items-center border-l border-slate-200 pl-2 ml-2">
+              <button
+                onClick={onMoveToTop}
+                disabled={index === 0}
+                className={`p-2 rounded-lg transition-colors ${
+                  index === 0
+                    ? 'opacity-30 cursor-not-allowed'
+                    : 'hover:bg-slate-100'
+                }`}
+                title="Move to top"
+              >
+                <IconMoveToTop className="w-5 h-5 text-slate-600" />
+              </button>
               <button
                 onClick={onMoveUp}
                 disabled={index === 0}
@@ -240,6 +276,18 @@ const SectionCard: React.FC<SectionCardProps> = ({ section, index, total, onEdit
                 title="Move down"
               >
                 <IconMoveDown className="w-5 h-5 text-slate-600" />
+              </button>
+              <button
+                onClick={onMoveToBottom}
+                disabled={index === total - 1}
+                className={`p-2 rounded-lg transition-colors ${
+                  index === total - 1
+                    ? 'opacity-30 cursor-not-allowed'
+                    : 'hover:bg-slate-100'
+                }`}
+                title="Move to bottom"
+              >
+                <IconMoveToBottom className="w-5 h-5 text-slate-600" />
               </button>
             </div>
             

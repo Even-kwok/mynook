@@ -26,7 +26,7 @@ export async function getAllHomeSectionsForAdmin(): Promise<HomeSection[]> {
   const { data, error } = await supabase
     .from('home_sections')
     .select('*')
-    .order('section_number', { ascending: true });
+    .order('sort_order', { ascending: true });
 
   if (error) {
     console.error('Error fetching home sections for admin:', error);
