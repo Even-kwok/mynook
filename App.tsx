@@ -817,7 +817,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </section>
 
             {/* Second Section: Preview Card Left + Text Right */}
-            <section className="bg-black pt-20 pb-20">
+            <section className="bg-black -mt-[700px] pt-20 pb-20">
                 {/* Content Container */}
                 <div className="container mx-auto px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
