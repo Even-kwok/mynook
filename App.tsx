@@ -763,7 +763,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </div>
                         
                         {/* Right Side: Preview Card and Stats */}
-                        <div className="flex flex-col items-end gap-6 w-full">
+                        <div className="flex flex-col items-end gap-6 w-full mt-[105px]">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
