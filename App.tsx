@@ -732,7 +732,16 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6 }}
                                 className="text-white"
-                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 60, lineHeight: '75px', letterSpacing: '0px' }}
+                                style={{ 
+                                    fontFamily: 'Arial, sans-serif', 
+                                    fontWeight: 400, 
+                                    fontSize: '60px', 
+                                    lineHeight: '75px', 
+                                    letterSpacing: '0px',
+                                    textRendering: 'optimizeLegibility',
+                                    WebkitFontSmoothing: 'antialiased',
+                                    MozOsxFontSmoothing: 'grayscale'
+                                }}
                             >
                                 <span className="block">Start Ultimate</span>
                                 <span className="block">Interior Design</span>
