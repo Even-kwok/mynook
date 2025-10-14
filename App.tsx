@@ -533,10 +533,10 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] bg-transparent z-40" style={{ paddingRight: '38px' }}>
+        <header className="fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] bg-slate-900/95 backdrop-blur-md z-40 rounded-2xl mx-4" style={{ paddingRight: '38px' }}>
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
-                    <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
+                    <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00BCD4' }}>MYNOOK.AI</span>
                 </button>
                 {/* Moved and restyled Start Design button */}
                 <div className="relative hidden md:block" ref={designToolsRef}>
@@ -582,10 +582,10 @@ const Header: React.FC<{
                     <div className="flex items-center gap-2">
                         {/* 会员等级徽章 */}
                         <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                            user.permissionLevel === 1 ? 'bg-slate-100 text-slate-700' :
-                            user.permissionLevel === 2 ? 'bg-blue-100 text-blue-700' :
-                            user.permissionLevel === 3 ? 'bg-purple-100 text-purple-700' :
-                            'bg-amber-100 text-amber-700'
+                            user.permissionLevel === 1 ? 'bg-white/10 text-white border border-white/20' :
+                            user.permissionLevel === 2 ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' :
+                            user.permissionLevel === 3 ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' :
+                            'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                         }`}>
                             {user.permissionLevel === 1 ? '🆓 FREE' :
                              user.permissionLevel === 2 ? '⭐ PRO' :
@@ -593,8 +593,8 @@ const Header: React.FC<{
                              '💼 BUSINESS'}
                         </div>
                         {/* 信用点显示 */}
-                        <div className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-1.5">
-                            <IconSparkles className="w-3.5 h-3.5 text-indigo-500" />
+                        <div className="text-sm font-semibold text-white bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full hidden sm:flex items-center gap-1.5 border border-white/20">
+                            <IconSparkles className="w-3.5 h-3.5 text-[#00BCD4]" />
                             <span>{user.credits.toLocaleString()}</span>
                         </div>
                     </div>
@@ -1196,14 +1196,51 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
 
 const ComingSoonPage: React.FC<{ pageName: string }> = ({ pageName }) => {
     return (
-        <div className="flex-1 flex items-center justify-center text-center p-4">
-            <div>
-                <motion.div initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5}}>
+        <div className="flex-1 flex items-center justify-center text-center p-4 bg-black">
+            <motion.div 
+                initial={{opacity: 0, y:20}} 
+                animate={{opacity: 1, y: 0}} 
+                transition={{duration: 0.6}}
+                className="max-w-2xl w-full bg-white/10 backdrop-blur-md rounded-3xl p-12 border border-white/20"
+            >
+                <motion.div 
+                    initial={{opacity: 0, scale: 0.9}} 
+                    animate={{opacity: 1, scale: 1}} 
+                    transition={{duration: 0.5, delay: 0.1}}
+                >
                     <IconLogo />
                 </motion.div>
-                <motion.h2 initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5, delay: 0.1}} className="mt-6 text-4xl font-bold text-slate-900">Coming Soon</motion.h2>
-                <motion.p initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5, delay: 0.2}} className="text-slate-500 mt-2">{`The "${pageName}" page is under construction. Stay tuned!`}</motion.p>
-            </div>
+                <motion.h2 
+                    initial={{opacity: 0, y:20}} 
+                    animate={{opacity: 1, y: 0}} 
+                    transition={{duration: 0.5, delay: 0.2}} 
+                    className="mt-6 text-white"
+                    style={{
+                        fontFamily: 'Arial, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '48px',
+                        lineHeight: '60px',
+                        letterSpacing: '0px'
+                    }}
+                >
+                    Coming Soon
+                </motion.h2>
+                <motion.p 
+                    initial={{opacity: 0, y:20}} 
+                    animate={{opacity: 1, y: 0}} 
+                    transition={{duration: 0.5, delay: 0.3}} 
+                    className="text-slate-300 mt-4"
+                    style={{
+                        fontFamily: 'Arial, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        letterSpacing: '0px'
+                    }}
+                >
+                    {`The "${pageName}" page is under construction. Stay tuned!`}
+                </motion.p>
+            </motion.div>
         </div>
     );
 };

@@ -3,22 +3,22 @@ import { motion } from 'framer-motion';
 
 export const TermsPage: React.FC = () => {
     return (
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+        <div className="flex-1 overflow-y-auto bg-black">
             <div className="max-w-5xl mx-auto px-6 pt-24 pb-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.6 }}
                 >
                     {/* Header */}
                     <div className="mb-12 text-center">
-                        <h1 className="text-5xl font-bold text-slate-900 mb-4">Terms of Service & Privacy Policy</h1>
-                        <p className="text-lg text-slate-600">Last updated and effective date: October 11, 2025</p>
+                        <h1 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '48px', lineHeight: '60px', letterSpacing: '0px' }}>Terms of Service & Privacy Policy</h1>
+                        <p className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px' }}>Last updated and effective date: October 11, 2025</p>
                     </div>
 
                     {/* Important Notice */}
-                    <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 mb-10">
-                        <p className="text-amber-900 font-semibold text-center leading-relaxed">
+                    <div className="bg-amber-500/20 border-2 border-amber-400/30 backdrop-blur-md rounded-2xl p-6 mb-10">
+                        <p className="text-amber-300 font-semibold text-center leading-relaxed">
                             PLEASE READ THESE TERMS OF SERVICE ("AGREEMENT" OR "TERMS OF SERVICE") CAREFULLY BEFORE USING THE SERVICES OFFERED BY MYNOOK. 
                             THIS AGREEMENT SETS FORTH THE LEGALLY BINDING TERMS AND CONDITIONS FOR YOUR USE OF THE MYNOOK WEBSITE AND ALL RELATED SERVICES. 
                             BY USING THE SERVICES IN ANY MANNER, YOU AGREE TO BE BOUND BY THIS AGREEMENT.
@@ -26,10 +26,10 @@ export const TermsPage: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="space-y-8 text-slate-700">
+                    <div className="space-y-8 text-slate-300">
                         
                         {/* Definition */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
                             <p className="leading-relaxed">
                                 "The Site" refers to the websites and services operated by MyNook, including but not limited to mynook.ai, 
                                 as well as any associated applications, services, features, content, and functionalities offered by MyNook.
@@ -37,8 +37,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Acceptance of Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Acceptance of Terms of Service</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Acceptance of Terms of Service</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     The Service is offered subject to acceptance without modification of all of these Terms of Service and all other operating rules, 
@@ -54,12 +54,12 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Rules and Conduct */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-6">Rules and Conduct</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-6" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Rules and Conduct</h2>
                             
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Service Purpose</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Service Purpose</h3>
                                     <p className="leading-relaxed">
                                         By using MyNook, you agree that the Service is intended for creating AI-powered interior and exterior design visualizations. 
                                         You acknowledge and agree that when creating AI models that contain identifiable individuals, you must have their express written 
@@ -68,7 +68,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Age Requirements</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Age Requirements</h3>
                                     <p className="leading-relaxed mb-3">
                                         By using the MyNook app, you agree that you are at least 18 years old or have reached the legal age of majority in your country 
                                         of residence. If you are under 18 or the legal age in your country (whichever is higher), you are prohibited from using this app. 
@@ -81,13 +81,13 @@ export const TermsPage: React.FC = () => {
                                     </p>
                                 </div>
 
-                                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
-                                    <h3 className="text-xl font-bold text-red-900 mb-3">⚠️ Minor Protection Policy</h3>
-                                    <p className="text-red-900 leading-relaxed mb-3">
+                                <div className="bg-red-500/20 border-2 border-red-400/30 backdrop-blur-md rounded-xl p-5">
+                                    <h3 className="text-red-300 mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>⚠️ Minor Protection Policy</h3>
+                                    <p className="text-red-300 leading-relaxed mb-3">
                                         <strong>By using the Service and uploading any content, you expressly acknowledge and agree that you will not upload, post, 
                                         generate or share any photographs or content depicting minors (individuals under the age of 18).</strong>
                                     </p>
-                                    <p className="text-red-900 leading-relaxed">
+                                    <p className="text-red-300 leading-relaxed">
                                         You further agree that, in compliance with applicable laws and regulations, we reserve the right to monitor and review any uploaded 
                                         or generated content, and if we identify any content featuring minors, we will immediately remove such content and report any instances 
                                         of potential child exploitation, endangerment, or abuse to the appropriate law enforcement authorities in your respective jurisdiction. 
@@ -97,7 +97,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Prohibited Uses</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Prohibited Uses</h3>
                                     <p className="leading-relaxed mb-3">
                                         As a condition of use, you promise not to use the Service for any purpose that is prohibited by the Terms of Service. 
                                         By way of example, and not as a limitation, you shall not (and shall not permit any third party to):
@@ -125,8 +125,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* DMCA Policy */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">DMCA and Takedowns Policy</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>DMCA and Takedowns Policy</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     MyNook utilizes artificial intelligence systems to produce design visualizations. Such outputs may be unintentionally similar to 
@@ -145,8 +145,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Modification of Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Modification of Terms of Service</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Modification of Terms of Service</h2>
                             <p className="leading-relaxed">
                                 At its sole discretion, MyNook may modify or replace any of the Terms of Service, or change, suspend, or discontinue the Service 
                                 (including without limitation, the availability of any feature, database, or content) at any time by posting a notice on the MyNook 
@@ -157,8 +157,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Trademarks and Patents */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Trademarks and Patents</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Trademarks and Patents</h2>
                             <p className="leading-relaxed">
                                 All MyNook logos, marks and designations are trademarks or registered trademarks of MyNook. All other trademarks mentioned in this 
                                 website are the property of their respective owners. The trademarks and logos displayed on this website may not be used without the prior 
@@ -168,8 +168,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Licensing Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Licensing Terms</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Licensing Terms</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     Subject to your compliance with this Agreement, the conditions herein and any limitations applicable to MyNook or by law:
@@ -195,8 +195,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Fees and Payments */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Fees and Payments</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Fees and Payments</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     You agree that MyNook provides you immediate access to digital content and begins service consumption immediately upon purchase, 
@@ -222,8 +222,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Termination */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Termination</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Termination</h2>
                             <p className="leading-relaxed">
                                 MyNook may terminate your access to all or any part of the Service at any time if you fail to comply with these Terms of Service, which may 
                                 result in the forfeiture and destruction of all information associated with your account. Further, either party may terminate the Services for 
@@ -235,8 +235,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Indemnification */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Indemnification</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Indemnification</h2>
                             <p className="leading-relaxed">
                                 You shall defend, indemnify, and hold harmless MyNook, its affiliates and each of its employees, contractors, directors, suppliers and 
                                 representatives from all liabilities, losses, claims, and expenses, including reasonable attorneys' fees, that arise from or relate to (i) your 
@@ -247,8 +247,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Limitation of Liability */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Limitation of Liability</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Limitation of Liability</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed font-semibold">
                                     IN NO EVENT SHALL MYNOOK OR ITS DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, SUPPLIERS OR CONTENT PROVIDERS, BE LIABLE UNDER CONTRACT, TORT, 
@@ -269,8 +269,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Disclaimer */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Disclaimer</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Disclaimer</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed font-semibold">
                                     ALL USE OF THE SERVICE AND ANY CONTENT IS UNDERTAKEN ENTIRELY AT YOUR OWN RISK. THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" AND IS 
@@ -289,8 +289,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Links to Other Websites */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Links to and From Other Websites</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Links to and From Other Websites</h2>
                             <p className="leading-relaxed">
                                 You may gain access to other websites via links on the Site. These Terms apply to the Site only and do not apply to other parties' websites. 
                                 MyNook assumes no responsibility for any terms of service or material outside of the Site accessed via any link. You are free to establish a 
@@ -299,8 +299,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Choice of Law */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Choice of Law and Dispute Resolution</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Choice of Law and Dispute Resolution</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     You agree that any claim or cause of action arising out of or related to these Terms, the Site, or any services provided must be filed 
@@ -315,8 +315,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Miscellaneous */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Miscellaneous</h2>
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
+                            <h2 className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Miscellaneous</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     The Terms of Service are the entire agreement between you and MyNook with respect to the Service, and supersede all prior or contemporaneous 
@@ -335,11 +335,11 @@ export const TermsPage: React.FC = () => {
 
                         {/* Privacy Section */}
                         <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-sm border-2 border-indigo-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-6">Privacy Policy</h2>
+                            <h2 className="text-white mb-6" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Privacy Policy</h2>
                             
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Our Commitment to Privacy</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Our Commitment to Privacy</h3>
                                     <p className="leading-relaxed">
                                         Our commitment to privacy and data protection is reflected in this Privacy Statement which describes how we collect and process 
                                         "personal information" that identifies you, like your name or email address. Any other information besides this is "non-personal information." 
@@ -348,7 +348,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Gathering</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Information Gathering</h3>
                                     <p className="leading-relaxed mb-3">We learn information about you when:</p>
                                     <ul className="list-disc pl-6 space-y-2">
                                         <li><strong>You directly provide it to us:</strong> Name and contact information, payment information, photos and design files you upload</li>
@@ -359,7 +359,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Use</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Information Use</h3>
                                     <p className="leading-relaxed mb-2">We use your personal information to:</p>
                                     <ul className="list-disc pl-6 space-y-1">
                                         <li>Provide you with our Services</li>
@@ -370,7 +370,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Sharing</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Information Sharing</h3>
                                     <p className="leading-relaxed mb-2">We share information about you:</p>
                                     <ul className="list-disc pl-6 space-y-1">
                                         <li>When we've asked and received your consent to share it</li>
@@ -385,7 +385,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Protection</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Information Protection</h3>
                                     <p className="leading-relaxed">
                                         We implement physical, business and technical security measures to safeguard your personal information. In the event of a security breach, 
                                         we'll notify you so that you can take appropriate protective steps. We only keep your personal information for as long as is needed to do 
@@ -394,7 +394,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Your Privacy Rights</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Your Privacy Rights</h3>
                                     <p className="leading-relaxed mb-3">
                                         The following rights are granted under the European General Data Protection Regulation ("GDPR") and California Consumer Privacy Act ("CCPA"). 
                                         MyNook applies these rights to all users of our products, regardless of your location:
@@ -427,7 +427,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Children's Privacy</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Children's Privacy</h3>
                                     <p className="leading-relaxed">
                                         We don't want your personal information if you're under 18. Do not provide it to us. If your child is under 18 and you believe your 
                                         child has provided us with their personal information, please contact us to have such information removed.
@@ -435,7 +435,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Data Retention and International Transfers</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Data Retention and International Transfers</h3>
                                     <p className="leading-relaxed">
                                         We retain personal data for as long as necessary to provide the services and fulfill the transactions you have requested. As part of 
                                         our normal operations, your information may be stored in computers in other countries outside of your home country. By giving us information, 
@@ -445,7 +445,7 @@ export const TermsPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Changes to Privacy Policy</h3>
+                                    <h3 className="text-white mb-3" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>Changes to Privacy Policy</h3>
                                     <p className="leading-relaxed">
                                         We may need to change this Privacy Statement and our notices from time to time. Any updates will be posted online with an effective date. 
                                         Continued use of our services after the effective date of any changes constitutes acceptance of those changes.

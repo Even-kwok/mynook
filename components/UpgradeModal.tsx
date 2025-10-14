@@ -84,14 +84,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-white/20"
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
           >
-            <IconX />
+            <IconX className="text-white" />
           </button>
 
           {/* Gradient header */}
@@ -101,10 +101,10 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 {config.icon}
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-center mb-2">
+            <h2 className="text-white text-center mb-2" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>
               Upgrade to {config.name}
             </h2>
-            <p className="text-center text-white/90 text-lg">
+            <p className="text-center text-white/90" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px' }}>
               Unlock <span className="font-semibold">{featureName}</span> feature
             </p>
           </div>
@@ -112,8 +112,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           {/* Content area */}
           <div className="p-8">
             {/* Current status notice */}
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <p className="text-amber-800 text-sm text-center">
+            <div className="mb-6 p-4 bg-amber-500/20 border border-amber-400/30 backdrop-blur-md rounded-xl">
+              <p className="text-amber-300 text-sm text-center">
                 <span className="font-semibold">💡 Notice:</span>
                 {' '}You are currently a <span className="font-semibold capitalize">{membershipTier}</span> member,
                 you need to upgrade to <span className="font-semibold">{config.name}</span> to use this feature
@@ -122,10 +122,10 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
             {/* Price display */}
             <div className="text-center mb-6">
-              <div className="text-4xl font-bold text-slate-800 mb-1">
+              <div className="text-white mb-1" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '36px', lineHeight: '48px', letterSpacing: '0px' }}>
                 {config.price}
               </div>
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-slate-400">
                 Save more with annual billing
               </div>
             </div>
@@ -135,9 +135,9 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               {config.features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <IconCheck className="w-5 h-5 text-green-500" />
+                    <IconCheck className="w-5 h-5 text-[#00BCD4]" />
                   </div>
-                  <span className="text-slate-700">{feature}</span>
+                  <span className="text-slate-300">{feature}</span>
                 </div>
               ))}
             </div>
@@ -155,7 +155,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               
               <button
                 onClick={onClose}
-                className="w-full py-3 text-slate-600 hover:text-slate-800 transition-colors text-sm font-medium"
+                className="w-full py-3 text-slate-300 hover:text-white transition-colors text-sm font-medium"
               >
                 Maybe Later
               </button>
@@ -163,7 +163,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
             {/* Additional info */}
             <div className="mt-6 text-center">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Takes effect immediately after upgrade
               </p>
             </div>

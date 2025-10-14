@@ -261,13 +261,13 @@ export const PricingPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 overflow-y-auto bg-white text-slate-900 scrollbar-hide">
+        <main className="flex-1 overflow-y-auto bg-black text-white scrollbar-hide">
             <div className="pt-[136px] pb-16 sm:pt-[168px] sm:pb-24 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto text-center">
-                    <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
+                    <h1 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '48px', lineHeight: '60px', letterSpacing: '0px' }}>
                         Plans & pricing
                     </h1>
-                    <p className="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+                    <p className="mt-4 text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px', maxWidth: '48rem', margin: '1rem auto 0' }}>
                         Choose the plan that's right for you and unlock the full power of AI interior design.
                     </p>
 
@@ -278,15 +278,15 @@ export const PricingPage: React.FC = () => {
                     )}
 
                     <div className="mt-10 flex justify-center">
-                        <div className="relative flex items-center p-1 bg-slate-100 rounded-full">
+                        <div className="relative flex items-center p-1 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                             <button
                                 onClick={() => setBillingCycle('monthly')}
-                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-700"
+                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-white"
                             >
                                 {billingCycle === 'monthly' && (
                                     <motion.div
                                         layoutId="billing-highlight"
-                                        className="absolute inset-0 bg-white rounded-full shadow-sm"
+                                        className="absolute inset-0 bg-white/20 rounded-full shadow-sm"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
@@ -294,18 +294,18 @@ export const PricingPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setBillingCycle('yearly')}
-                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-700"
+                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-white"
                             >
                                 {billingCycle === 'yearly' && (
                                     <motion.div
                                         layoutId="billing-highlight"
-                                        className="absolute inset-0 bg-white rounded-full shadow-sm"
+                                        className="absolute inset-0 bg-white/20 rounded-full shadow-sm"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
                                 <span className="relative z-10">Yearly</span>
                                 <div className="absolute -top-3 -right-5">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 ring-4 ring-white">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-500 text-white ring-4 ring-black">
                                         Save 50%+
                                     </span>
                                 </div>
@@ -319,15 +319,16 @@ export const PricingPage: React.FC = () => {
                         <motion.div
                             key={plan.name}
                             initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className={`relative border rounded-3xl p-8 flex flex-col h-full ${
-                                plan.isPopular ? 'bg-indigo-50 border-indigo-300 shadow-lg shadow-indigo-500/10' : 'bg-white border-slate-200 shadow-sm'
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: index * 0.1 }}
+                            className={`relative border rounded-3xl p-8 flex flex-col h-full backdrop-blur-md ${
+                                plan.isPopular ? 'bg-white/15 border-purple-400/30 shadow-lg shadow-purple-500/10' : 'bg-white/10 border-white/20 shadow-sm'
                             }`}
                         >
                             {plan.isPopular && (
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-indigo-500 text-white">
+                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-500 text-white">
                                         Most Popular
                                     </span>
                                 </div>
@@ -335,23 +336,23 @@ export const PricingPage: React.FC = () => {
 
                             <div className="flex items-center gap-3">
                                 <span className="text-4xl">{plan.icon}</span>
-                                <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                                <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
                             </div>
                             
-                            <div className="mt-2 inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full">
+                            <div className="mt-2 inline-block px-3 py-1 bg-[#00BCD4]/20 text-[#00BCD4] text-sm font-semibold rounded-full border border-[#00BCD4]/30">
                                 {plan.credits.toLocaleString()} Credits
                             </div>
                             
                             <div className="mt-6 flex items-baseline gap-x-2">
-                                <span className="text-5xl font-extrabold tracking-tight text-slate-900">
+                                <span className="text-5xl font-extrabold tracking-tight text-white">
                                     ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                                 </span>
-                                <span className="text-base font-medium text-slate-500">
+                                <span className="text-base font-medium text-slate-300">
                                     / month
                                 </span>
                             </div>
                             
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-slate-400">
                                 {billingCycle === 'yearly' && `billed yearly $${plan.yearlyBilled}`}
                             </p>
 
@@ -359,7 +360,7 @@ export const PricingPage: React.FC = () => {
                                 onClick={() => handleSubscribe(plan.id)}
                                 disabled={loadingPlanId !== null}
                                 className={`mt-8 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    plan.isPopular ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-800 text-white hover:bg-slate-900'
+                                    plan.isPopular ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600' : 'bg-[#00BCD4] text-black hover:bg-[#00ACC1]'
                                 }`}
                             >
                                 {loadingPlanId === plan.id ? (
@@ -374,12 +375,12 @@ export const PricingPage: React.FC = () => {
                             </button>
 
                             <div className="mt-10 flex-1 space-y-4">
-                                {plan.description && <p className="text-sm font-semibold text-slate-600">{plan.description}</p>}
+                                {plan.description && <p className="text-sm font-semibold text-slate-300">{plan.description}</p>}
                                 <ul role="list" className="space-y-4 text-sm leading-6">
                                     {plan.features.map((feature) => (
                                         <li key={feature} className="flex gap-x-3">
-                                            <IconCheck className="h-6 w-5 flex-none text-indigo-500" aria-hidden="true" />
-                                            <span className="text-slate-600">{feature}</span>
+                                            <IconCheck className="h-6 w-5 flex-none text-[#00BCD4]" aria-hidden="true" />
+                                            <span className="text-slate-300">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -391,10 +392,10 @@ export const PricingPage: React.FC = () => {
                 {/* Credit Packs Section */}
                 <div className="mt-24 max-w-7xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">
+                        <h2 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '48px', lineHeight: '60px', letterSpacing: '0px' }}>
                             💎 Top up your credits
                         </h2>
-                        <p className="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+                        <p className="mt-4 text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px', maxWidth: '48rem', margin: '1rem auto 0' }}>
                             Need more credits? Purchase one-time credit packs anytime.
                         </p>
                     </div>
@@ -408,10 +409,11 @@ export const PricingPage: React.FC = () => {
                                 <motion.div
                                     key={pack.id}
                                     initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                                    className={`relative border rounded-2xl p-6 flex flex-col ${
-                                        pack.isPopular ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-lg' : 'bg-white border-slate-200 shadow-sm'
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                                    className={`relative border rounded-2xl p-6 flex flex-col backdrop-blur-md ${
+                                        pack.isPopular ? 'bg-white/15 border-amber-400/30 shadow-lg shadow-amber-500/10' : 'bg-white/10 border-white/20 shadow-sm'
                                     }`}
                                 >
                                     {pack.isPopular && (
@@ -424,26 +426,26 @@ export const PricingPage: React.FC = () => {
 
                                     <div className="text-center">
                                         <span className="text-5xl">{pack.icon}</span>
-                                        <h3 className="mt-4 text-xl font-bold text-slate-900">{pack.name}</h3>
-                                        <p className="mt-2 text-sm text-slate-500">{pack.description}</p>
+                                        <h3 className="mt-4 text-xl font-bold text-white">{pack.name}</h3>
+                                        <p className="mt-2 text-sm text-slate-300">{pack.description}</p>
                                         
-                                        <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-lg font-bold rounded-full">
+                                        <div className="mt-4 inline-block px-4 py-2 bg-[#00BCD4]/20 text-[#00BCD4] text-lg font-bold rounded-full border border-[#00BCD4]/30">
                                             {pack.credits.toLocaleString()} Credits
                                         </div>
 
                                         <div className="mt-6 flex items-baseline justify-center gap-x-2">
-                                            <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                            <span className="text-4xl font-extrabold tracking-tight text-white">
                                                 ${pack.price}
                                             </span>
                                         </div>
 
-                                        <p className="mt-2 text-sm text-slate-500">
+                                        <p className="mt-2 text-sm text-slate-400">
                                             ${(pack.price / pack.credits).toFixed(3)} per credit
                                         </p>
 
                                         {isFreeUser && (
-                                            <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                                                <p className="text-xs text-amber-700 font-medium">
+                                            <div className="mt-4 px-3 py-2 bg-amber-500/20 border border-amber-400/30 rounded-lg">
+                                                <p className="text-xs text-amber-300 font-medium">
                                                     ⭐ Upgrade to Pro, Premium or Business to purchase credits
                                                 </p>
                                             </div>
@@ -455,7 +457,7 @@ export const PricingPage: React.FC = () => {
                                             className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
                                                 pack.isPopular 
                                                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600' 
-                                                    : 'bg-slate-800 text-white hover:bg-slate-900'
+                                                    : 'bg-[#00BCD4] text-black hover:bg-[#00ACC1]'
                                             }`}
                                         >
                                             {loadingPackId === pack.id ? 'Processing...' : isFreeUser ? '🔒 Upgrade Required' : 'Buy Now'}
@@ -466,7 +468,7 @@ export const PricingPage: React.FC = () => {
                         })}
                     </div>
 
-                    <div className="mt-8 text-center text-sm text-slate-500">
+                    <div className="mt-8 text-center text-sm text-slate-400">
                         <p>💡 Credits never expire and can be used for any AI generation feature</p>
                     </div>
                 </div>
