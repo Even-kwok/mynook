@@ -709,24 +709,23 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     return (
-        <main className="relative overflow-y-auto bg-slate-900">
-            {/* First Section: Hero + Preview Card (Figma-aligned) */}
-            <section className="relative min-h-screen">
-                {/* Background Image with Overlay */}
-                <div className="absolute inset-0 z-0">
-                    <img 
-                        src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
-                        alt="Mountain background" 
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
-                </div>
-                
-                {/* Content Container */}
-                <div className="relative z-10 container mx-auto px-8 py-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-                        {/* Left Side: Hero Section */}
-                        <div className="space-y-6 mt-[105px] ml-[50px]">
+        <main className="min-h-screen bg-black relative overflow-hidden">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Mountain background" 
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+            </div>
+            
+            {/* Unified Content Container */}
+            <div className="container mx-auto px-8 py-20 relative z-10">
+                {/* Section 1 - Hero Area */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                    {/* Left Side: Hero Title */}
+                    <div className="space-y-6">
                             <motion.h1 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -762,8 +761,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             </motion.button>
                         </div>
                         
-                        {/* Right Side: Preview Card and Stats */}
-                        <div className="flex flex-col items-end gap-6 w-full mt-[105px] lg:ml-[-50px]">
+                    {/* Right Side: Preview Card and Stats */}
+                    <div className="flex flex-col items-end gap-6 w-full">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -812,15 +811,10 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                             </motion.div>
                         </div>
-                    </div>
                 </div>
-            </section>
-
-            {/* Second Section: Preview Card Left + Text Right */}
-            <section className="py-20">
-                {/* Content Container */}
-                <div className="container mx-auto px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                
+                {/* Section 2 - Feature Area */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
                         {/* Left Side: Preview Card */}
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
@@ -898,9 +892,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
                             </button>
                         </motion.div>
-                    </div>
                 </div>
-            </section>
+            </div>
         </main>
     );
 };
