@@ -263,8 +263,8 @@ const SectionCard: React.FC<SectionCardProps> = ({ section, index, total, onEdit
           </div>
         </div>
 
-        {/* Preview */}
-        <div className="aspect-[4/3] bg-slate-100 rounded-xl mb-3 overflow-hidden">
+        {/* Preview - 200x200 缩略图 */}
+        <div className="w-[200px] h-[200px] bg-slate-100 rounded-xl mb-3 overflow-hidden flex-shrink-0">
           {section.media_type === 'image' && (
             <img
               src={section.media_url}
