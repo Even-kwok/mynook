@@ -758,7 +758,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.6, delay: 0.3 }}
-                                className="w-full max-w-[704px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-white/10"
+                                className="w-full max-w-[704px] bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20"
                             >
                                 {/* Card Header */}
                                 <div className="flex justify-between items-center mb-4">
@@ -785,7 +785,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.4 }}
-                                className="w-full max-w-[704px] grid grid-cols-3 gap-4 p-4 bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white/10"
+                                className="w-full max-w-[704px] grid grid-cols-3 gap-4 p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20"
                             >
                                 <div className="text-center">
                                     <div className="text-xl font-bold text-cyan-300">50+</div>
@@ -816,7 +816,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
                         >
-                            <div className="max-w-[480px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                            <div className="max-w-[480px] bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
                                 {/* Card Header */}
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="text-sm tracking-wider text-slate-400 uppercase">AI DESIGN PREVIEW</span>
