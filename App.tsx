@@ -646,8 +646,8 @@ const Header: React.FC<{
 
                 {user && (
                     <div className="relative" ref={userMenuRef}>
-                        <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm uppercase shadow-inner shadow-black/10">
-                            {user.email.charAt(0)}
+                        <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-lg shadow-inner shadow-black/10 hover:scale-110 transition-transform">
+                            🐱
                         </button>
                         <AnimatePresence>
                             {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
