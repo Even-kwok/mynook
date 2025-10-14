@@ -448,7 +448,7 @@ const DesignToolsMenu: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-0 top-full mt-3 w-80 origin-top-left bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-black/5 text-slate-800 text-sm flex flex-col p-2"
+            className="absolute left-0 top-full mt-3 w-80 origin-top-left bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-white/20 text-white text-sm flex flex-col p-2"
         >
             {designTools.map(item => (
                 <button
@@ -459,8 +459,8 @@ const DesignToolsMenu: React.FC<{
                         item.comingSoon 
                             ? 'opacity-50 cursor-not-allowed' 
                             : activeItem === item.label 
-                                ? 'bg-indigo-500/10 text-indigo-600' 
-                                : 'hover:bg-slate-500/10'
+                                ? 'bg-[#00BCD4]/20 text-[#00BCD4]' 
+                                : 'hover:bg-white/10 text-slate-300'
                     }`}
                 >
                     <span>{item.label}</span>
@@ -711,15 +711,15 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     return (
         <main className="min-h-screen bg-black relative overflow-y-auto">
             {/* Background Image Layer */}
-            <div className="absolute inset-0 z-0">
-                <img 
-                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
-                    alt="Mountain background" 
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
-            </div>
-            
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                        alt="Mountain background" 
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+                </div>
+                
             {/* Unified Content Container */}
             <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
                 {/* Section 1 - Hero Area */}
@@ -761,8 +761,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                             </motion.button>
                         </div>
                         
-                    {/* Right Side: Preview Card and Stats */}
-                    <div className="flex flex-col items-end gap-6 w-full">
+                        {/* Right Side: Preview Card and Stats */}
+                        <div className="flex flex-col items-end gap-6 w-full">
                             {/* Preview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -811,7 +811,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                             </motion.div>
                         </div>
-                </div>
+                    </div>
                 
                 {/* Section 2 - Feature Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
@@ -829,7 +829,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
                                     <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Alpine Interior Adventure</span>
-                                </div>
+                </div>
                                 
                                 {/* Preview Area */}
                                 <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
@@ -1306,12 +1306,12 @@ const MyRendersPage: React.FC<{
 
     if (history.filter(b => imageBatchTypes.includes(b.type) && b.results.some(r => r.status === 'success')).length === 0) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 pt-[72px]">
-                 <div className="p-8 bg-white rounded-full border-2 border-slate-200 mb-6">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 pt-[72px] bg-black">
+                 <div className="p-8 bg-white/10 backdrop-blur-md rounded-full border-2 border-white/20 mb-6">
                     <IconPhoto className="w-16 h-16 text-slate-400" />
                 </div>
-                <h2 className="text-2xl font-semibold text-slate-800">No Designs Yet</h2>
-                <p className="text-slate-500 mt-2 max-w-md">You haven't generated any designs. Your past design batches will appear here.</p>
+                <h2 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>No Designs Yet</h2>
+                <p className="text-slate-300 mt-2 max-w-md" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px' }}>You haven't generated any designs. Your past design batches will appear here.</p>
                 <Button primary className="mt-6 py-3 px-6" onClick={() => onNavigate('Interior Design')}>
                     <IconSparkles className="w-5 h-5"/>
                     Start Designing
@@ -1322,12 +1322,12 @@ const MyRendersPage: React.FC<{
     
     return (
         <div className="flex flex-1 overflow-hidden h-full pt-[72px]">
-            <aside className="w-[280px] bg-white p-4 border-r border-slate-200 flex flex-col overflow-y-auto scrollbar-hide">
-                <h2 className="text-lg font-semibold text-slate-800 px-2 pb-4">My Albums</h2>
+            <aside className="w-[280px] bg-slate-900/50 backdrop-blur-md p-4 border-r border-white/20 flex flex-col overflow-y-auto scrollbar-hide">
+                <h2 className="text-white px-2 pb-4" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '18px', lineHeight: '24px', letterSpacing: '0px' }}>My Albums</h2>
                 <div className="space-y-1">
                     <button 
                         onClick={() => setSelectedAlbum('all')}
-                        className={`w-full text-left p-3 rounded-2xl transition-colors flex items-center gap-3 text-sm font-medium ${selectedAlbum === 'all' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                        className={`w-full text-left p-3 rounded-2xl transition-colors flex items-center gap-3 text-sm font-medium ${selectedAlbum === 'all' ? 'bg-[#00BCD4]/20 text-[#00BCD4]' : 'text-slate-300 hover:bg-white/10'}`}
                     >
                         <IconPhoto className="w-5 h-5" />
                         <span>All Designs</span>
@@ -1336,7 +1336,7 @@ const MyRendersPage: React.FC<{
                         <button 
                             key={albumType} 
                             onClick={() => setSelectedAlbum(albumType)}
-                            className={`w-full text-left p-3 rounded-2xl transition-colors flex items-center gap-3 text-sm font-medium ${selectedAlbum === albumType ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                            className={`w-full text-left p-3 rounded-2xl transition-colors flex items-center gap-3 text-sm font-medium ${selectedAlbum === albumType ? 'bg-[#00BCD4]/20 text-[#00BCD4]' : 'text-slate-300 hover:bg-white/10'}`}
                         >
                              <IconSparkles className="w-5 h-5" />
                             <span className="truncate">{albumTypeLabels[albumType]}</span>
@@ -1344,17 +1344,17 @@ const MyRendersPage: React.FC<{
                     ))}
                 </div>
             </aside>
-            <main className="flex-1 p-6 overflow-y-auto bg-slate-50">
+            <main className="flex-1 p-6 overflow-y-auto bg-black">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-slate-900">
+                    <h1 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>
                         {selectedAlbum === 'all' ? 'All Designs' : albumTypeLabels[selectedAlbum]}
                     </h1>
-                    <div className="flex items-center gap-2 p-1 bg-slate-200 rounded-xl">
+                    <div className="flex items-center gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                         {(['lg', 'md', 'sm'] as const).map(size => (
                            <button 
                                 key={size}
                                 onClick={() => setGalleryViewSize(size)}
-                                className={`p-2 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-300'}`}
+                                className={`p-2 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-[#00BCD4]/20 text-[#00BCD4] shadow-sm' : 'text-slate-400 hover:bg-white/10'}`}
                                 aria-label={`${size} view`}
                            >
                                 {size === 'lg' && <IconViewLarge className="w-5 h-5" />}
