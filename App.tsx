@@ -723,7 +723,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 </div>
                 
                 {/* Content Container */}
-                <div className="container mx-auto px-8 py-20">
+                <div className="relative z-10 container mx-auto px-8 py-20">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                         {/* Left Side: Hero Section */}
                         <div className="space-y-6 pt-8">
