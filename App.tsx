@@ -12,6 +12,10 @@ import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './se
 import { PricingPage } from './components/PricingPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
+import { ImageComparison } from './components/ImageComparison';
+import { HomeSection, HeroSection } from './types';
+import { getAllHomeSections } from './services/homeSectionService';
+import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
 import { useAuth } from './context/AuthContext';
@@ -512,6 +516,17 @@ const Header: React.FC<{
     const isDesignToolActive = useMemo(() => designToolLabels.includes(activeItem), [designToolLabels, activeItem]);
     const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Start Design My Nook';
 
+    // 检测是否在功能页面（白底页面）
+    const isFunctionalPage = useMemo(() => {
+        const functionalPages = [
+            ...designToolLabels,
+            'Terms',
+            'Pricing',
+            'Admin'
+        ];
+        return functionalPages.includes(activeItem);
+    }, [designToolLabels, activeItem]);
+
     const upgradeButton = useMemo(() => {
         if (!user) {
             return { text: 'Upgrade to PRO', visible: true, disabled: false };
@@ -533,40 +548,58 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-0 left-0 right-0 flex items-center justify-between p-4 bg-white/70 backdrop-blur-xl z-40 border-b border-slate-900/10 shadow-sm">
+        <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent animate-gradient-pan">MyNook.AI</span>
+                    <span className="logo-gradient" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px' }}>MyNook.AI</span>
                 </button>
+                {/* Moved and restyled Start Design button */}
+                <div className="relative hidden md:block" ref={designToolsRef}>
+                    <button
+                        onClick={() => setDesignToolsOpen(o => !o)}
+                        className={`px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 shadow-md ${
+                            isFunctionalPage 
+                                ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200' 
+                                : isDesignToolActive 
+                                    ? 'text-white bg-[#2b2f34] ring-1 ring-white/10' 
+                                    : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f] ring-1 ring-white/10'
+                        }`}
+                        style={{ width: '239.09px', height: '32px' }}
+                    >
+                        <IconSparkles className={`w-4 h-4 ${isFunctionalPage ? 'text-indigo-500' : 'text-white'}`} />
+                        <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{activeDesignToolLabel}</span>
+                        <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
+                    </AnimatePresence>
+                </div>
             </div>
             <div className="flex items-center gap-4">
-                {/* Design Tools Menu */}
+                {/* Right-side nav items (moved button removed) */}
                 <nav className="hidden md:flex items-center gap-2">
-                    <div className="relative" ref={designToolsRef}>
-                        <button
-                            onClick={() => setDesignToolsOpen(o => !o)}
-                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all relative flex items-center gap-2 ${isDesignToolActive ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30' : 'text-slate-700 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200'}`}
-                        >
-                            <IconSparkles className={`w-4 h-4 ${isDesignToolActive ? 'text-yellow-300 animate-pulse' : 'text-purple-500'}`} />
-                            <span>{activeDesignToolLabel}</span>
-                            <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                            {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
-                        </AnimatePresence>
-                    </div>
 
                     {navItems.map(item => (
                          <a 
                            key={item} 
                            href="#" 
                            onClick={(e) => { e.preventDefault(); onNavigate(item); }}
-                           className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors relative ${activeItem === item ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                           className={`px-3 py-2 text-base font-normal transition-colors ${isFunctionalPage ? 'text-black' : 'text-white'}`}
+                           style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                         >
                            {item}
-                           {activeItem === item && <motion.div className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-500" layoutId="nav-underline" />}
                         </a>
                     ))}
+                    {!user && (
+                        <a 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); onLoginClick(); }}
+                            className={`px-3 py-2 text-base font-normal transition-colors ${isFunctionalPage ? 'text-black' : 'text-white'}`}
+                            style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                        >
+                            Login
+                        </a>
+                    )}
                 </nav>
                 {user && (
                     <div className="flex items-center gap-2">
@@ -590,7 +623,16 @@ const Header: React.FC<{
                     </div>
                 )}
 
-                {upgradeButton.visible && (
+                {!user && (
+                    <button
+                        onClick={onLoginClick}
+                        className="hidden md:flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-colors"
+                        style={{ width: '171.66px', height: '36px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                    >
+                        REGISTER for FREE
+                    </button>
+                )}
+                {user && upgradeButton.visible && (
                     <Button 
                         primary 
                         className="rounded-full !px-4 !py-2 text-sm font-bold hidden md:flex" 
@@ -602,18 +644,16 @@ const Header: React.FC<{
                     </Button>
                 )}
 
-                <div className="relative" ref={userMenuRef}>
-                    {user ? (
-                        <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm uppercase shadow-inner shadow-black/10">
-                            {user.email.charAt(0)}
+                {user && (
+                    <div className="relative" ref={userMenuRef}>
+                        <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-lg shadow-inner shadow-black/10 hover:scale-110 transition-transform">
+                            🐱
                         </button>
-                    ) : (
-                        <button onClick={onLoginClick} className="text-slate-500 hover:text-slate-800"><IconUserCircle/></button>
-                    )}
-                    <AnimatePresence>
-                        {user && userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
-                    </AnimatePresence>
-                </div>
+                        <AnimatePresence>
+                            {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
+                        </AnimatePresence>
+                    </div>
+                )}
             </div>
         </header>
     );
@@ -691,166 +731,670 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 }
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
-    const [galleryItems, setGalleryItems] = useState<GeneratedImage[]>([]);
-    const [displayedCount, setDisplayedCount] = useState(20);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [heroBanners, setHeroBanners] = useState<any[]>([]);
-    const [isBannersLoading, setIsBannersLoading] = useState(true);
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-    const ITEMS_PER_LOAD = 20;
-    const TOTAL_ITEMS = galleryItems.length;
+    const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
+    const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
+    const [sectionsLoading, setSectionsLoading] = useState(true);
+    const [loadedRef] = useState({ current: false }); // 防止重复加载
 
-    // Load gallery items from Supabase
     useEffect(() => {
-        const loadGalleryItems = async () => {
-            setIsInitialLoading(true);
-            try {
-                const { fetchGalleryItems } = await import('./services/galleryService');
-                const items = await fetchGalleryItems();
-                setGalleryItems(items as any);
-            } catch (error) {
-                console.error('Failed to load gallery items:', error);
-                // Fallback to static data if Supabase fails
-                setGalleryItems(EXPLORE_GALLERY_ITEMS as any);
-            } finally {
-                setIsInitialLoading(false);
-            }
-        };
-
-        loadGalleryItems();
+        // 防止重复加载
+        if (loadedRef.current) return;
+        loadedRef.current = true;
+        
+        loadAllSections();
     }, []);
 
-    // Load Hero Banners from Supabase
-    useEffect(() => {
-        const loadHeroBanners = async () => {
-            setIsBannersLoading(true);
-            try {
-                const { fetchHeroBanners } = await import('./services/galleryService');
-                const banners = await fetchHeroBanners();
-                setHeroBanners(banners);
-            } catch (error) {
-                console.error('Failed to load hero banners:', error);
-                // Empty array will show default banner in HeroBannerCarousel
-            } finally {
-                setIsBannersLoading(false);
-            }
-        };
+    const loadAllSections = async () => {
+        try {
+            // 并行加载 Hero Section 和 Home Sections
+            const [hero, sections] = await Promise.all([
+                getHeroSection(),
+                getAllHomeSections()
+            ]);
+            
+            setHeroSection(hero);
+            setHomeSections(sections);
+        } catch (error) {
+            console.error('Error loading sections:', error);
+        } finally {
+            setSectionsLoading(false);
+        }
+    };
 
-        loadHeroBanners();
-    }, []);
-
-    // Infinite scroll with Intersection Observer
-    useEffect(() => {
-        const currentRef = loadMoreRef.current;
-        if (!currentRef || isInitialLoading) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const firstEntry = entries[0];
-                if (firstEntry.isIntersecting && !isLoading && displayedCount < TOTAL_ITEMS) {
-                    setIsLoading(true);
+    // 渲染单个 Section（支持图片/视频/对比图）
+    const renderSection = useCallback((section: HomeSection, index: number) => {
+        const isLeftImage = section.layout_direction === 'left-image';
+        
+        // 媒体卡片
+        const MediaCard = () => (
+            <motion.div
+                initial={{ opacity: 0, x: isLeftImage ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className={`w-full max-w-[704px] ${!isLeftImage ? 'lg:ml-auto' : ''}`}
+            >
+                <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                    <div className="flex justify-between items-center mb-4">
+                        <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{section.card_title}</span>
+                        <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{section.card_subtitle}</span>
+                    </div>
                     
-                    // Simulate loading delay for better UX
-                    setTimeout(() => {
-                        setDisplayedCount((prev) => Math.min(prev + ITEMS_PER_LOAD, TOTAL_ITEMS));
-                        setIsLoading(false);
-                    }, 500);
-                }
-            },
-            { threshold: 0.1, rootMargin: '100px' }
+                    {/* 媒体显示区域 */}
+                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 overflow-hidden">
+                        {section.media_type === 'image' && (
+                            <img 
+                                src={section.media_url} 
+                                alt={section.title}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                        {section.media_type === 'video' && (
+                            <video 
+                                src={section.media_url}
+                                className="w-full h-full object-cover"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                            />
+                        )}
+                        {section.media_type === 'comparison' && section.comparison_before_url && section.comparison_after_url && (
+                            <ImageComparison
+                                beforeImage={section.comparison_before_url}
+                                afterImage={section.comparison_after_url}
+                            />
+                        )}
+                    </div>
+                    
+                    <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                        Generate AI Design
+                    </button>
+                </div>
+            </motion.div>
         );
+        
+        // 文字内容
+        const TextContent = () => (
+            <motion.div
+                initial={{ opacity: 0, x: isLeftImage ? 20 : -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="space-y-6"
+            >
+                <h2 
+                    className="text-white whitespace-pre-line"
+                    style={{ 
+                        fontFamily: 'Arial, sans-serif', 
+                        fontWeight: 400, 
+                        fontSize: '48px', 
+                        lineHeight: '60px', 
+                        letterSpacing: '0px'
+                    }}
+                >
+                    {section.title}
+                </h2>
+                
+                <p 
+                    className="text-slate-300"
+                    style={{ 
+                        fontFamily: 'Arial, sans-serif', 
+                        fontWeight: 400, 
+                        fontSize: '16px', 
+                        lineHeight: '24px', 
+                        letterSpacing: '0px'
+                    }}
+                >
+                    {section.subtitle}
+                </p>
 
-        observer.observe(currentRef);
+                <button
+                    onClick={() => onNavigate(section.button_link)}
+                    className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                    style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                >
+                    {section.button_text}
+                    <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </button>
+            </motion.div>
+        );
+        
+        return (
+            <div key={section.id} className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                {isLeftImage ? (
+                    <>
+                        <MediaCard />
+                        <TextContent />
+                    </>
+                ) : (
+                    <>
+                        <TextContent />
+                        <MediaCard />
+                    </>
+                )}
+            </div>
+        );
+    }, [onNavigate]); // useCallback 依赖项
 
-        return () => {
-            if (currentRef) {
-                observer.unobserve(currentRef);
-            }
-        };
-    }, [displayedCount, isLoading, TOTAL_ITEMS, isInitialLoading]);
-
-    const displayedItems = galleryItems.slice(0, displayedCount);
-    const hasMore = displayedCount < TOTAL_ITEMS;
+    // 使用 useMemo 缓存渲染的 sections，避免重复触发动画
+    const renderedSections = useMemo(() => {
+        if (sectionsLoading) return null;
+        return homeSections.map((section) => renderSection(section, 0));
+    }, [homeSections, sectionsLoading, renderSection]);
 
     return (
-        <main className="flex-1 overflow-y-auto text-slate-800 scrollbar-hide flex flex-col">
-            {/* Hero Banner Carousel */}
-            {!isBannersLoading && (
-                <HeroBannerCarousel
-                    banners={heroBanners}
-                    autoplay={true}
-                    pauseOnHover={true}
-                    showIndicators={true}
-                    showControls={true}
+        <main className="min-h-screen bg-black relative overflow-y-auto">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Mountain background" 
+                    className="w-full h-full object-cover"
                 />
-            )}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+            </div>
             
-            {/* Only show gallery section when loading or when there are items */}
-            {(isInitialLoading || displayedItems.length > 0) && (
-                <section className="flex-shrink-0 bg-white px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-16">
-                    {isInitialLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                            <p className="text-slate-600 text-lg">Loading gallery...</p>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="w-full mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-4">
-                                {displayedItems.map((item) => (
-                            <div 
-                                key={item.id} 
-                                onClick={() => onNavigate(item.toolPage)}
-                                className="mb-4 break-inside-avoid relative group cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
-                                style={{
-                                    aspectRatio: (item.width && item.height) ? `${item.width} / ${item.height}` : 'auto'
+            {/* Unified Content Container */}
+            <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
+                {/* Section 1 - Hero Area (Dynamic from Database) */}
+                {!sectionsLoading && heroSection && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                        {/* Left Side: Hero Title */}
+                        <div className="space-y-6">
+                            <motion.h1 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6 }}
+                                className="text-white"
+                                style={{ 
+                                    fontFamily: 'Arial, sans-serif', 
+                                    fontWeight: 400, 
+                                    fontSize: '60px', 
+                                    lineHeight: '75px', 
+                                    letterSpacing: '0px',
+                                    textRendering: 'optimizeLegibility',
+                                    WebkitFontSmoothing: 'antialiased',
+                                    MozOsxFontSmoothing: 'grayscale'
                                 }}
                             >
-                                {item.type === 'image' ? (
-                                    <img 
-                                        src={item.src} 
-                                        alt={item.title} 
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <video 
-                                        src={item.src} 
-                                        autoPlay 
-                                        loop 
-                                        muted 
-                                        playsInline
-                                        className="w-full h-full object-cover" 
-                                    />
-                                )}
-                                {/* Hover overlay with category info */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                        <p className="text-white font-semibold text-sm mb-1">{item.categoryName}</p>
-                                        <p className="text-white/80 text-xs">Click to use this tool</p>
-                                    </div>
+                                <span className="block">{heroSection.title_line_1}</span>
+                                <span className="block">{heroSection.title_line_2}</span>
+                                <span className="block">{heroSection.title_line_3}</span>
+                                <span className="block">{heroSection.title_line_4}</span>
+                            </motion.h1>
+                            
+                            <motion.button
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.2 }}
+                                onClick={() => onNavigate(heroSection.button_link)}
+                                className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                                style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                            >
+                                {heroSection.button_text}
+                                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                            </motion.button>
+                        </div>
+                        
+                        {/* Right Side: Preview Card and Stats */}
+                        <div className="flex flex-col items-end gap-6 w-full">
+                            {/* Preview Card */}
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6, delay: 0.3 }}
+                                className="w-full max-w-[704px] bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20"
+                            >
+                                {/* Card Header */}
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{heroSection.preview_title}</span>
+                                    <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{heroSection.preview_subtitle}</span>
                                 </div>
+                                
+                                {/* Preview Area */}
+                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                    {heroSection.preview_media_type === 'image' && (
+                                        <img 
+                                            src={heroSection.preview_media_url} 
+                                            alt="Preview" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    )}
+                                    {heroSection.preview_media_type === 'video' && (
+                                        <video 
+                                            src={heroSection.preview_media_url}
+                                            className="w-full h-full object-cover"
+                                            autoPlay
+                                            loop
+                                            muted
+                                            playsInline
+                                        />
+                                    )}
+                                    {heroSection.preview_media_type === 'comparison' && 
+                                     heroSection.preview_comparison_before_url && 
+                                     heroSection.preview_comparison_after_url && (
+                                        <ImageComparison
+                                            beforeImage={heroSection.preview_comparison_before_url}
+                                            afterImage={heroSection.preview_comparison_after_url}
+                                        />
+                                    )}
+                                </div>
+                                
+                                {/* Generate Button */}
+                                <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                    Generate AI Design
+                                </button>
+                            </motion.div>
+                            {/* Stats Bar - 固定数据 */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.4 }}
+                                className="w-full max-w-[704px] grid grid-cols-3 gap-4 p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20"
+                            >
+                                <div className="text-center">
+                                    <div className="text-cyan-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>50+</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Design Styles</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-purple-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>10+</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Room Types</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-blue-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 30, lineHeight: '36px', letterSpacing: '0px' }}>&lt;30s</div>
+                                    <div className="text-slate-300" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Generation Time</div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Dynamically Rendered Sections 2-6 from Database */}
+                {renderedSections}
+                
+                {/* LEGACY: Hardcoded Sections - Hidden */}
+                {false && <>
+                {/* Section 2 - Exterior Design Feature Area */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                        {/* Left Side: Preview Card */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                            className="w-full max-w-[704px]"
+                        >
+                            {/* Preview Card */}
+                            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                                {/* Card Header */}
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI EXTERIOR PREVIEW</span>
+                                    <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Modern Architectural Design</span>
+                                </div>
+                                
+                                {/* Preview Area */}
+                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop" 
+                                        alt="Exterior Preview" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                
+                                {/* Generate Button */}
+                                <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                    Generate Exterior Design
+                                </button>
                             </div>
-                                ))}
-                            </div>
+                        </motion.div>
 
-                            {/* Loading indicator */}
-                            <div ref={loadMoreRef} className="flex justify-center items-center py-12">
-                                {isLoading && hasMore && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="flex flex-col items-center gap-3"
-                                    >
-                                        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                                        <p className="text-slate-500 text-sm">Loading more images...</p>
-                                    </motion.div>
-                                )}
+                        {/* Right Side: Text Content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <h2 
+                                className="text-white"
+                                style={{ 
+                                    fontFamily: 'Arial, sans-serif', 
+                                    fontWeight: 400, 
+                                    fontSize: '48px', 
+                                    lineHeight: '60px', 
+                                    letterSpacing: '0px'
+                                }}
+                            >
+                                Transform Your<br />
+                                Home Exterior with<br />
+                                AI-Powered Design
+                            </h2>
+                            
+                            <p 
+                                className="text-slate-300"
+                                style={{ 
+                                    fontFamily: 'Arial, sans-serif', 
+                                    fontWeight: 400, 
+                                    fontSize: '16px', 
+                                    lineHeight: '24px', 
+                                    letterSpacing: '0px'
+                                }}
+                            >
+                                Reimagine your home's facade with 6 architectural styles - from Modern to Victorian. Our AI technology transforms your exterior photos into stunning architectural visions in seconds. Explore different materials, colors, and design elements effortlessly.
+                            </p>
+
+                            <button
+                                onClick={() => onNavigate('Exterior Design')}
+                                className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                                style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                            >
+                                Design My Exterior
+                                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                            </button>
+                        </motion.div>
+                </div>
+                
+                {/* Section 3 - Wall Paint (Right Card, Left Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Perfect Wall Colors<br />
+                            for Every Room
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Transform your space with AI-powered color recommendations. Get personalized paint suggestions that match your style and lighting conditions.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Wall Paint')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+
+                    {/* Right Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="w-full max-w-[704px] lg:ml-auto"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Paint Design</span>
                             </div>
-                        </>
-                    )}
-                </section>
-            )}
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Wall Paint Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* Section 4 - Floor Style (Left Card, Right Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="w-full max-w-[704px]"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Floor Style Design</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Floor Style Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+
+                    {/* Right Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Stunning Flooring<br />
+                            Options & Styles
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Discover the perfect flooring for your space. From hardwood to tile, our AI helps you visualize different materials and patterns instantly.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Floor Style')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+                </div>
+
+                {/* Section 5 - Garden & Backyard (Right Card, Left Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Beautiful Gardens<br />
+                            & Outdoor Spaces
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Transform your backyard into a stunning oasis. Get AI-powered landscaping ideas and garden designs tailored to your outdoor space.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Garden & Backyard Design')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+
+                    {/* Right Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="w-full max-w-[704px] lg:ml-auto"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Garden Design</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1558904541-efa843a96f01?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Garden Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* Section 6 - Festive Decor (Left Card, Right Text) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
+                    {/* Left Side: Preview Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="w-full max-w-[704px]"
+                    >
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Festive Decoration</span>
+                            </div>
+                            <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2000&auto=format&fit=crop" 
+                                    alt="Festive Decor Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                Generate AI Design
+                            </button>
+                        </div>
+                    </motion.div>
+
+                    {/* Right Side: Text Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <h2 
+                            className="text-white"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '48px', 
+                                lineHeight: '60px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Magical Festive<br />
+                            Decorations
+                        </h2>
+                        
+                        <p 
+                            className="text-slate-300"
+                            style={{ 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontWeight: 400, 
+                                fontSize: '16px', 
+                                lineHeight: '24px', 
+                                letterSpacing: '0px'
+                            }}
+                        >
+                            Celebrate in style with AI-designed festive decorations. From holidays to special occasions, create the perfect atmosphere for any celebration.
+                        </p>
+
+                        <button
+                            onClick={() => onNavigate('Festive Decor')}
+                            className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
+                            style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
+                        >
+                            Get Started
+                            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </motion.div>
+                </div>
+                {/* Section 6 end */}
+                </>}
+                {/* END LEGACY Hardcoded Sections */}
+            </div>
         </main>
     );
 };

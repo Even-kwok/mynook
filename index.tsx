@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import FigmaHomePrototype from './components/FigmaHomePrototype';
 import { AuthProvider } from './context/AuthContext';
 
 const rootElement = document.getElementById('root');
@@ -10,10 +11,17 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+// Simple conditional mount for prototype route without adding router dependency
+const isProtoRoute = (() => {
+  const { pathname, hash } = window.location;
+  return pathname === '/proto' || hash === '#/proto' || hash === '#proto';
+})();
+
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      {isProtoRoute ? <FigmaHomePrototype /> : <App />}
     </AuthProvider>
   </React.StrictMode>
 );

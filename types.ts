@@ -201,3 +201,50 @@ export interface HeroBannerConfig {
   showIndicators: boolean;     // 显示指示器
   showControls: boolean;       // 显示控制按钮
 }
+
+// Home Section 媒体类型
+export type HomeSectionMediaType = 'image' | 'video' | 'comparison';
+
+// Home Section 布局方向
+export type HomeSectionLayout = 'left-image' | 'right-image';
+
+// Home Section 接口（首页 Section 2-6）
+export interface HomeSection {
+  id: string;
+  section_number: number;
+  title: string;
+  subtitle: string;
+  media_url: string;
+  media_type: HomeSectionMediaType;
+  comparison_before_url: string | null;  // 对比图：改造前
+  comparison_after_url: string | null;   // 对比图：改造后
+  card_title: string;                    // 预览卡片左侧标题
+  card_subtitle: string;                 // 预览卡片右侧标题
+  button_text: string;
+  button_link: string;
+  layout_direction: HomeSectionLayout;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Hero Section 接口（首页 Section 1）
+export interface HeroSection {
+  id: string;
+  title_line_1: string;
+  title_line_2: string;
+  title_line_3: string;
+  title_line_4: string;
+  button_text: string;
+  button_link: string;
+  preview_media_url: string;
+  preview_media_type: HomeSectionMediaType;
+  preview_comparison_before_url: string | null;
+  preview_comparison_after_url: string | null;
+  preview_title: string;
+  preview_subtitle: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
