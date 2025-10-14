@@ -344,7 +344,7 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Privacy Section */}
-                        <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-sm border-2 border-indigo-200">
+                        <section className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-white/20">
                             <h2 className="text-white mb-6" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>Privacy Policy</h2>
                             
                             <div className="space-y-6">
