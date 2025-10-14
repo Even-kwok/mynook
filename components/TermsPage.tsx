@@ -3,8 +3,18 @@ import { motion } from 'framer-motion';
 
 export const TermsPage: React.FC = () => {
     return (
-        <div className="flex-1 overflow-y-auto bg-black">
-            <div className="max-w-5xl mx-auto px-6 pt-24 pb-12">
+        <main className="min-h-screen bg-black relative overflow-y-auto">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Mountain background" 
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+            </div>
+            
+            <div className="max-w-5xl mx-auto px-6 pt-24 pb-12 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -467,7 +477,8 @@ export const TermsPage: React.FC = () => {
                     </div>
                 </motion.div>
             </div>
-        </div>
+            </div>
+        </main>
     );
 };
 

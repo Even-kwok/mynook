@@ -261,8 +261,18 @@ export const PricingPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 overflow-y-auto bg-black text-white scrollbar-hide">
-            <div className="pt-[136px] pb-16 sm:pt-[168px] sm:pb-24 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen bg-black relative overflow-y-auto text-white scrollbar-hide">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Mountain background" 
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
+            </div>
+            
+            <div className="pt-[136px] pb-16 sm:pt-[168px] sm:pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="max-w-7xl mx-auto text-center">
                     <h1 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '48px', lineHeight: '60px', letterSpacing: '0px' }}>
                         Plans & pricing
@@ -323,7 +333,7 @@ export const PricingPage: React.FC = () => {
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: index * 0.1 }}
                             className={`relative border rounded-3xl p-8 flex flex-col h-full backdrop-blur-md ${
-                                plan.isPopular ? 'bg-white/15 border-purple-400/30 shadow-lg shadow-purple-500/10' : 'bg-white/10 border-white/20 shadow-sm'
+                                plan.isPopular ? 'bg-white/10 border-purple-400/30 shadow-lg shadow-purple-500/10' : 'bg-white/10 border-white/20 shadow-sm'
                             }`}
                         >
                             {plan.isPopular && (
@@ -413,7 +423,7 @@ export const PricingPage: React.FC = () => {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
                                     className={`relative border rounded-2xl p-6 flex flex-col backdrop-blur-md ${
-                                        pack.isPopular ? 'bg-white/15 border-amber-400/30 shadow-lg shadow-amber-500/10' : 'bg-white/10 border-white/20 shadow-sm'
+                                        pack.isPopular ? 'bg-white/10 border-amber-400/30 shadow-lg shadow-amber-500/10' : 'bg-white/10 border-white/20 shadow-sm'
                                     }`}
                                 >
                                     {pack.isPopular && (
@@ -472,6 +482,7 @@ export const PricingPage: React.FC = () => {
                         <p>💡 Credits never expire and can be used for any AI generation feature</p>
                     </div>
                 </div>
+            </div>
             </div>
         </main>
     );
