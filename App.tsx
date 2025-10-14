@@ -533,7 +533,7 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 lg:px-20 h-[72px] bg-transparent z-40">
+        <header className="fixed top-6 left-0 right-0 flex items-center justify-between px-8 h-[72px] bg-transparent z-40">
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
@@ -542,11 +542,11 @@ const Header: React.FC<{
                 <div className="relative hidden md:block" ref={designToolsRef}>
                     <button
                         onClick={() => setDesignToolsOpen(o => !o)}
-                        className={`px-5 h-12 rounded-full text-base font-normal transition-all flex items-center gap-2 ring-1 ring-white/10 shadow-md ${isDesignToolActive ? 'text-white bg-[#2b2f34]' : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f]'}`}
+                        className={`w-[239px] h-9 px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 ring-1 ring-white/10 shadow-md ${isDesignToolActive ? 'text-white bg-[#2b2f34]' : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f]'}`}
                     >
                         <IconSparkles className="w-4 h-4 text-white" />
-                        <span>Start Design My Room</span>
-                        <IconChevronDown className={`w-3 h-3 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
+                        <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Start Design My Room</span>
+                        <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
                         {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
@@ -563,6 +563,7 @@ const Header: React.FC<{
                            href="#" 
                            onClick={(e) => { e.preventDefault(); onNavigate(item); }}
                            className={`px-3 py-2 text-base font-normal transition-colors ${activeItem === item ? 'text-white' : 'text-slate-300 hover:text-white'}`}
+                           style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                         >
                            {item}
                         </a>
@@ -571,6 +572,7 @@ const Header: React.FC<{
                         href="#" 
                         onClick={(e) => { e.preventDefault(); onLoginClick(); }}
                         className="px-3 py-2 text-base font-normal text-slate-300 hover:text-white transition-colors"
+                        style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                     >
                         Login
                     </a>
@@ -600,7 +602,8 @@ const Header: React.FC<{
                 {!user && (
                     <button
                         onClick={onLoginClick}
-                        className="px-6 py-2.5 rounded-xl text-base font-medium bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/30 hidden md:flex items-center"
+                        className="hidden md:flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/30"
+                        style={{ width: '171.66px', height: '36px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                     >
                         REGISTER for FREE
                     </button>
