@@ -178,7 +178,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"
+                className="mb-6 p-4 bg-red-500/20 border border-red-400/30 backdrop-blur-md rounded-xl text-red-300 text-sm"
               >
                 {error}
               </motion.div>
@@ -189,7 +189,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm"
+                className="mb-6 p-4 bg-green-500/20 border border-green-400/30 backdrop-blur-md rounded-xl text-green-300 text-sm"
               >
                 {successMessage}
               </motion.div>

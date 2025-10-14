@@ -420,17 +420,17 @@ export const TermsPage: React.FC = () => {
                                     </ul>
                                 </div>
 
-                                <div className="bg-blue-50 border border-blue-300 rounded-xl p-5">
-                                    <h3 className="text-lg font-bold text-blue-900 mb-2">EEA, UK, and Swiss Users</h3>
-                                    <p className="text-blue-900 leading-relaxed">
+                                <div className="bg-blue-500/20 border border-blue-400/30 backdrop-blur-md rounded-xl p-5">
+                                    <h3 className="text-blue-300 mb-2" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>EEA, UK, and Swiss Users</h3>
+                                    <p className="text-blue-300 leading-relaxed">
                                         Under the GDPR, you have additional rights including the right to lodge a complaint with a supervisory authority. 
                                         We encourage you to first contact us with any questions or concerns.
                                     </p>
                                 </div>
 
-                                <div className="bg-purple-50 border border-purple-300 rounded-xl p-5">
-                                    <h3 className="text-lg font-bold text-purple-900 mb-2">California Users</h3>
-                                    <p className="text-purple-900 leading-relaxed">
+                                <div className="bg-purple-500/20 border border-purple-400/30 backdrop-blur-md rounded-xl p-5">
+                                    <h3 className="text-purple-300 mb-2" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '20px', lineHeight: '28px', letterSpacing: '0px' }}>California Users</h3>
+                                    <p className="text-purple-300 leading-relaxed">
                                         Under the CCPA, you have additional rights including the right to opt-out of the sale of personal information. 
                                         Note that we do NOT sell personal information as defined by the CCPA and have not done so in the past 12 months.
                                     </p>

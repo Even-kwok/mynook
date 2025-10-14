@@ -282,7 +282,7 @@ export const PricingPage: React.FC = () => {
                     </p>
 
                     {error && (
-                        <div className="mt-6 mx-auto max-w-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <div className="mt-6 mx-auto max-w-md bg-red-500/20 border border-red-400/30 backdrop-blur-md text-red-300 px-4 py-3 rounded-lg">
                             {error}
                         </div>
                     )}
