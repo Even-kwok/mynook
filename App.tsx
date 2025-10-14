@@ -512,6 +512,17 @@ const Header: React.FC<{
     const isDesignToolActive = useMemo(() => designToolLabels.includes(activeItem), [designToolLabels, activeItem]);
     const activeDesignToolLabel = isDesignToolActive ? activeItem : 'Start Design My Nook';
 
+    // 检测是否在功能页面（白底页面）
+    const isFunctionalPage = useMemo(() => {
+        const functionalPages = [
+            ...designToolLabels,
+            'Terms',
+            'Pricing',
+            'Admin'
+        ];
+        return functionalPages.includes(activeItem);
+    }, [designToolLabels, activeItem]);
+
     const upgradeButton = useMemo(() => {
         if (!user) {
             return { text: 'Upgrade to PRO', visible: true, disabled: false };
@@ -533,7 +544,7 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] bg-transparent z-40" style={{ paddingRight: '38px' }}>
+        <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
@@ -563,20 +574,22 @@ const Header: React.FC<{
                            key={item} 
                            href="#" 
                            onClick={(e) => { e.preventDefault(); onNavigate(item); }}
-                           className="px-3 py-2 text-base font-normal text-white"
+                           className={`px-3 py-2 text-base font-normal transition-colors ${isFunctionalPage ? 'text-black' : 'text-white'}`}
                            style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                         >
                            {item}
                         </a>
                     ))}
-                    <a 
-                        href="#" 
-                        onClick={(e) => { e.preventDefault(); onLoginClick(); }}
-                        className="px-3 py-2 text-base font-normal text-white"
-                        style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
-                    >
-                        Login
-                    </a>
+                    {!user && (
+                        <a 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); onLoginClick(); }}
+                            className={`px-3 py-2 text-base font-normal transition-colors ${isFunctionalPage ? 'text-black' : 'text-white'}`}
+                            style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                        >
+                            Login
+                        </a>
+                    )}
                 </nav>
                 {user && (
                     <div className="flex items-center gap-2">
