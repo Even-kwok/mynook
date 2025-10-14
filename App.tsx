@@ -3268,9 +3268,9 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </aside>
-                <main className="flex-1 p-8 pt-[104px] pr-8 overflow-y-auto relative z-10">
+                <main className="flex-1 bg-white/10 backdrop-blur-md m-8 mt-[104px] mb-8 mr-8 rounded-3xl border border-white/20 overflow-y-auto relative z-10">
                     {generatedImages.length > 0 ? (
-                        <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+                        <div className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {generatedImages.map((image, i) => (
                                 image.status === 'success' && image.imageUrl ? (
