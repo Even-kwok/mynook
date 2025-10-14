@@ -219,15 +219,49 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
 
     return (
         <div className="relative flex-shrink-0">
-            <button
+            {/* Toggle Button with Enhanced Design */}
+            <motion.button
                 onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-8 h-16 bg-white/10 backdrop-blur-md rounded-l-xl flex items-center justify-center text-white hover:bg-white/20 transition-all focus:outline-none shadow-lg"
-                aria-label={isGalleryOpen ? 'Collapse gallery' : 'Expand gallery'}
+                className="absolute top-1/2 -translate-y-1/2 -left-4 z-30 w-10 h-20 bg-gradient-to-r from-indigo-600/90 to-indigo-500/90 backdrop-blur-xl rounded-l-2xl flex items-center justify-center text-white hover:from-indigo-500 hover:to-indigo-400 transition-all duration-300 focus:outline-none shadow-2xl border border-white/20 group"
+                aria-label={isGalleryOpen ? 'Hide My Designs' : 'Show My Designs'}
+                whileHover={{ scale: 1.05, x: -2 }}
+                whileTap={{ scale: 0.95 }}
+                title={isGalleryOpen ? 'Hide My Designs' : 'Show My Designs'}
             >
-                <motion.div animate={{ rotate: isGalleryOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <IconChevronRight className="w-5 h-5" />
+                {/* Icon with Rotation Animation */}
+                <motion.div 
+                    animate={{ 
+                        rotate: isGalleryOpen ? 180 : 0,
+                        x: isGalleryOpen ? 0 : 2
+                    }} 
+                    transition={{ 
+                        duration: 0.3,
+                        ease: [0.4, 0, 0.2, 1]
+                    }}
+                    className="relative"
+                >
+                    <IconChevronRight className="w-6 h-6 drop-shadow-lg" />
                 </motion.div>
-            </button>
+                
+                {/* Hover Effect Indicator */}
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 rounded-l-2xl transition-colors duration-300" />
+                
+                {/* Pulsing Indicator when Closed */}
+                {!isGalleryOpen && (
+                    <motion.div
+                        className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-green-400 rounded-full shadow-lg"
+                        animate={{
+                            scale: [1, 1.3, 1],
+                            opacity: [1, 0.7, 1]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    />
+                )}
+            </motion.button>
             <motion.aside
                 initial={false}
                 animate={{ width: isGalleryOpen ? 320 : 0 }}
@@ -264,7 +298,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             </button>
                         </div>
                     )}
-                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide rounded-2xl">
                         {allGalleryImages.length > 0 ? (
                             <div className="space-y-2">
                                 {albumOrder.map(albumType => {
@@ -344,7 +378,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                 })}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4">
+                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4 rounded-2xl">
                                 <IconPhoto className="w-12 h-12 text-slate-300" />
                                 <p className="mt-4 text-sm font-medium text-slate-500">No Designs Yet</p>
                             </div>
@@ -1619,7 +1653,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                     value={prompt} 
                                     onChange={(e) => setPrompt(e.target.value)} 
                                     placeholder="Describe what you want to create..." 
-                                    className="w-full p-3 h-32 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                                    className="w-full p-3 h-32 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                             </div>
                         </div>
                     </div>
