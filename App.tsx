@@ -798,7 +798,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                                     <div className="text-3xl lg:text-4xl font-bold text-[#3B82F6] mb-1">&lt;30s</div>
                                     <div className="text-sm text-slate-300">Generation Time</div>
-                                </div>
+                        </div>
                             </motion.div>
                         </div>
                     </div>
@@ -830,17 +830,17 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                         alt="Interior design preview" 
                                         className="w-full h-full object-cover"
                                     />
-                                </div>
+                                    </div>
                                 
                                 {/* Generate Button */}
                                 <button className="w-full py-4 rounded-2xl text-lg font-medium bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg">
                                     Generate AI Design
                                 </button>
-                            </div>
+                                </div>
                         </motion.div>
-                        
+
                         {/* Right Side: Text Content */}
-                        <motion.div
+                                    <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
@@ -861,10 +861,10 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 Get Started
                                 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
                             </button>
-                        </motion.div>
-                    </div>
+                                    </motion.div>
+                            </div>
                 </div>
-            </section>
+                </section>
         </main>
     );
 };
