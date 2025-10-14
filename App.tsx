@@ -654,12 +654,12 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
     };
 
     return (
-        <motion.div 
-            initial="hidden"
-            animate="visible"
-            className="w-full h-full flex items-center justify-center"
-        >
-            <div className="w-full max-w-2xl mx-auto bg-white/5 border border-white/20 shadow-inner rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+        <div className="w-full max-h-full aspect-[4/5] bg-white/5 border border-white/20 shadow-inner rounded-3xl relative overflow-hidden flex items-center justify-center">
+            <motion.div 
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col items-center justify-center text-center px-12 py-8"
+            >
                 <div className="p-8 bg-white/10 backdrop-blur-sm rounded-full border-2 border-white/20 mb-6">
                     <IconSparkles className="w-16 h-16 text-slate-400" />
                 </div>
@@ -681,8 +681,8 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
                 >
                     {isAdvisor ? "Ask a design question in the left panel to get expert advice." : "Get started by uploading a photo of your room and describing a style in the left panel."}
                 </motion.p>
-            </div>
-        </motion.div>
+            </motion.div>
+        </div>
     );
 }
 
