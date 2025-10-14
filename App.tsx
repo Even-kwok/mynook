@@ -533,7 +533,7 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 h-[72px] bg-slate-900/95 backdrop-blur-xl z-40 border-b border-slate-700/50 shadow-sm">
+        <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 lg:px-20 h-[72px] bg-transparent z-40">
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span className="text-xl font-bold text-[#00BCD4] tracking-tight">MYNOOK.AI</span>
@@ -706,99 +706,165 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     return (
-        <main className="relative min-h-screen flex items-center px-8 md:px-12 lg:px-20 py-16 overflow-hidden">
-            {/* Background Image with Overlay */}
-            <div className="absolute inset-0 z-0">
-                <img 
-                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
-                    alt="Mountain background" 
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90" />
-            </div>
-            
-            {/* Content Container */}
-            <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-[1400px] mx-auto">
-                {/* Left Side: Hero Section */}
-                <div className="space-y-8">
-                    <motion.h1 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight"
-                    >
-                        Start Ultimate Interior Design Journey Today
-                    </motion.h1>
-                    
-                    <motion.button
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        onClick={() => onNavigate('Interior Design')}
-                        className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
-                    >
-                        Get Started
-                        <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-                    </motion.button>
+        <main className="relative overflow-y-auto bg-slate-900">
+            {/* First Section: Hero + Preview Card */}
+            <section className="relative min-h-screen">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
+                        alt="Mountain background" 
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90" />
                 </div>
                 
-                {/* Right Side: Preview Card and Stats */}
-                <div className="flex flex-col items-end gap-8 w-full">
-                    {/* Preview Card */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="w-full max-w-[480px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl"
-                    >
-                        {/* Card Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <span className="text-sm tracking-wider text-slate-400 uppercase">AI DESIGN PREVIEW</span>
-                            <span className="text-base text-white">Alpine Interior Adventure</span>
+                {/* Content Container */}
+                <div className="relative z-10 px-8 md:px-12 lg:px-20 pt-24 pb-16">
+                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                        {/* Left Side: Hero Section */}
+                        <div className="space-y-6 pt-8">
+                            <motion.h1 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6 }}
+                                className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight"
+                            >
+                                Start Ultimate Interior Design Journey Today
+                            </motion.h1>
+                            
+                            <motion.button
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.2 }}
+                                onClick={() => onNavigate('Interior Design')}
+                                className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+                            >
+                                Get Started
+                                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                            </motion.button>
                         </div>
                         
-                        {/* Preview Area */}
-                        <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
-                            <img 
-                                src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2000&auto=format&fit=crop" 
-                                alt="Preview" 
-                                className="w-full h-full object-cover"
-                            />
+                        {/* Right Side: Preview Card and Stats */}
+                        <div className="flex flex-col items-end gap-6 w-full">
+                            {/* Preview Card */}
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6, delay: 0.3 }}
+                                className="w-full max-w-[420px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl"
+                            >
+                                {/* Card Header */}
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-sm tracking-wider text-slate-400 uppercase">AI DESIGN PREVIEW</span>
+                                    <span className="text-sm text-white">Alpine Interior Adventure</span>
+                                </div>
+                                
+                                {/* Preview Area */}
+                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2000&auto=format&fit=crop" 
+                                        alt="Preview" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                
+                                {/* Generate Button */}
+                                <button className="w-full py-3 rounded-2xl text-base font-medium bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg">
+                                    Generate AI Design
+                                </button>
+                            </motion.div>
+                            
+                            {/* Stats Cards */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.4 }}
+                                className="flex gap-4 w-full max-w-[420px]"
+                            >
+                                {/* Design Styles */}
+                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                                    <div className="text-3xl lg:text-4xl font-bold text-[#00BCD4] mb-1">50+</div>
+                                    <div className="text-sm text-slate-300">Design Styles</div>
+                                </div>
+                                
+                                {/* Room Types */}
+                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                                    <div className="text-3xl lg:text-4xl font-bold text-[#7C3AED] mb-1">10+</div>
+                                    <div className="text-sm text-slate-300">Room Types</div>
+                                </div>
+                                
+                                {/* Generation Time */}
+                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                                    <div className="text-3xl lg:text-4xl font-bold text-[#3B82F6] mb-1">&lt;30s</div>
+                                    <div className="text-sm text-slate-300">Generation Time</div>
+                                </div>
+                            </motion.div>
                         </div>
-                        
-                        {/* Generate Button */}
-                        <button className="w-full py-4 rounded-2xl text-lg font-medium bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg">
-                            Generate AI Design
-                        </button>
-                    </motion.div>
-                    
-                    {/* Stats Cards */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="flex gap-6 lg:gap-8 w-full max-w-[480px]"
-                    >
-                        {/* Design Styles */}
-                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                            <div className="text-4xl lg:text-5xl font-bold text-[#00BCD4] mb-2">50+</div>
-                            <div className="text-base text-slate-300">Design Styles</div>
-                        </div>
-                        
-                        {/* Room Types */}
-                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                            <div className="text-4xl lg:text-5xl font-bold text-[#7C3AED] mb-2">10+</div>
-                            <div className="text-base text-slate-300">Room Types</div>
-                        </div>
-                        
-                        {/* Generation Time */}
-                        <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                            <div className="text-4xl lg:text-5xl font-bold text-[#3B82F6] mb-2">&lt;30s</div>
-                            <div className="text-base text-slate-300">Generation Time</div>
-                        </div>
-                    </motion.div>
+                    </div>
                 </div>
-            </div>
+            </section>
+            
+            {/* Second Section: Instant Design Variations */}
+            <section className="relative py-20 bg-slate-900">
+                <div className="px-8 md:px-12 lg:px-20">
+                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        {/* Left Side: Preview Card */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <div className="max-w-[480px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                                {/* Card Header */}
+                                <div className="flex justify-between items-center mb-6">
+                                    <span className="text-sm tracking-wider text-slate-400 uppercase">AI DESIGN PREVIEW</span>
+                                    <span className="text-base text-white">Alpine Interior Adventure</span>
+                                </div>
+                                
+                                {/* Preview Area */}
+                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop" 
+                                        alt="Interior design preview" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                
+                                {/* Generate Button */}
+                                <button className="w-full py-4 rounded-2xl text-lg font-medium bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg">
+                                    Generate AI Design
+                                </button>
+                            </div>
+                        </motion.div>
+                        
+                        {/* Right Side: Text Content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <h2 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
+                                Instant Design Variations at Your Fingertips
+                            </h2>
+                            <p className="text-lg text-slate-300 leading-relaxed">
+                                Our advanced AI technology analyzes your space and creates multiple design
+                                options in seconds. Choose your favorite style and let the magic happen.
+                            </p>
+                            <button 
+                                onClick={() => onNavigate('Interior Design')}
+                                className="px-8 py-4 rounded-xl text-lg font-medium bg-[#00BCD4] text-white hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+                            >
+                                Get Started
+                                <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                            </button>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
         </main>
     );
 };
