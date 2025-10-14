@@ -707,7 +707,7 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     return (
         <main className="relative overflow-y-auto bg-slate-900">
-            {/* First Section: Hero + Preview Card */}
+            {/* First Section: Hero + Preview Card (Figma-aligned) */}
             <section className="relative min-h-screen">
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 z-0">
@@ -721,7 +721,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 
                 {/* Content Container */}
                 <div className="relative z-10 px-8 md:px-12 lg:px-20 pt-24 pb-16">
-                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    <div className="max-w-[1536px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                         {/* Left Side: Hero Section */}
                         <div className="space-y-6 pt-8">
                             <motion.h1 
@@ -730,7 +730,10 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 transition={{ duration: 0.6 }}
                                 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight"
                             >
-                                Start Ultimate Interior Design Journey Today
+                                <span className="block">Start Ultimate</span>
+                                <span className="block">Interior Design</span>
+                                <span className="block">Journey</span>
+                                <span className="block">Today</span>
                             </motion.h1>
                             
                             <motion.button
@@ -752,7 +755,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.6, delay: 0.3 }}
-                                className="w-full max-w-[420px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl"
+                                className="w-full max-w-[704px] bg-slate-800/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-white/10"
                             >
                                 {/* Card Header */}
                                 <div className="flex justify-between items-center mb-4">
@@ -774,31 +777,25 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     Generate AI Design
                                 </button>
                             </motion.div>
-                            
-                            {/* Stats Cards */}
+                            {/* Stats Bar */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.4 }}
-                                className="flex gap-4 w-full max-w-[420px]"
+                                className="w-full max-w-[704px] grid grid-cols-3 gap-4 p-4 bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white/10"
                             >
-                                {/* Design Styles */}
-                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                                    <div className="text-3xl lg:text-4xl font-bold text-[#00BCD4] mb-1">50+</div>
-                                    <div className="text-sm text-slate-300">Design Styles</div>
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-cyan-300">50+</div>
+                                    <div className="text-xs text-slate-300">Design Styles</div>
                                 </div>
-                                
-                                {/* Room Types */}
-                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                                    <div className="text-3xl lg:text-4xl font-bold text-[#7C3AED] mb-1">10+</div>
-                                    <div className="text-sm text-slate-300">Room Types</div>
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-purple-300">10+</div>
+                                    <div className="text-xs text-slate-300">Room Types</div>
                                 </div>
-                                
-                                {/* Generation Time */}
-                                <div className="flex-1 bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                                    <div className="text-3xl lg:text-4xl font-bold text-[#3B82F6] mb-1">&lt;30s</div>
-                                    <div className="text-sm text-slate-300">Generation Time</div>
-                        </div>
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-blue-300">&lt;30s</div>
+                                    <div className="text-xs text-slate-300">Generation Time</div>
+                                </div>
                             </motion.div>
                         </div>
                     </div>
