@@ -542,7 +542,8 @@ const Header: React.FC<{
                 <div className="relative hidden md:block" ref={designToolsRef}>
                     <button
                         onClick={() => setDesignToolsOpen(o => !o)}
-                        className={`w-[239px] h-9 px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 ring-1 ring-white/10 shadow-md ${isDesignToolActive ? 'text-white bg-[#2b2f34]' : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f]'}`}
+                        className={`px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 ring-1 ring-white/10 shadow-md ${isDesignToolActive ? 'text-white bg-[#2b2f34]' : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f]'}`}
+                        style={{ width: '239.09px', height: '32px' }}
                     >
                         <IconSparkles className="w-4 h-4 text-white" />
                         <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Start Design My Room</span>
