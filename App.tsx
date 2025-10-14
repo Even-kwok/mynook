@@ -536,7 +536,7 @@ const Header: React.FC<{
         <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 lg:px-20 h-[72px] bg-transparent z-40">
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-xl font-bold text-[#00BCD4] tracking-tight">MYNOOK.AI</span>
+                    <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
                 </button>
             </div>
             <div className="flex items-center gap-4">
