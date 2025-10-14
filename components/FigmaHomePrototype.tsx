@@ -55,24 +55,25 @@ export default function FigmaHomePrototype(): JSX.Element {
         <section className="section-2">
           <div className="panel">
             <div className="panel-head">
-              <div className="muted">AI DESIGN PREVIEW</div>
-              <div className="muted">Alpine Interior Adventure</div>
+              <div className="muted">AI EXTERIOR PREVIEW</div>
+              <div className="muted">Modern Architectural Design</div>
             </div>
             <div className="panel-body preview" />
-            <button className="btn gradient block">Generate AI Design</button>
+            <button className="btn gradient block">Generate Exterior Design</button>
           </div>
 
           <div className="copy">
             <h2 className="title-2">
-              <span>Instant Design</span>
-              <span>Variations at</span>
-              <span>Your Fingertips</span>
+              <span>Transform Your</span>
+              <span>Home Exterior with</span>
+              <span>AI-Powered Design</span>
             </h2>
             <p className="lead">
-              Our advanced AI technology analyzes your space and creates multiple design
-              options in seconds. Choose your favorite style and let the magic happen.
+              Reimagine your home's facade with 6 architectural styles - from Modern to Victorian. 
+              Our AI technology transforms your exterior photos into stunning architectural visions 
+              in seconds. Explore different materials, colors, and design elements effortlessly.
             </p>
-            <button className="btn primary">Get Started →</button>
+            <button className="btn primary">Design My Exterior →</button>
           </div>
         </section>
       </main>
