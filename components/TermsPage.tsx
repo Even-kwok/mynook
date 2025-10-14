@@ -477,7 +477,6 @@ export const TermsPage: React.FC = () => {
                     </div>
                 </motion.div>
             </div>
-            </div>
         </main>
     );
 };

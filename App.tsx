@@ -1331,15 +1331,15 @@ const MyRendersPage: React.FC<{
                 
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 pt-[72px] relative z-10 min-h-screen">
                     <div className="p-8 bg-white/10 backdrop-blur-md rounded-full border-2 border-white/20 mb-6">
-                        <IconPhoto className="w-16 h-16 text-slate-400" />
-                    </div>
+                    <IconPhoto className="w-16 h-16 text-slate-400" />
+                </div>
                     <h2 className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: '42px', letterSpacing: '0px' }}>No Designs Yet</h2>
                     <p className="text-slate-300 mt-2 max-w-md" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px', letterSpacing: '0px' }}>You haven't generated any designs. Your past design batches will appear here.</p>
-                    <Button primary className="mt-6 py-3 px-6" onClick={() => onNavigate('Interior Design')}>
-                        <IconSparkles className="w-5 h-5"/>
-                        Start Designing
-                    </Button>
-                </div>
+                <Button primary className="mt-6 py-3 px-6" onClick={() => onNavigate('Interior Design')}>
+                    <IconSparkles className="w-5 h-5"/>
+                    Start Designing
+                </Button>
+            </div>
             </main>
         );
     }
@@ -1456,7 +1456,7 @@ const MyRendersPage: React.FC<{
                         </div>
                     </div>
                 )}
-            </div>
+        </div>
             </div>
         </main>
     );

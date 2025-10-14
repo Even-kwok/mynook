@@ -483,7 +483,6 @@ export const PricingPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            </div>
         </main>
     );
 };
