@@ -71,7 +71,7 @@ export const MEMBERSHIP_CONFIG = {
   free: {
     name: 'Free',
     credits: 0, // Free 用户没有信用点额度
-    maxTemplates: 0, // Free 用户不能生成图片
+    maxTemplates: 1, // Free 用户可以选择1个模板（体验功能，但生成时需要升级）
     color: 'text-slate-600',
     bgColor: 'bg-slate-100',
     icon: '🆓',

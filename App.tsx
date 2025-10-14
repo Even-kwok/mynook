@@ -2317,9 +2317,11 @@ const App: React.FC = () => {
                 return prev.filter(id => id !== templateId);
             }
             
-            // 未登录用户可以自由选择模板（最多9个），登录时才检查权限
+            // 所有用户都可以自由选择模板（最多9个），权限检查在点击生成时进行
+            const MAX_SELECTION = 9;
+            
             if (!currentUser) {
-                const MAX_SELECTION = 9;
+                // 未登录用户
                 if (prev.length < MAX_SELECTION) {
                     return [...prev, templateId];
                 }
@@ -2328,18 +2330,20 @@ const App: React.FC = () => {
                 return prev;
             }
             
-            // 已登录用户：根据会员等级限制可选择的模板数量
+            // 已登录用户：允许选择模板，但不在这里限制（让用户体验选择的过程）
+            // 实际权限检查将在点击生成按钮时进行
             const membershipTier = getUserMembershipTier();
             const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
             
             console.log('[Template Selection] User:', currentUser?.email, 'Tier:', membershipTier, 'Level:', currentUser?.permissionLevel, 'MaxTemplates:', maxTemplates, 'CurrentSelected:', prev.length);
             
-            if (prev.length < maxTemplates) {
+            // 允许选择最多9个模板（提升用户体验）
+            if (prev.length < MAX_SELECTION) {
                 return [...prev, templateId];
             }
             
-            // 达到上限时显示提示
-            setError(`Your ${MEMBERSHIP_CONFIG[membershipTier].name} plan allows selecting up to ${maxTemplates} template${maxTemplates > 1 ? 's' : ''} at a time. Please upgrade for more.`);
+            // 达到系统上限时提示
+            setError(`You can select up to ${MAX_SELECTION} templates at a time.`);
             setTimeout(() => setError(null), 3000);
             
             return prev;
@@ -2423,11 +2427,20 @@ const App: React.FC = () => {
         const membershipTier = getUserMembershipTier();
         const maxTemplates = MEMBERSHIP_CONFIG[membershipTier].maxTemplates;
         
+        // 特别处理：免费用户点击生成时直接提示升级
+        if (membershipTier === 'free') {
+            setError('Please upgrade to Pro or higher to generate design images.');
+            setIsUpgradeModalOpen(true);
+            setUpgradeFeatureName('Design Image Generation');
+            setUpgradeRequiredTier('pro');
+            return;
+        }
+        
         if (selectedTemplateIds.length > maxTemplates) {
             setError(`Your ${MEMBERSHIP_CONFIG[membershipTier].name} plan allows generating up to ${maxTemplates} template${maxTemplates > 1 ? 's' : ''} at a time. You have selected ${selectedTemplateIds.length}. Please upgrade or reduce your selection.`);
             setIsUpgradeModalOpen(true);
             setUpgradeFeatureName('Multiple Template Generation');
-            setUpgradeRequiredTier(membershipTier === 'free' ? 'pro' : 'premium');
+            setUpgradeRequiredTier(membershipTier === 'pro' ? 'premium' : 'business');
             return;
         }
         
@@ -2435,6 +2448,9 @@ const App: React.FC = () => {
         const creditsNeeded = selectedTemplateIds.length;
         if (currentUser.credits < creditsNeeded) {
             setError(`You need ${creditsNeeded} credits to generate ${selectedTemplateIds.length} image${selectedTemplateIds.length > 1 ? 's' : ''}. You have ${currentUser.credits} credit${currentUser.credits !== 1 ? 's' : ''} remaining. Please upgrade your plan.`);
+            setIsUpgradeModalOpen(true);
+            setUpgradeFeatureName('Credits Top-up');
+            setUpgradeRequiredTier('pro');
             return;
         }
     
