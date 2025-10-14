@@ -533,7 +533,7 @@ const Header: React.FC<{
     const navItems = ['Terms', 'Pricing'];
 
     return (
-        <header className="fixed top-6 left-0 right-0 flex items-center justify-between px-8 h-[72px] bg-transparent z-40">
+        <header className="fixed top-4 left-0 right-0 flex items-center justify-between px-8 h-[72px] bg-transparent z-40">
             <div className="flex items-center gap-6">
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px', color: '#00D3F2' }}>MYNOOK.AI</span>
@@ -563,7 +563,7 @@ const Header: React.FC<{
                            key={item} 
                            href="#" 
                            onClick={(e) => { e.preventDefault(); onNavigate(item); }}
-                           className={`px-3 py-2 text-base font-normal transition-colors ${activeItem === item ? 'text-white' : 'text-slate-300 hover:text-white'}`}
+                           className="px-3 py-2 text-base font-normal text-white"
                            style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                         >
                            {item}
@@ -572,7 +572,7 @@ const Header: React.FC<{
                     <a 
                         href="#" 
                         onClick={(e) => { e.preventDefault(); onLoginClick(); }}
-                        className="px-3 py-2 text-base font-normal text-slate-300 hover:text-white transition-colors"
+                        className="px-3 py-2 text-base font-normal text-white"
                         style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                     >
                         Login
@@ -603,7 +603,7 @@ const Header: React.FC<{
                 {!user && (
                     <button
                         onClick={onLoginClick}
-                        className="hidden md:flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/30"
+                        className="hidden md:flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-colors"
                         style={{ width: '171.66px', height: '36px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
                     >
                         REGISTER for FREE
@@ -621,18 +621,16 @@ const Header: React.FC<{
                     </Button>
                 )}
 
-                <div className="relative" ref={userMenuRef}>
-                    {user ? (
+                {user && (
+                    <div className="relative" ref={userMenuRef}>
                         <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm uppercase shadow-inner shadow-black/10">
                             {user.email.charAt(0)}
                         </button>
-                    ) : (
-                        <button onClick={onLoginClick} className="text-slate-500 hover:text-slate-800"><IconUserCircle/></button>
-                    )}
-                    <AnimatePresence>
-                        {user && userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
-                    </AnimatePresence>
-                </div>
+                        <AnimatePresence>
+                            {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
+                        </AnimatePresence>
+                    </div>
+                )}
             </div>
         </header>
     );
