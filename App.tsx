@@ -709,7 +709,7 @@ const ResultsPlaceholder: React.FC<{isAdvisor?: boolean}> = ({ isAdvisor = false
 
 const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     return (
-        <main className="min-h-screen bg-black relative overflow-hidden">
+        <main className="min-h-screen bg-black relative overflow-y-auto">
             {/* Background Image Layer */}
             <div className="absolute inset-0 z-0">
                 <img 
@@ -721,7 +721,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </div>
             
             {/* Unified Content Container */}
-            <div className="container mx-auto px-8 py-20 relative z-10">
+            <div className="container mx-auto px-8 pt-[128px] pb-20 relative z-10">
                 {/* Section 1 - Hero Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                     {/* Left Side: Hero Title */}
