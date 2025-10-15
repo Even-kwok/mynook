@@ -1480,7 +1480,7 @@ const MyRendersPage: React.FC<{
     const [galleryViewSize, setGalleryViewSize] = useState<'sm' | 'md' | 'lg'>('md');
     const [selectedAlbum, setSelectedAlbum] = useState<string>('all');
 
-    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
     
     const albumTypeLabels: Record<string, string> = {
         "style": "Interior Designs",

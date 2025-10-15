@@ -23,7 +23,7 @@ export interface GenerationBatch {
   id: string;
   // FIX: Add 'floor_style' to the union type to support the floor style generation feature.
   // FIX: A type literal property cannot have an initializer.
-  type: 'style' | 'item_replace' | 'wall_paint' | 'garden' | 'style_match' | 'ai_advisor' | 'multi_item' | 'exterior' | 'festive' | 'free_canvas' | 'floor_style';
+  type: 'style' | 'item_replace' | 'wall_design' | 'garden' | 'style_match' | 'ai_advisor' | 'multi_item' | 'exterior' | 'festive' | 'free_canvas' | 'floor_style';
   timestamp: Date;
   subjectImage: string | null;
   styleImages: string[];

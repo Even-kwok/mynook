@@ -51,12 +51,12 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
 }) => {
     const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(true);
     const [galleryViewSize, setGalleryViewSize] = useState<'sm' | 'md' | 'lg'>('md');
-    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
 
     const albumTypeLabels: Record<string, string> = {
         "style": "Interior Designs",
         "item_replace": "Item Replacements",
-        "wall_paint": "Wall Paints",
+        "wall_design": "Wall Design",
         "floor_style": "Floor Styles",
         "garden": "Garden Designs",
         "style_match": "Style Matches",
@@ -1516,7 +1516,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     };
     
     const handleDelete = (batchId: string, imageId: string) => {
-        const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+        const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
         setGenerationHistory(prevHistory => {
             const newHistory = prevHistory.map(batch => {
                 if (batch.id === batchId) {
@@ -1628,7 +1628,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </Button>
                     </div>
                 </aside>
-                <main className="flex-1 pt-[72px] bg-slate-50 relative">
+                <main className="flex-1 bg-slate-50 relative">
                      {isLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
                             <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
