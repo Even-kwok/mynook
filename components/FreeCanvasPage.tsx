@@ -234,7 +234,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                 className="h-full overflow-hidden bg-white border-l border-slate-200"
             >
-                <div className="w-[320px] h-full px-4 pb-4 pt-6 flex flex-col">
+                <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
                     <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-slate-800">My Designs</h2>
                         <div className="flex items-center gap-1 p-0.5 bg-slate-200 rounded-xl">
@@ -1541,9 +1541,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 requiredTier="premium"
                 onUpgrade={onUpgrade}
             />
-            <div className="flex flex-1 overflow-hidden h-full">
+            <div className="flex flex-1 overflow-hidden">
                 <aside className="w-[380px] bg-white flex flex-col overflow-hidden flex-shrink-0 border-r border-slate-200">
-                    <div className="flex-1 px-6 pb-6 pt-6 overflow-y-auto scrollbar-hide">
+                    <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
                         <div className="flex flex-col gap-6">
                             <div className="space-y-3">
                                 <h2 className="text-xl font-bold text-slate-800">Free Canvas</h2>
@@ -1628,7 +1628,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </Button>
                     </div>
                 </aside>
-                <main className="flex-1 bg-slate-50 relative">
+                <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
                      {isLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
                             <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
@@ -1673,7 +1673,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         onConfirm={handleConfirmClear}
                         clearButtonRef={clearButtonRef}
                      />
-                    <div className="absolute inset-0 m-4 bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
+                    <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
                         <>
                             {images.length === 0 && paths.length === 0 && !cropState && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
