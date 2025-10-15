@@ -555,6 +555,7 @@ const Header: React.FC<{
         const functionalPages = [
             ...designToolLabels,
             'Terms',
+            'Privacy',
             'Pricing',
             'Admin'
         ];
@@ -3476,7 +3477,7 @@ const App: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200">
+                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200 z-20">
                                 {isAIAdvisor ? (
                                     <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>
