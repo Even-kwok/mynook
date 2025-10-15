@@ -3183,7 +3183,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1"
                     >
                         <ExplorePage onNavigate={setActivePage} />
                     </motion.div>
@@ -3197,7 +3197,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <PricingPage />
                     </motion.div>
@@ -3211,7 +3211,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} />
                     </motion.div>
@@ -3237,7 +3237,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <FreeCanvasPage 
                             setGenerationHistory={setGenerationHistory} 
@@ -3264,7 +3264,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <TermsPage />
                     </motion.div>
@@ -3278,7 +3278,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <PrivacyPage />
                     </motion.div>
@@ -3352,7 +3352,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1 overflow-y-auto"
                     >
                         <AdminPage 
                             users={users} 
@@ -3378,7 +3378,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         animate="animate"
                         exit="exit"
                         transition={pageTransition}
-                        className="w-full h-full"
+                        className="w-full flex-1"
                     >
                         {renderMainGenerator()}
                     </motion.div>
@@ -3488,9 +3488,10 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
 
         return (
             <div className="flex-1 flex overflow-hidden">
-                <aside className="w-[380px] bg-white px-6 pb-6 pt-24 border-r border-slate-200 flex-shrink-0">
-                    <div className="h-full overflow-y-auto scrollbar-hide pr-2 -mr-2">
-                        <div className="flex flex-col gap-6">
+                <aside className="w-[380px] bg-white border-r border-slate-200 flex-shrink-0 flex flex-col">
+                    {/* 可滚动内容区域 */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide pt-24 px-6">
+                        <div className="flex flex-col gap-6 pb-6">
                             {currentPageInfo && (
                                 <div className="space-y-3">
                                     <h2 className="text-xl font-bold text-slate-800">{currentPageInfo.title}</h2>
@@ -3673,36 +3674,37 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                                     </div>
                                 </div>
                             )}
-
-                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200 z-20">
-                                {isAIAdvisor ? (
-                                    <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isAdvisorLoading ? "Thinking..." : "Ask (1 Credit)"}
-                                    </Button>
-                                ) : isItemReplace ? (
-                                    <Button onClick={handleItemReplaceClick} disabled={isLoading || !hasModule1Image || !hasItemReplaceImage} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Replacing..." : "Replace (1 Credit)"}
-                                    </Button>
-                                ) : isStyleMatch ? (
-                                    <Button onClick={handleStyleMatchClick} disabled={isLoading || !hasModule1Image || !hasStyleMatchImage} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Matching Style..." : "Generate (1 Credit)"}
-                                    </Button>
-                                ) : isMultiItem ? (
-                                    <Button onClick={handleMultiItemClick} disabled={isLoading || !hasModule1Image || !hasMultiItemImages} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Placing Items..." : "Generate (1 Credit)"}
-                                    </Button>
-                                ) : (
-                                    <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
-                                    </Button>
-                                )}
-                            </div>
                         </div>
+                    </div>
+                    
+                    {/* 固定在底部的生成按钮 */}
+                    <div className="flex-shrink-0 bg-white border-t border-slate-200 px-6 py-4">
+                        {isAIAdvisor ? (
+                            <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isAdvisorLoading ? "Thinking..." : "Ask (1 Credit)"}
+                            </Button>
+                        ) : isItemReplace ? (
+                            <Button onClick={handleItemReplaceClick} disabled={isLoading || !hasModule1Image || !hasItemReplaceImage} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Replacing..." : "Replace (1 Credit)"}
+                            </Button>
+                        ) : isStyleMatch ? (
+                            <Button onClick={handleStyleMatchClick} disabled={isLoading || !hasModule1Image || !hasStyleMatchImage} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Matching Style..." : "Generate (1 Credit)"}
+                            </Button>
+                        ) : isMultiItem ? (
+                            <Button onClick={handleMultiItemClick} disabled={isLoading || !hasModule1Image || !hasMultiItemImages} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Placing Items..." : "Generate (1 Credit)"}
+                            </Button>
+                        ) : (
+                            <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
+                            </Button>
+                        )}
                     </div>
                 </aside>
                 <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
@@ -3822,7 +3824,7 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                 onLogout={handleLogout}
                 designTools={designTools}
             />
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-y-auto">
                 <AnimatePresence mode="wait">
                     {renderPage()}
                 </AnimatePresence>
