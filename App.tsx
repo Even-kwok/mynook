@@ -920,9 +920,9 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     }, [homeSections, sectionsLoading, renderSection]);
 
     return (
-        <main className="min-h-screen bg-black relative overflow-y-auto">
-            {/* Background Image Layer */}
-            <div className="absolute inset-0 z-0">
+        <main className="min-h-screen bg-black relative">
+            {/* Background Image Layer - Fixed */}
+            <div className="fixed inset-0 z-0">
                 <img 
                     src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
                     alt="Mountain background" 
