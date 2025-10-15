@@ -2747,7 +2747,38 @@ const App: React.FC = () => {
         const styleImageForApi = styleMatchImage.split(',')[1];
         const roomTypeName = ROOM_TYPES.find(r => r.id === selectedRoomType)?.name || selectedRoomType;
 
-        const instruction = `This is an advanced interior design style transfer task. The first image is a photo of a ${roomTypeName} that needs a complete redesign. The second image is the target style reference. Your task is to COMPLETELY transform the room in the first image to match the aesthetic, color palette, materials, furniture style, and overall mood of the second image. You MUST strictly preserve the architectural layout, window and door placements, and overall structure of the first image. The final output must be a single, photorealistic image of the redesigned room.`;
+        const instruction = `You are an expert interior designer performing a style transfer. You have TWO images:
+
+IMAGE 1 (Base Structure): A ${roomTypeName} photo. This provides the EXACT spatial structure you MUST preserve.
+IMAGE 2 (Style Reference): The target aesthetic you MUST apply to Image 1.
+
+YOUR TASK:
+1. STRICTLY PRESERVE from Image 1:
+   - Exact room dimensions, proportions, and layout
+   - All architectural elements: walls, ceiling, floor boundaries
+   - Window positions, sizes, and placements
+   - Door locations and openings
+   - Built-in fixtures and their locations
+   - Overall room geometry and perspective
+
+2. EXTRACT AND APPLY from Image 2:
+   - Design style and aesthetic (modern, traditional, minimalist, etc.)
+   - Color palette and color scheme
+   - Material choices (wood, metal, fabric, stone types)
+   - Furniture style and design language
+   - Lighting approach and fixtures
+   - Decorative elements and patterns
+   - Textures and finishes
+   - Overall mood and atmosphere
+
+3. EXECUTION REQUIREMENTS:
+   - The result MUST have Image 1's exact structure with Image 2's complete style
+   - Maintain realistic proportions and scale
+   - Ensure proper lighting consistency
+   - Create seamless integration of all elements
+   - Output a single, photorealistic, professional-quality interior design rendering
+
+Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2 should be comprehensively applied to transform the appearance while respecting the structural constraints.`;
         
         const placeholder: GeneratedImage = {
             id: `style-match-${Date.now()}`,
