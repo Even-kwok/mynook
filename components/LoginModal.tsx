@@ -23,7 +23,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -52,7 +53,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
+    setEmailLoading(true);
 
     try {
       let result;
@@ -67,24 +68,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         // Localize error message
         const errorMessage = getErrorMessage(result.error);
         setError(errorMessage);
-        setLoading(false);
+        setEmailLoading(false);
       } else {
         // Optimistic UI update: close modal immediately without waiting for user profile to load
         // onAuthStateChange will automatically load user profile in the background
         handleClose();
         // Keep loading state until modal close animation completes
-        setTimeout(() => setLoading(false), 300);
+        setTimeout(() => setEmailLoading(false), 300);
       }
     } catch (err) {
       setError('An unknown error occurred, please try again later');
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
     setError(null);
-    setLoading(true);
+    setGoogleLoading(true);
 
     try {
       const { error } = await signInWithGoogle();
@@ -96,7 +97,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     } catch (err) {
       setError('Google sign in failed, please try again later');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -105,7 +106,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setLoading(true);
+    setEmailLoading(true);
 
     try {
       const { error } = await sendPasswordResetEmail(email);
@@ -124,7 +125,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     } catch (err) {
       setError('Failed to send email, please try again later');
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
@@ -210,10 +211,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <Button
                   type="submit"
                   primary
-                  disabled={loading}
+                  disabled={emailLoading}
                   className="w-full py-3 text-base font-semibold relative"
                 >
-                  {loading ? (
+                  {emailLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <motion.span
                         animate={{ rotate: 360 }}
@@ -310,10 +311,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <Button
                 type="submit"
                 primary
-                disabled={loading}
+                disabled={emailLoading}
                 className="w-full py-3 text-base font-semibold relative"
               >
-                {loading ? (
+                {emailLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <motion.span
                       animate={{ rotate: 360 }}
@@ -345,10 +346,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {/* Google sign in */}
             <button
               onClick={handleGoogleSignIn}
-              disabled={loading}
+              disabled={googleLoading}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {googleLoading ? (
                 <>
                   <motion.span
                     animate={{ rotate: 360 }}
