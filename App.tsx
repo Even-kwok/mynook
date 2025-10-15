@@ -920,7 +920,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     }, [homeSections, sectionsLoading, renderSection]);
 
     return (
-        <main className="min-h-screen bg-black relative">
+        <main className="min-h-screen bg-black relative w-full">
             {/* Background Image Layer - Fixed */}
             <div className="fixed inset-0 z-0">
                 <img 
@@ -932,7 +932,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </div>
             
             {/* Unified Content Container */}
-            <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
+            <div className="w-full relative z-10">
+                <div className="container mx-auto px-8 pt-[188px] pb-20">
                 {/* Section 1 - Hero Area (Dynamic from Database) */}
                 {!sectionsLoading && heroSection && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -1430,6 +1431,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 {/* Section 6 end */}
                 </>}
                 {/* END LEGACY Hardcoded Sections */}
+                </div>
             </div>
         </main>
     );
