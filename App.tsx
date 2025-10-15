@@ -58,14 +58,14 @@ const TemplateImage: React.FC<{
                             <div className="relative mb-2">
                                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white/80"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <IconSparkles className="w-4 h-4 text-white/60" strokeWidth={2} />
+                                    <IconSparkles className="w-4 h-4 text-white/60" />
                                 </div>
                             </div>
                         )}
                         
                         {/* 图标 */}
                         {(shouldShowFallback || imageError) && (
-                            <IconSparkles className="w-10 h-10 text-white/90 mb-2" strokeWidth={1.5} />
+                            <IconPhoto className="w-10 h-10 text-white/90 mb-2" />
                         )}
                         
                         {/* 模板名称 */}
@@ -1927,37 +1927,37 @@ const App: React.FC = () => {
             
             setIsLoadingUsers(true);
             try {
-                const query = supabase
+                const { data, error } = await supabase
                     .from('users')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                const { data, error } = await query;
+                    .select('*');
                 
                 if (error) {
                     console.error('Error loading users:', error);
                     setUsers([]);
                 } else {
                     // 转换 Supabase 用户数据为 App 的 User 类型
-                    const transformedUsers: User[] = (data || []).map(user => ({
-                        id: user.id,
-                        email: user.email,
-                        password: '', // 不存储密码
-                        status: 'Active',
-                        joined: user.created_at,
-                        lastIp: '',
-                        registrationIp: '',
-                        permissionLevel: (() => {
-                            switch (user.membership_tier) {
-                                case 'free': return 1;
-                                case 'pro': return 2;
-                                case 'premium': return 3;
-                                case 'business': return 4;
-                                default: return 1;
-                            }
-                        })(),
-                        credits: user.credits,
-                        membershipTier: user.membership_tier,
-                    }));
+                    const transformedUsers: User[] = ((data as any[]) || [])
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((user: any) => ({
+                            id: user.id,
+                            email: user.email,
+                            password: '', // 不存储密码
+                            status: 'Active',
+                            joined: user.created_at,
+                            lastIp: '',
+                            registrationIp: '',
+                            permissionLevel: (() => {
+                                switch (user.membership_tier) {
+                                    case 'free': return 1;
+                                    case 'pro': return 2;
+                                    case 'premium': return 3;
+                                    case 'business': return 4;
+                                    default: return 1;
+                                }
+                            })(),
+                            credits: user.credits,
+                            membershipTier: user.membership_tier,
+                        }));
                     setUsers(transformedUsers);
                 }
             } catch (err) {

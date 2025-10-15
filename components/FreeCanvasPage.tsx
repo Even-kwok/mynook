@@ -1628,7 +1628,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </Button>
                     </div>
                 </aside>
-                <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
+                <main className="flex-1 pt-[72px] bg-slate-50 relative">
                      {isLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
                             <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
@@ -1660,7 +1660,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 onClick={() => setIsClearConfirmOpen(o => !o)}
-                                className="absolute bottom-12 right-12 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
+                                className="absolute bottom-8 right-8 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
                                 aria-label="Clear canvas"
                             >
                                 <IconTrash className="w-6 h-6" />
@@ -1673,7 +1673,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         onConfirm={handleConfirmClear}
                         clearButtonRef={clearButtonRef}
                      />
-                    <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
+                    <div className="absolute inset-0 top-[72px] m-4 bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
                         <>
                             {images.length === 0 && paths.length === 0 && !cropState && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
