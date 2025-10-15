@@ -26,6 +26,63 @@ import { MEMBERSHIP_CONFIG } from './types/database';
 
 // --- Re-styled Helper Components ---
 
+// --- Template Image with Elegant Placeholder ---
+const TemplateImage: React.FC<{ 
+    imageUrl: string; 
+    templateName: string; 
+    isSelected: boolean;
+}> = ({ imageUrl, templateName, isSelected }) => {
+    const [imageError, setImageError] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
+
+    // 根据模板名生成一致的渐变颜色
+    const getGradientColors = (name: string) => {
+        const gradients = [
+            'from-purple-400 via-pink-400 to-red-400',
+            'from-blue-400 via-cyan-400 to-teal-400',
+            'from-green-400 via-emerald-400 to-cyan-400',
+            'from-orange-400 via-amber-400 to-yellow-400',
+            'from-rose-400 via-pink-400 to-purple-400',
+            'from-indigo-400 via-purple-400 to-pink-400',
+            'from-cyan-400 via-blue-400 to-indigo-400',
+            'from-teal-400 via-green-400 to-emerald-400',
+        ];
+        const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return gradients[hash % gradients.length];
+    };
+
+    return (
+        <>
+            {!imageError && (
+                <img 
+                    src={imageUrl} 
+                    alt={templateName} 
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                />
+            )}
+            {(imageError || !imageLoaded) && (
+                <div className={`absolute inset-0 bg-gradient-to-br ${getGradientColors(templateName)} flex items-center justify-center p-4 ${imageLoaded ? 'hidden' : ''}`}>
+                    <div className="text-center">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg">
+                            <IconSparkles className="w-8 h-8 mx-auto mb-2 text-slate-700" />
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">{templateName}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isSelected && (
+                <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-10">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                        <IconCheck className="w-5 h-5 text-indigo-600" />
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};
+
 const PromptTemplates: React.FC<{
     categories: PromptTemplateCategory[];
     onTemplateSelect: (templateId: string) => void;
@@ -50,14 +107,11 @@ const PromptTemplates: React.FC<{
                                     className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                                 >
                                     <div className={`relative aspect-square rounded-2xl overflow-hidden border-2 bg-slate-100 transition-all duration-300 ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-500/20' : 'border-slate-200 group-hover:border-indigo-400'}`}>
-                                        <img src={template.imageUrl} alt={template.name} className="w-full h-full object-cover" />
-                                        {isSelected && (
-                                            <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center">
-                                                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                                                    <IconCheck className="w-5 h-5 text-indigo-600" />
-                                                </div>
-                                            </div>
-                                        )}
+                                        <TemplateImage 
+                                            imageUrl={template.imageUrl} 
+                                            templateName={template.name}
+                                            isSelected={isSelected}
+                                        />
                                     </div>
                                     <p className={`text-center text-xs mt-2 font-medium transition-colors ${isSelected ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-800'}`}>{template.name}</p>
                                 </div>
@@ -650,7 +704,7 @@ const Header: React.FC<{
                             🐱
                         </button>
                         <AnimatePresence>
-                            {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} />}
+                            {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} onClose={() => setUserMenuOpen(false)} />}
                         </AnimatePresence>
                     </div>
                 )}
@@ -1600,7 +1654,28 @@ const getModelInstruction = (promptBase: string): string => promptBase.trim();
 
 // --- New UI Components for Header ---
 
-const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (page: string) => void }> = ({ user, onLogout, onNavigate }) => {
+const UserMenu: React.FC<{ 
+    user: User, 
+    onLogout: () => void, 
+    onNavigate: (page: string) => void,
+    onClose: () => void
+}> = ({ user, onLogout, onNavigate, onClose }) => {
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogoutClick = async () => {
+        setIsLoggingOut(true);
+        // 先关闭菜单，提供即时反馈
+        onClose();
+        // 然后执行登出
+        await onLogout();
+        setIsLoggingOut(false);
+    };
+
+    const handleNavigate = (page: string) => {
+        onNavigate(page);
+        onClose();
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -1618,8 +1693,25 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (page: 
                     </span>
                 </div>
             </div>
-            <button onClick={() => onNavigate('My Designs')} className="w-full text-left px-3 py-2 hover:bg-slate-500/10 rounded-xl transition-colors">My Designs</button>
-            <button onClick={onLogout} className="w-full text-left px-3 py-2 hover:bg-red-500/10 text-red-600 rounded-xl transition-colors">Sign Out</button>
+            <button 
+                onClick={() => handleNavigate('My Designs')} 
+                className="w-full text-left px-3 py-2 hover:bg-slate-500/10 rounded-xl transition-colors"
+            >
+                My Designs
+            </button>
+            <button 
+                onClick={handleLogoutClick}
+                disabled={isLoggingOut}
+                className="w-full text-left px-3 py-2 hover:bg-red-500/10 text-red-600 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+            >
+                <span>Sign Out</span>
+                {isLoggingOut && (
+                    <svg className="animate-spin h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                )}
+            </button>
         </motion.div>
     );
 };
@@ -1912,7 +2004,15 @@ const App: React.FC = () => {
 
     // --- Auth Handlers (使用 Supabase) ---
     const handleLogout = async () => {
-        await auth.signOut();
+        try {
+            await auth.signOut();
+            // 登出后跳转到首页，提供更流畅的体验
+            setActivePage('Explore');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // 即使出错也跳转到首页
+            setActivePage('Explore');
+        }
     };
     
     // 保留用于Admin页面的用户更新函数（如果需要的话）

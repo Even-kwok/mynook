@@ -191,11 +191,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignOut = async () => {
     try {
       await signOut();
+      // 不在这里手动设置状态，让 onAuthStateChange 监听器自动处理
+      // 这样可以避免状态冲突，提供更流畅的体验
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // 如果登出失败，手动清除状态
       setUser(null);
       setProfile(null);
       setSession(null);
-    } catch (error) {
-      console.error('Sign out error:', error);
     }
   };
 
