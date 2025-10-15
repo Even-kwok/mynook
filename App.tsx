@@ -3509,10 +3509,10 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
 
         return (
             <div className="flex-1 flex overflow-hidden">
-                <aside className="w-[380px] bg-white border-r border-slate-200 flex-shrink-0 flex flex-col">
+                <aside className="w-[380px] bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-screen relative">
                     {/* 可滚动内容区域 */}
-                    <div className="flex-1 overflow-y-auto scrollbar-hide pt-24 px-6">
-                        <div className="flex flex-col gap-6 pb-6">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide pt-24 px-6 pb-24">
+                        <div className="flex flex-col gap-6">
                             {currentPageInfo && (
                                 <div className="space-y-3">
                                     <h2 className="text-xl font-bold text-slate-800">{currentPageInfo.title}</h2>
@@ -3698,8 +3698,8 @@ Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2
                         </div>
                     </div>
                     
-                    {/* 固定在底部的生成按钮 */}
-                    <div className="flex-shrink-0 bg-white border-t border-slate-200 px-6 py-4">
+                    {/* 固定在底部的生成按钮 - 使用绝对定位确保始终可见 */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-4 shadow-lg">
                         {isAIAdvisor ? (
                             <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                 <IconSparkles className="w-5 h-5"/>
