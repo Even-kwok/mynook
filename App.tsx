@@ -18,6 +18,7 @@ import { getAllHomeSections } from './services/homeSectionService';
 import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
+import { PrivacyPage } from './components/PrivacyPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -554,6 +555,7 @@ const Header: React.FC<{
         const functionalPages = [
             ...designToolLabels,
             'Terms',
+            'Privacy',
             'Pricing',
             'Admin'
         ];
@@ -578,7 +580,7 @@ const Header: React.FC<{
         }
     }, [user]);
 
-    const navItems = ['Terms', 'Pricing'];
+    const navItems = ['Terms', 'Privacy', 'Pricing'];
 
     return (
         <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
@@ -3131,6 +3133,8 @@ const App: React.FC = () => {
                 />;
             case 'Terms':
                 return <TermsPage />;
+            case 'Privacy':
+                return <PrivacyPage />;
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
@@ -3473,7 +3477,7 @@ const App: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200">
+                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200 z-20">
                                 {isAIAdvisor ? (
                                     <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
                                         <IconSparkles className="w-5 h-5"/>

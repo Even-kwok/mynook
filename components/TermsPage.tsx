@@ -12,8 +12,8 @@ export const TermsPage: React.FC = () => {
                 >
                     {/* Header */}
                     <div className="mb-12 text-center">
-                        <h1 className="text-5xl font-bold text-slate-900 mb-4">Terms of Service & Privacy Policy</h1>
-                        <p className="text-lg text-slate-600">Last updated and effective date: October 11, 2025</p>
+                        <h1 className="text-5xl font-bold text-slate-900 mb-4">Terms of Service</h1>
+                        <p className="text-lg text-slate-600">Last updated: October 15, 2025</p>
                     </div>
 
                     {/* Important Notice */}
@@ -221,6 +221,163 @@ export const TermsPage: React.FC = () => {
                             </div>
                         </section>
 
+                        {/* Subscription Plans and Pricing */}
+                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Subscription Plans and Pricing</h2>
+                            <div className="space-y-6">
+                                <p className="leading-relaxed">
+                                    MyNook offers four membership tiers with different features and credit allocations. All paid subscriptions can be billed monthly or yearly.
+                                </p>
+
+                                <div className="space-y-4">
+                                    <div className="bg-slate-50 rounded-xl p-5">
+                                        <h3 className="text-xl font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                            <span>🆓</span> FREE Plan
+                                        </h3>
+                                        <ul className="list-disc pl-6 space-y-1 text-slate-700">
+                                            <li><strong>Price:</strong> $0</li>
+                                            <li><strong>Credits:</strong> 0 credits included</li>
+                                            <li><strong>Features:</strong> Browse designs and explore features</li>
+                                            <li><strong>Limitations:</strong> Must upgrade to generate designs</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-blue-50 rounded-xl p-5 border border-blue-200">
+                                        <h3 className="text-xl font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                                            <span>⭐</span> PRO Plan
+                                        </h3>
+                                        <ul className="list-disc pl-6 space-y-1 text-slate-700">
+                                            <li><strong>Price:</strong> $39/month or $199/year ($17/month when billed annually)</li>
+                                            <li><strong>Credits:</strong> 1,000 credits included per billing cycle</li>
+                                            <li><strong>Design Generation:</strong> Create up to 1 design per generation</li>
+                                            <li><strong>Features:</strong> Design generation, commercial use license, no watermark, style transfer</li>
+                                            <li><strong>Response Time:</strong> Standard</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-purple-50 rounded-xl p-5 border-2 border-purple-300">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <h3 className="text-xl font-semibold text-purple-800 flex items-center gap-2">
+                                                <span>👑</span> PREMIUM Plan
+                                            </h3>
+                                            <span className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full">POPULAR</span>
+                                        </div>
+                                        <ul className="list-disc pl-6 space-y-1 text-slate-700">
+                                            <li><strong>Price:</strong> $99/month or $499/year ($42/month when billed annually)</li>
+                                            <li><strong>Credits:</strong> 5,000 credits included per billing cycle</li>
+                                            <li><strong>Design Generation:</strong> Create up to 8 designs in parallel per generation</li>
+                                            <li><strong>Special Features:</strong> 🎨 Free Canvas feature, 🔧 Item Replace feature, priority queue processing</li>
+                                            <li><strong>Additional Features:</strong> Commercial use license, no watermark, style transfer, early access to new features</li>
+                                            <li><strong>Response Time:</strong> Fast (priority queue)</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-amber-50 rounded-xl p-5 border border-amber-200">
+                                        <h3 className="text-xl font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                                            <span>💼</span> BUSINESS Plan
+                                        </h3>
+                                        <ul className="list-disc pl-6 space-y-1 text-slate-700">
+                                            <li><strong>Price:</strong> $299/month or $1,699/year ($142/month when billed annually)</li>
+                                            <li><strong>Credits:</strong> 25,000 credits included per billing cycle (💰 Best value per credit)</li>
+                                            <li><strong>Design Generation:</strong> Create up to 16 designs in parallel per generation</li>
+                                            <li><strong>Special Features:</strong> 🎨 Free Canvas feature, 🔧 Item Replace feature</li>
+                                            <li><strong>Additional Features:</strong> Commercial use license, no watermark, style transfer, early access to new features</li>
+                                            <li><strong>Response Time:</strong> Fast (highest priority)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mt-6">
+                                    <h3 className="text-lg font-bold text-indigo-900 mb-3">💎 Credit Packs (One-Time Purchase)</h3>
+                                    <p className="text-slate-700 mb-3">
+                                        <strong>Available only for Pro, Premium, and Business members.</strong> Free members must upgrade to a paid plan before purchasing credit packs.
+                                    </p>
+                                    <ul className="list-disc pl-6 space-y-1 text-slate-700">
+                                        <li><strong>100 Credits Pack:</strong> $9.90 - Perfect for trying out</li>
+                                        <li><strong>300 Credits Pack:</strong> $24.99 - Great for small projects (Most Popular)</li>
+                                        <li><strong>1,000 Credits Pack:</strong> $69.99 - Best value per credit</li>
+                                    </ul>
+                                    <p className="text-sm text-slate-600 mt-3 italic">
+                                        Credit packs are added to your account balance immediately and do not expire. Credits from packs are used after your monthly subscription credits are consumed.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Subscription Terms */}
+                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Subscription Terms and Renewal</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Automatic Renewal</h3>
+                                    <p className="leading-relaxed">
+                                        All subscription plans (Pro, Premium, and Business) automatically renew at the end of each billing period (monthly or yearly) unless cancelled before the renewal date. You will be charged the then-current rate for your subscription plan upon renewal.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Credit Allocation</h3>
+                                    <ul className="list-disc pl-6 space-y-2">
+                                        <li>Credits are allocated at the beginning of each billing cycle</li>
+                                        <li>Unused subscription credits will be retained in your account and do not expire</li>
+                                        <li>Additional credits purchased through credit packs do NOT expire and will be used after your monthly subscription credits are consumed</li>
+                                        <li>Credits are deducted when you generate designs using AI features</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Cancellation Policy</h3>
+                                    <p className="leading-relaxed mb-3">
+                                        You may cancel your subscription at any time through your account settings. Upon cancellation:
+                                    </p>
+                                    <ul className="list-disc pl-6 space-y-2">
+                                        <li>Your subscription will remain active until the end of the current billing period</li>
+                                        <li>You will continue to have access to your plan features and remaining credits until the subscription expires</li>
+                                        <li>No refunds or credits will be issued for partial billing periods</li>
+                                        <li>Your account will automatically downgrade to the Free plan after your subscription expires</li>
+                                        <li>Any purchased credit packs will remain available in your account</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-amber-50 border border-amber-300 rounded-xl p-5">
+                                    <h3 className="text-lg font-bold text-amber-900 mb-2">⚠️ No Refund Policy</h3>
+                                    <p className="text-amber-900 leading-relaxed">
+                                        Due to the immediate access to digital services and the high costs of AI processing, <strong>we do not offer refunds for subscription fees or credit pack purchases</strong>. All sales are final. We encourage you to start with a lower-tier plan or smaller credit pack to ensure our service meets your needs before making larger purchases.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Plan Changes and Upgrades</h3>
+                                    <p className="leading-relaxed mb-2">
+                                        You may upgrade or downgrade your subscription plan at any time:
+                                    </p>
+                                    <ul className="list-disc pl-6 space-y-2">
+                                        <li><strong>Upgrades:</strong> Take effect immediately. You will be charged the prorated difference for the remainder of your current billing period, and your credits will be updated accordingly.</li>
+                                        <li><strong>Downgrades:</strong> Take effect at the end of your current billing period. You will retain your current plan's features and credits until then.</li>
+                                        <li><strong>Credit Retention:</strong> When changing plans, all credits in your account (including both subscription credits and credit pack credits) will be retained and will not be forfeited.</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Price Changes</h3>
+                                    <p className="leading-relaxed">
+                                        MyNook reserves the right to modify subscription prices and credit pack prices at any time. If you are on an active subscription, price changes will not affect you until your next renewal date. We will notify you of any price changes at least 30 days before they take effect for existing subscribers.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Payment Processing */}
+                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Payment Processing</h2>
+                            <p className="leading-relaxed">
+                                MyNook uses <strong>Creem.io as our Merchant of Record</strong> for payment processing. When you make a purchase, your payment information 
+                                is processed securely by Creem.io. We do not store your credit card information. All payment transactions are handled securely through 
+                                Creem.io's platform. By making a purchase, you agree to Creem.io's terms and conditions. For more information on how Creem.io handles 
+                                your payment data, please visit their privacy policy.
+                            </p>
+                        </section>
+
                         {/* Termination */}
                         <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                             <h2 className="text-3xl font-bold text-slate-900 mb-4">Termination</h2>
@@ -333,135 +490,18 @@ export const TermsPage: React.FC = () => {
                             </div>
                         </section>
 
-                        {/* Privacy Section */}
-                        <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-sm border-2 border-indigo-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-6">Privacy Policy</h2>
-                            
-                            <div className="space-y-6">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Our Commitment to Privacy</h3>
-                                    <p className="leading-relaxed">
-                                        Our commitment to privacy and data protection is reflected in this Privacy Statement which describes how we collect and process 
-                                        "personal information" that identifies you, like your name or email address. Any other information besides this is "non-personal information." 
-                                        If we store personal information with non-personal information, we'll consider that combination to be personal information.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Gathering</h3>
-                                    <p className="leading-relaxed mb-3">We learn information about you when:</p>
-                                    <ul className="list-disc pl-6 space-y-2">
-                                        <li><strong>You directly provide it to us:</strong> Name and contact information, payment information, photos and design files you upload</li>
-                                        <li><strong>We collect it automatically:</strong> IP address, device information, geolocation data, usage data and analytics</li>
-                                        <li><strong>Third parties provide it:</strong> Social networks (if you connect them), service providers, analytics partners</li>
-                                        <li><strong>We infer information:</strong> Such as your preferences based on your usage patterns</li>
-                                    </ul>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Use</h3>
-                                    <p className="leading-relaxed mb-2">We use your personal information to:</p>
-                                    <ul className="list-disc pl-6 space-y-1">
-                                        <li>Provide you with our Services</li>
-                                        <li>Improve and develop our Services</li>
-                                        <li>Communicate with you</li>
-                                        <li>Provide customer support</li>
-                                    </ul>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Sharing</h3>
-                                    <p className="leading-relaxed mb-2">We share information about you:</p>
-                                    <ul className="list-disc pl-6 space-y-1">
-                                        <li>When we've asked and received your consent to share it</li>
-                                        <li>With third-party service providers who help us operate our services</li>
-                                        <li>To comply with laws or respond to lawful requests</li>
-                                        <li>To prevent harm to the rights, property or safety of you or others</li>
-                                        <li>In the event of a corporate restructuring</li>
-                                    </ul>
-                                    <p className="leading-relaxed mt-3 font-semibold text-indigo-900">
-                                        Note: We do NOT sell your personal information to third parties.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Information Protection</h3>
-                                    <p className="leading-relaxed">
-                                        We implement physical, business and technical security measures to safeguard your personal information. In the event of a security breach, 
-                                        we'll notify you so that you can take appropriate protective steps. We only keep your personal information for as long as is needed to do 
-                                        what we collected it for. After that, we destroy it unless required by law.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Your Privacy Rights</h3>
-                                    <p className="leading-relaxed mb-3">
-                                        The following rights are granted under the European General Data Protection Regulation ("GDPR") and California Consumer Privacy Act ("CCPA"). 
-                                        MyNook applies these rights to all users of our products, regardless of your location:
-                                    </p>
-                                    <ul className="list-disc pl-6 space-y-2">
-                                        <li>The right to know what personal information is collected</li>
-                                        <li>The right to know if personal information is being shared, and to whom</li>
-                                        <li>The right to access your personal information</li>
-                                        <li>The right to exercise your privacy rights without being discriminated against</li>
-                                        <li>The right to request correction or erasure of personal information</li>
-                                        <li>The right to object to processing your personal information</li>
-                                        <li>The right to transfer or receive a copy of your personal information in a usable format</li>
-                                    </ul>
-                                </div>
-
-                                <div className="bg-blue-50 border border-blue-300 rounded-xl p-5">
-                                    <h3 className="text-lg font-bold text-blue-900 mb-2">EEA, UK, and Swiss Users</h3>
-                                    <p className="text-blue-900 leading-relaxed">
-                                        Under the GDPR, you have additional rights including the right to lodge a complaint with a supervisory authority. 
-                                        We encourage you to first contact us with any questions or concerns.
-                                    </p>
-                                </div>
-
-                                <div className="bg-purple-50 border border-purple-300 rounded-xl p-5">
-                                    <h3 className="text-lg font-bold text-purple-900 mb-2">California Users</h3>
-                                    <p className="text-purple-900 leading-relaxed">
-                                        Under the CCPA, you have additional rights including the right to opt-out of the sale of personal information. 
-                                        Note that we do NOT sell personal information as defined by the CCPA and have not done so in the past 12 months.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Children's Privacy</h3>
-                                    <p className="leading-relaxed">
-                                        We don't want your personal information if you're under 18. Do not provide it to us. If your child is under 18 and you believe your 
-                                        child has provided us with their personal information, please contact us to have such information removed.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Data Retention and International Transfers</h3>
-                                    <p className="leading-relaxed">
-                                        We retain personal data for as long as necessary to provide the services and fulfill the transactions you have requested. As part of 
-                                        our normal operations, your information may be stored in computers in other countries outside of your home country. By giving us information, 
-                                        you consent to this kind of information transfer. Irrespective of where your information resides, we'll comply with applicable law and abide 
-                                        by our commitments herein.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold text-slate-800 mb-3">Changes to Privacy Policy</h3>
-                                    <p className="leading-relaxed">
-                                        We may need to change this Privacy Statement and our notices from time to time. Any updates will be posted online with an effective date. 
-                                        Continued use of our services after the effective date of any changes constitutes acceptance of those changes.
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
                         {/* Contact Section */}
                         <section className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 shadow-lg text-white">
                             <h2 className="text-3xl font-bold mb-4">Contact Us</h2>
-                            <p className="leading-relaxed text-lg">
-                                If you have any questions about these Terms of Service or Privacy Policy, please contact us through your account settings or our support page.
+                            <p className="leading-relaxed text-lg mb-4">
+                                If you have any questions about these Terms of Service, please contact us at:
                             </p>
+                            <div className="bg-white/10 rounded-xl p-4">
+                                <p className="font-semibold text-lg mb-1">Customer Support</p>
+                                <p className="text-white/90">Email: support@mynook.ai</p>
+                            </div>
                             <p className="mt-6 text-sm opacity-90">
-                                By using MyNook, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and Privacy Policy.
+                                By using MyNook, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
                             </p>
                         </section>
                     </div>
