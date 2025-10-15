@@ -18,6 +18,7 @@ import { getAllHomeSections } from './services/homeSectionService';
 import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
+import { PrivacyPage } from './components/PrivacyPage';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -578,7 +579,7 @@ const Header: React.FC<{
         }
     }, [user]);
 
-    const navItems = ['Terms', 'Pricing'];
+    const navItems = ['Terms', 'Privacy', 'Pricing'];
 
     return (
         <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
@@ -3131,6 +3132,8 @@ const App: React.FC = () => {
                 />;
             case 'Terms':
                 return <TermsPage />;
+            case 'Privacy':
+                return <PrivacyPage />;
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
