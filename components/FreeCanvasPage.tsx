@@ -1628,7 +1628,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </Button>
                     </div>
                 </aside>
-                <main className="flex-1 bg-slate-50 relative">
+                <main className="flex-1 pt-[72px] bg-slate-50 relative">
                      {isLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
                             <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
