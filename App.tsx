@@ -2330,7 +2330,25 @@ const App: React.FC = () => {
         setError(null);
         
         try {
-            const base64Image = await toBase64(capturedFiles[0] as File);
+            const file = capturedFiles[0] as File;
+            if (!file) return;
+            
+            // First convert to base64
+            const originalBase64 = await toBase64(file);
+            
+            // Then compress the image
+            console.log(`🖼️ Compressing image for ${module}...`);
+            const { smartCompress } = await import('./utils/imageCompression');
+            const compressionResult = await smartCompress(
+                file as File,
+                (progress) => console.log(`📦 ${progress}`)
+            );
+            
+            console.log(`✅ Compression complete: ${compressionResult.reduction.toFixed(0)}% reduction (${(compressionResult.originalSize / 1024).toFixed(0)}KB → ${(compressionResult.compressedSize / 1024).toFixed(0)}KB)`);
+            
+            // Use the compressed image
+            const base64Image = compressionResult.base64;
+            
             if (module === 'm1') {
                 setModule1Images([base64Image]);
             } else if (module === 'item') {
