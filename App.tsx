@@ -44,48 +44,18 @@ const TemplateImage: React.FC<{
 
     return (
         <>
-            {/* 优雅的占位符 - 当无图片URL或加载失败时显示 */}
+            {/* 简洁占位符 - 只显示图标 */}
             {(shouldShowFallback || imageError || !imageLoaded) && (
-                <div className={`absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center ${imageLoaded && !imageError && !shouldShowFallback ? 'hidden' : ''}`}>
-                    {/* 装饰性背景元素 */}
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10"></div>
-                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full -ml-8 -mb-8"></div>
+                <div className={`absolute inset-0 bg-slate-100 flex items-center justify-center ${imageLoaded && !imageError && !shouldShowFallback ? 'hidden' : ''}`}>
+                    {/* 加载中动画 */}
+                    {!shouldShowFallback && !imageError && !imageLoaded && (
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-slate-600"></div>
+                    )}
                     
-                    {/* 主要内容 */}
-                    <div className="relative z-10 flex flex-col items-center justify-center p-4">
-                        {/* 加载中动画 */}
-                        {!shouldShowFallback && !imageError && !imageLoaded && (
-                            <div className="relative mb-2">
-                                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white/80"></div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <IconSparkles className="w-4 h-4 text-white/60" />
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* 图标 */}
-                        {(shouldShowFallback || imageError) && (
-                            <IconPhoto className="w-10 h-10 text-white/90 mb-2" />
-                        )}
-                        
-                        {/* 模板名称 */}
-                        <div 
-                            className="text-xs font-semibold text-center text-white/95 leading-tight px-2"
-                            style={{ 
-                                fontFamily: 'Arial, sans-serif',
-                                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                            }}
-                        >
-                            {templateName}
-                        </div>
-                        
-                        {/* 小标签 */}
-                        {(shouldShowFallback || imageError) && (
-                            <div className="mt-2 px-2 py-0.5 bg-white/25 rounded-full text-[10px] font-medium backdrop-blur-sm text-white/90">
-                                Template
-                            </div>
-                        )}
-                    </div>
+                    {/* 图标 */}
+                    {(shouldShowFallback || imageError) && (
+                        <IconPhoto className="w-12 h-12 text-slate-400" />
+                    )}
                 </div>
             )}
             
