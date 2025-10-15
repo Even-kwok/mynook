@@ -11,8 +11,7 @@ import { HeroBannerManager } from './HeroBannerManager';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, batchImportTemplates, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
-import { ADMIN_PAGE_CATEGORIES } from '../constants';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
 
 // --- Component Props ---
 
@@ -276,7 +275,6 @@ const TemplateManagement: React.FC<{
     const [editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [targetCategory, setTargetCategory] = useState<{ main: string, sub: string } | null>(null);
-    const [isImporting, setIsImporting] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
@@ -531,76 +529,6 @@ const TemplateManagement: React.FC<{
         });
     };
 
-    const handleImportTemplates = async () => {
-        if (!confirm('This will import all hard-coded templates into the database. Continue?')) return;
-        
-        setIsImporting(true);
-        try {
-            const templatesToImport: any[] = [];
-            
-            // 导入 Interior Design 模板 - 为每个房间类型创建独立副本
-            const { STYLES_BY_ROOM_TYPE } = await import('../constants');
-            
-            // 为每个房间类型创建独立的模板副本
-            Object.entries(STYLES_BY_ROOM_TYPE).forEach(([roomType, categories]) => {
-                categories.forEach(category => {
-                    category.templates.forEach(template => {
-                        templatesToImport.push({
-                            name: template.name,
-                            image_url: template.imageUrl,
-                            prompt: template.prompt,
-                            main_category: 'Interior Design',
-                            sub_category: 'All Interior Styles', // 保持原有的sub_category
-                            room_type: roomType, // 设置当前房间类型
-                            enabled: true,
-                            sort_order: 0
-                        });
-                    });
-                });
-            });
-            
-            // 导入其他分类的模板（非 Interior Design）
-            for (const [mainCategory, subCategories] of Object.entries(ADMIN_PAGE_CATEGORIES)) {
-                // 跳过 Interior Design，因为已经通过 STYLES_BY_ROOM_TYPE 导入
-                if (mainCategory === 'Interior Design') continue;
-                
-                for (const subCategory of subCategories) {
-                    for (const template of subCategory.templates) {
-                        templatesToImport.push({
-                            name: template.name,
-                            image_url: template.imageUrl,
-                            prompt: template.prompt,
-                            main_category: mainCategory,
-                            sub_category: subCategory.name,
-                            room_type: null, // 其他分类不需要 room_type
-                            enabled: subCategory.enabled !== false,
-                            sort_order: 0
-                        });
-                    }
-                }
-            }
-            
-            await batchImportTemplates(templatesToImport);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully imported ${templatesToImport.length} templates!`);
-        } catch (error) {
-            console.error('Failed to import templates:', error);
-            alert('Failed to import templates. Please check the console for details.');
-        } finally {
-            setIsImporting(false);
-        }
-    };
-
     // 排序处理函数
     const handleSortMainCategory = async (category: string, action: 'up' | 'down' | 'top' | 'bottom') => {
         if (isSorting) return;
@@ -777,13 +705,6 @@ const TemplateManagement: React.FC<{
                     >
                         <IconUpload className="w-4 h-4 mr-1" />
                         Batch Upload
-                    </Button>
-                    <Button 
-                        onClick={handleImportTemplates} 
-                        disabled={isImporting}
-                        className="!bg-green-50 hover:!bg-green-100 !text-green-600 !border-green-200"
-                    >
-                        {isImporting ? 'Importing...' : 'Import Default Templates'}
                     </Button>
                 </div>
             </div>
