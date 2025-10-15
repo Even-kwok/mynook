@@ -19,6 +19,7 @@ import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
 import { PrivacyPage } from './components/PrivacyPage';
+import { supabase } from './config/supabase';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -1875,11 +1876,11 @@ const App: React.FC = () => {
             
             setIsLoadingUsers(true);
             try {
-                const { supabase } = await import('./config/supabase');
-                const { data, error } = await supabase
+                const query = supabase
                     .from('users')
                     .select('*')
                     .order('created_at', { ascending: false });
+                const { data, error } = await query;
                 
                 if (error) {
                     console.error('Error loading users:', error);
@@ -3111,81 +3112,228 @@ const App: React.FC = () => {
     };
 
     const renderPage = () => {
+        // 页面过渡动画配置
+        const pageVariants = {
+            initial: { opacity: 0 },
+            animate: { opacity: 1 },
+            exit: { opacity: 0 }
+        };
+
+        const pageTransition = {
+            duration: 0.3,
+            ease: "easeInOut"
+        };
+
         switch (activePage) {
-            case 'Explore': return <ExplorePage onNavigate={setActivePage} />;
-            case 'Pricing': return <PricingPage />;
+            case 'Explore': 
+                return (
+                    <motion.div
+                        key="explore"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <ExplorePage onNavigate={setActivePage} />
+                    </motion.div>
+                );
+            case 'Pricing': 
+                return (
+                    <motion.div
+                        key="pricing"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <PricingPage />
+                    </motion.div>
+                );
             case 'My Designs': 
-                return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
+                return currentUser ? (
+                    <motion.div
+                        key="mydesigns"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="login-prompt"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]"
+                    >
+                        <div>Please log in to view your designs.</div>
+                    </motion.div>
+                );
             case 'Free Canvas':
-                return <FreeCanvasPage 
-                    setGenerationHistory={setGenerationHistory} 
-                    generationHistory={generationHistory} 
-                    // FIX: Corrected a typo in the onDownload prop, changing from the undefined 'onDownload' variable to the existing 'handleDownload' function.
-                    onDownload={handleDownload} 
-                    setFullScreenImage={setFullScreenImage} 
-                    currentUser={currentUser} 
-                    onUpdateUser={handleUpdateUser} 
-                    onLoginRequest={() => auth.setShowLoginModal(true)} 
-                    onError={setError}
-                    onUpgrade={() => setActivePage('Pricing')}
-                    canvasState={freeCanvasState}
-                    setCanvasState={setFreeCanvasState}
-                />;
+                return (
+                    <motion.div
+                        key="freecanvas"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <FreeCanvasPage 
+                            setGenerationHistory={setGenerationHistory} 
+                            generationHistory={generationHistory} 
+                            // FIX: Corrected a typo in the onDownload prop, changing from the undefined 'onDownload' variable to the existing 'handleDownload' function.
+                            onDownload={handleDownload} 
+                            setFullScreenImage={setFullScreenImage} 
+                            currentUser={currentUser} 
+                            onUpdateUser={handleUpdateUser} 
+                            onLoginRequest={() => auth.setShowLoginModal(true)} 
+                            onError={setError}
+                            onUpgrade={() => setActivePage('Pricing')}
+                            canvasState={freeCanvasState}
+                            setCanvasState={setFreeCanvasState}
+                        />
+                    </motion.div>
+                );
             case 'Terms':
-                return <TermsPage />;
+                return (
+                    <motion.div
+                        key="terms"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <TermsPage />
+                    </motion.div>
+                );
             case 'Privacy':
-                return <PrivacyPage />;
+                return (
+                    <motion.div
+                        key="privacy"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <PrivacyPage />
+                    </motion.div>
+                );
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-login"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <p className="text-xl text-slate-600 mb-4">请先登录</p>
                                 <Button onClick={() => auth.setShowLoginModal(true)}>登录</Button>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 if (!isAdmin) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-denied"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <p className="text-xl text-slate-600 mb-2">访问被拒绝</p>
                                 <p className="text-sm text-slate-500">您没有管理员权限</p>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 // Show loading state while fetching users
                 if (isLoadingUsers) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-loading"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4 mx-auto"></div>
                                 <p className="text-slate-600">加载管理后台...</p>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 // Render AdminPage with data
-                return <AdminPage 
-                    users={users} 
-                    onUpdateUser={handleUpdateUser} 
-                    onDeleteUser={handleDeleteUser} 
-                    generationHistory={generationHistory} 
-                    totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
-                    onDeleteBatch={handleDeleteGenerationBatch} 
-                    templateData={adminTemplateDataFull} 
-                    setTemplateData={setAdminTemplateDataFull} 
-                    categoryOrder={adminCategoryOrderFull} 
-                    setCategoryOrder={setAdminCategoryOrderFull}
-                    onTemplatesUpdated={refreshTemplateData}
-                  />
-            default: return renderMainGenerator();
+                return (
+                    <motion.div
+                        key="admin"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        <AdminPage 
+                            users={users} 
+                            onUpdateUser={handleUpdateUser} 
+                            onDeleteUser={handleDeleteUser} 
+                            generationHistory={generationHistory} 
+                            totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
+                            onDeleteBatch={handleDeleteGenerationBatch} 
+                            templateData={adminTemplateDataFull} 
+                            setTemplateData={setAdminTemplateDataFull} 
+                            categoryOrder={adminCategoryOrderFull} 
+                            setCategoryOrder={setAdminCategoryOrderFull}
+                            onTemplatesUpdated={refreshTemplateData}
+                        />
+                    </motion.div>
+                );
+            default: 
+                return (
+                    <motion.div
+                        key={activePage}
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full h-full"
+                    >
+                        {renderMainGenerator()}
+                    </motion.div>
+                );
         }
     };
     
@@ -3626,7 +3774,9 @@ const App: React.FC = () => {
                 designTools={designTools}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
-                {renderPage()}
+                <AnimatePresence mode="wait">
+                    {renderPage()}
+                </AnimatePresence>
             </div>
 
             {/* Hidden file input for uploads */}
