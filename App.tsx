@@ -7,7 +7,7 @@ import { toBase64 } from './utils/imageUtils';
 import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
 import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark, IconLock } from './components/Icons';
-import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, ADMIN_PAGE_CATEGORIES, EXPLORE_GALLERY_ITEMS } from './constants';
+import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
@@ -26,7 +26,7 @@ import { MEMBERSHIP_CONFIG } from './types/database';
 
 // --- Re-styled Helper Components ---
 
-// --- Template Image with Elegant Placeholder ---
+// --- Template Image with Simple Placeholder ---
 const TemplateImage: React.FC<{ 
     imageUrl: string; 
     templateName: string; 
@@ -34,22 +34,6 @@ const TemplateImage: React.FC<{
 }> = ({ imageUrl, templateName, isSelected }) => {
     const [imageError, setImageError] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
-
-    // 根据模板名生成一致的渐变颜色
-    const getGradientColors = (name: string) => {
-        const gradients = [
-            'from-purple-400 via-pink-400 to-red-400',
-            'from-blue-400 via-cyan-400 to-teal-400',
-            'from-green-400 via-emerald-400 to-cyan-400',
-            'from-orange-400 via-amber-400 to-yellow-400',
-            'from-rose-400 via-pink-400 to-purple-400',
-            'from-indigo-400 via-purple-400 to-pink-400',
-            'from-cyan-400 via-blue-400 to-indigo-400',
-            'from-teal-400 via-green-400 to-emerald-400',
-        ];
-        const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return gradients[hash % gradients.length];
-    };
 
     return (
         <>
@@ -63,13 +47,8 @@ const TemplateImage: React.FC<{
                 />
             )}
             {(imageError || !imageLoaded) && (
-                <div className={`absolute inset-0 bg-gradient-to-br ${getGradientColors(templateName)} flex items-center justify-center p-4 ${imageLoaded ? 'hidden' : ''}`}>
-                    <div className="text-center">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg">
-                            <IconSparkles className="w-8 h-8 mx-auto mb-2 text-slate-700" />
-                            <p className="text-sm font-semibold text-slate-800 leading-tight">{templateName}</p>
-                        </div>
-                    </div>
+                <div className={`absolute inset-0 bg-slate-100 flex items-center justify-center ${imageLoaded ? 'hidden' : ''}`}>
+                    <IconPhoto className="w-12 h-12 text-slate-400" />
                 </div>
             )}
             {isSelected && (
@@ -2161,34 +2140,23 @@ const App: React.FC = () => {
                 // Admin Panel 使用 getAllTemplates()（显示所有模板）
                 const allTemplates = await getAllTemplates();
                 
-                // 完全使用数据库模板，不合并硬编码模板
-                if (Object.keys(publicTemplates).length > 0) {
-                    setAdminTemplateData(publicTemplates);
-                    setAdminCategoryOrder(Object.keys(publicTemplates));
-                    console.log('✅ Public templates loaded from database');
-                } else {
-                    // 仅在数据库完全为空时使用默认模板作为fallback
-                    console.log('ℹ️ Database empty, using default templates as fallback');
-                    setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
-                    setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
-                }
+                // 只使用数据库模板，不使用硬编码fallback
+                setAdminTemplateData(publicTemplates);
+                setAdminCategoryOrder(Object.keys(publicTemplates));
+                setAdminTemplateDataFull(allTemplates);
+                setAdminCategoryOrderFull(Object.keys(allTemplates));
                 
-                // 设置Admin Panel的完整数据
-                if (Object.keys(allTemplates).length > 0) {
-                    setAdminTemplateDataFull(allTemplates);
-                    setAdminCategoryOrderFull(Object.keys(allTemplates));
-                    console.log('✅ All templates loaded for Admin Panel');
-                } else {
-                    setAdminTemplateDataFull(ADMIN_PAGE_CATEGORIES);
-                    setAdminCategoryOrderFull(Object.keys(ADMIN_PAGE_CATEGORIES));
-                }
+                console.log('✅ Templates loaded from database:', {
+                    publicCount: Object.keys(publicTemplates).length,
+                    allCount: Object.keys(allTemplates).length
+                });
             } catch (error) {
                 console.error('Failed to load templates:', error);
-                // 错误时使用默认模板
-                setAdminTemplateData(ADMIN_PAGE_CATEGORIES);
-                setAdminCategoryOrder(Object.keys(ADMIN_PAGE_CATEGORIES));
-                setAdminTemplateDataFull(ADMIN_PAGE_CATEGORIES);
-                setAdminCategoryOrderFull(Object.keys(ADMIN_PAGE_CATEGORIES));
+                // 错误时保持空状态，不使用硬编码fallback
+                setAdminTemplateData({});
+                setAdminCategoryOrder([]);
+                setAdminTemplateDataFull({});
+                setAdminCategoryOrderFull([]);
             } finally {
                 setTemplatesLoading(false);
             }
@@ -3447,15 +3415,28 @@ const App: React.FC = () => {
                                 />
                             )}
 
-                            {isStyleBased && categories.length > 0 && (
+                            {isStyleBased && (
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
-                                    <PromptTemplates 
-                                        categories={categories} 
-                                        onTemplateSelect={handleTemplateSelect} 
-                                        selectedTemplateIds={selectedTemplateIds}
-                                        maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
-                                    />
+                                    {templatesLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mx-auto mb-2"></div>
+                                            <p className="text-slate-500 text-sm">Loading templates...</p>
+                                        </div>
+                                    ) : categories.length > 0 ? (
+                                        <PromptTemplates 
+                                            categories={categories} 
+                                            onTemplateSelect={handleTemplateSelect} 
+                                            selectedTemplateIds={selectedTemplateIds}
+                                            maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                        />
+                                    ) : (
+                                        <div className="text-center py-8 px-4 bg-slate-50 rounded-xl border border-slate-200">
+                                            <IconPhoto className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+                                            <p className="text-slate-600 text-sm font-medium">No templates available</p>
+                                            <p className="text-slate-500 text-xs mt-1">Please contact support if this persists</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {isAIAdvisor && (
