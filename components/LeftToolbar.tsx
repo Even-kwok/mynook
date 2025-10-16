@@ -116,20 +116,20 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
       </div>
       
       {/* 底部用户信息区 */}
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-3">
         {user && (
           <>
-            {/* Credits */}
-            <div className="flex items-center gap-1.5">
-              <IconSparkles className="w-3.5 h-3.5 text-yellow-400" />
-              <span className={`text-xs font-semibold ${darkThemeClasses.textSecondary}`} style={{ fontFamily: 'Arial, sans-serif' }}>
+            {/* Credits - 上下布局 */}
+            <div className="flex flex-col items-center gap-1">
+              <IconSparkles className="w-4 h-4 text-yellow-400" />
+              <span className="text-xs font-semibold text-yellow-400" style={{ fontFamily: 'Arial, sans-serif' }}>
                 {user.credits}
               </span>
             </div>
             
-            {/* Tier */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs">
+            {/* Tier - 上下布局 */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-lg">
                 {user.permissionLevel === 1 ? '🆓' :
                  user.permissionLevel === 2 ? '⭐' :
                  user.permissionLevel === 3 ? '👑' : '💼'}
@@ -146,12 +146,12 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
               </span>
             </div>
             
-            {/* User Avatar Button */}
+            {/* User Avatar - 只显示圆形 */}
             <button
               onClick={onOpenUserMenu}
-              className={`w-full rounded-lg ${darkThemeClasses.bgTertiary} ${darkThemeClasses.bgHover} p-2 flex items-center justify-center transition-all`}
+              className="w-full flex items-center justify-center transition-all hover:scale-110"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-lg shadow-inner shadow-black/10">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl">
                 🐱
               </div>
             </button>
@@ -161,7 +161,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
         {!user && (
           <button
             onClick={onOpenUserMenu}
-            className={`w-full px-3 py-2 ${darkThemeClasses.bgTertiary} ${darkThemeClasses.bgHover} rounded-lg text-xs ${darkThemeClasses.textSecondary} font-semibold transition-all`}
+            className="w-full px-3 py-2 bg-[#2a2a2a] hover:bg-[#333333] rounded-lg text-xs text-[#a0a0a0] font-semibold transition-all"
           >
             Login
           </button>
