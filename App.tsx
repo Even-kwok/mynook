@@ -1131,7 +1131,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </motion.div>
                 </div>
                 
-                {/* Section 3 - Wall Paint (Right Card, Left Text) */}
+                {/* Section 3 - Wall Design (Right Card, Left Text) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
                     {/* Left Side: Text Content */}
                     <motion.div
@@ -1169,7 +1169,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </p>
 
                         <button
-                            onClick={() => onNavigate('Wall Paint')}
+                            onClick={() => onNavigate('Wall Design')}
                             className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
                             style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
                         >
@@ -1189,12 +1189,12 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
-                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Paint Design</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Design</span>
                             </div>
                             <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
                                 <img 
                                     src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=2000&auto=format&fit=crop" 
-                                    alt="Wall Paint Preview" 
+                                    alt="Wall Design Preview" 
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -1458,12 +1458,12 @@ const MyRendersPage: React.FC<{
     const [galleryViewSize, setGalleryViewSize] = useState<'sm' | 'md' | 'lg'>('md');
     const [selectedAlbum, setSelectedAlbum] = useState<string>('all');
 
-    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
     
     const albumTypeLabels: Record<string, string> = {
         "style": "Interior Designs",
         "item_replace": "Item Replacements",
-        "wall_paint": "Wall Paints",
+        "wall_design": "Wall Design",
         "floor_style": "Floor Styles",
         "garden": "Garden Designs",
         "style_match": "Style Matches",
@@ -2048,7 +2048,7 @@ const App: React.FC = () => {
     const [selectedBuildingType, setSelectedBuildingType] = useState<string>(BUILDING_TYPES[0].id);
     const [selectedItemType, setSelectedItemType] = useState<string>(ITEM_TYPES[0].id);
     const [selectedFestiveType, setSelectedFestiveType] = useState<string>('');
-    const [selectedWallPaintType, setSelectedWallPaintType] = useState<string>('');
+    const [selectedWallDesignType, setSelectedWallDesignType] = useState<string>('');
     const [selectedFloorType, setSelectedFloorType] = useState<string>('');
     const [selectedGardenType, setSelectedGardenType] = useState<string>('');
     
@@ -2109,7 +2109,7 @@ const App: React.FC = () => {
     const designTools = [
         { key: 'Interior Design', label: 'Interior Design', requiresPremium: false },
         { key: 'Exterior Design', label: 'Exterior Design', requiresPremium: false },
-        { key: 'Wall Paint', label: 'Wall Paint', requiresPremium: false },
+        { key: 'Wall Design', label: 'Wall Design', requiresPremium: false },
         { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
         { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
@@ -2239,10 +2239,10 @@ const App: React.FC = () => {
             .map(sc => ({ id: sc.name, name: sc.name }));
     }, [adminTemplateData, templatesLoading]);
 
-    // Wall Paint 色调选项
-    const availableWallPaintTypes = useMemo(() => {
+    // Wall Design 墙面类型选项
+    const availableWallDesignTypes = useMemo(() => {
         if (templatesLoading) return [];
-        const data = adminTemplateData["Wall Paint"];
+        const data = adminTemplateData["Wall Design"];
         if (!data || data.length === 0) return [];
         return data
             .filter(sc => sc.templates.length > 0)
@@ -2284,9 +2284,10 @@ const App: React.FC = () => {
             if (!selectedBuildingType || !availableBuildingTypes.some(bt => bt.id === selectedBuildingType)) {
                 setSelectedBuildingType(availableBuildingTypes[0].id);
             }
-        } else if (activePage === 'Wall Paint' && availableWallPaintTypes.length > 0) {
-            if (!selectedWallPaintType || !availableWallPaintTypes.some(wt => wt.id === selectedWallPaintType)) {
-                setSelectedWallPaintType(availableWallPaintTypes[0].id);
+        } else if (activePage === 'Wall Design' && availableWallDesignTypes.length > 0) {
+            const isCurrentWallDesignTypeAvailable = availableWallDesignTypes.some(wt => wt.id === selectedWallDesignType);
+            if (!isCurrentWallDesignTypeAvailable) {
+                setSelectedWallDesignType(availableWallDesignTypes[0].id);
             }
         } else if (activePage === 'Floor Style' && availableFloorTypes.length > 0) {
             if (!selectedFloorType || !availableFloorTypes.some(ft => ft.id === selectedFloorType)) {
@@ -2300,7 +2301,7 @@ const App: React.FC = () => {
     }, [availableRoomTypes, selectedRoomType, activePage, 
         availableFestiveTypes, selectedFestiveType,
         availableBuildingTypes, selectedBuildingType,
-        availableWallPaintTypes, selectedWallPaintType,
+        availableWallDesignTypes, selectedWallDesignType,
         availableFloorTypes, selectedFloorType,
         availableGardenTypes, selectedGardenType]);
 
@@ -2529,7 +2530,7 @@ const App: React.FC = () => {
         setCurrentAdvisorResponse(null);
         setAdvisorChat(null);
 
-        const isWallPaint = activePage === 'Wall Paint';
+        const isWallDesign = activePage === 'Wall Design';
         const isFloorStyle = activePage === 'Floor Style';
         const isGardenBackyard = activePage === 'Garden & Backyard Design';
         const isExteriorDesign = activePage === 'Exterior Design';
@@ -2558,7 +2559,7 @@ const App: React.FC = () => {
                 id: template.name,
                 status: 'pending',
                 imageUrl: null,
-                promptBase: isWallPaint || isGardenBackyard || isFloorStyle
+                promptBase: isWallDesign || isGardenBackyard || isFloorStyle
                     ? templatePrompt
                     : isExteriorDesign
                         ? `A ${buildingTypeName}, ${templatePrompt}`
@@ -2616,7 +2617,7 @@ const App: React.FC = () => {
     
         const newBatch: GenerationBatch = {
             id: Date.now().toString(),
-            type: isWallPaint ? 'wall_paint' : (isFloorStyle ? 'floor_style' : (isGardenBackyard ? 'garden' : (isExteriorDesign ? 'exterior' : (isFestiveDecor ? 'festive' : 'style')))),
+            type: isWallDesign ? 'wall_design' : (isFloorStyle ? 'floor_style' : (isGardenBackyard ? 'garden' : (isExteriorDesign ? 'exterior' : (isFestiveDecor ? 'festive' : 'style')))),
             timestamp: new Date(),
             subjectImage: cleanModule1[0],
             styleImages: [],
@@ -3080,8 +3081,8 @@ const App: React.FC = () => {
             title: 'Exterior Design',
             description: "Reimagine your property's exterior. Transform the architectural style of your home or building.",
         },
-        'Wall Paint': {
-            title: 'Wall Paint',
+        'Wall Design': {
+            title: 'Wall Design',
             description: 'Virtually repaint your walls. Choose from various colors and finishes to see an instant change.',
         },
         'Floor Style': {
@@ -3190,7 +3191,7 @@ const App: React.FC = () => {
     };
     
     const renderMainGenerator = () => {
-        const isStyleBased = ['Interior Design', 'Wall Paint', 'Floor Style', 'Garden & Backyard Design', 'Exterior Design', 'Festive Decor'].includes(activePage);
+        const isStyleBased = ['Interior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Exterior Design', 'Festive Decor'].includes(activePage);
         const isItemReplace = activePage === 'Item Replace';
         const isStyleMatch = activePage === 'Reference Style Match';
         const isAIAdvisor = activePage === 'AI Design Advisor';
@@ -3234,14 +3235,14 @@ const App: React.FC = () => {
                     }];
                 }
             }
-        } else if (activePage === 'Wall Paint') {
-            const wallPaintData = adminTemplateData["Wall Paint"];
-            if (wallPaintData) {
-                const wallPaintCategory = wallPaintData.find(sc => sc.name === selectedWallPaintType);
-                if (wallPaintCategory && wallPaintCategory.templates.length > 0) {
+        } else if (activePage === 'Wall Design') {
+            const wallDesignData = adminTemplateData["Wall Design"];
+            if (wallDesignData) {
+                const wallDesignCategory = wallDesignData.find(sc => sc.name === selectedWallDesignType);
+                if (wallDesignCategory && wallDesignCategory.templates.length > 0) {
                     categories = [{
-                        name: selectedWallPaintType,
-                        templates: wallPaintCategory.templates
+                        name: selectedWallDesignType,
+                        templates: wallDesignCategory.templates
                     }];
                 }
             }
@@ -3377,14 +3378,14 @@ const App: React.FC = () => {
                                     />
                                 </div>
                             )}
-                            {activePage === 'Wall Paint' && (
+                            {activePage === 'Wall Design' && (
                                 <div>
                                     <CustomSelect
-                                        label="Choose a Color Tone"
-                                        options={availableWallPaintTypes.length > 0 ? availableWallPaintTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No color tones available'}]}
-                                        value={availableWallPaintTypes.length > 0 ? selectedWallPaintType : 'loading'}
-                                        onChange={setSelectedWallPaintType}
-                                        disabled={templatesLoading || availableWallPaintTypes.length === 0}
+                                        label="Choose a Wall Type"
+                                        options={availableWallDesignTypes.length > 0 ? availableWallDesignTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No wall types available'}]}
+                                        value={availableWallDesignTypes.length > 0 ? selectedWallDesignType : 'loading'}
+                                        onChange={setSelectedWallDesignType}
+                                        disabled={templatesLoading || availableWallDesignTypes.length === 0}
                                     />
                                 </div>
                             )}
