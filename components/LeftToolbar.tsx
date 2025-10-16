@@ -74,15 +74,18 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
               <motion.button
                 key={tool.id}
                 onClick={() => onToolClick(tool.id)}
+                disabled={tool.isComingSoon}
                 className={`
                   relative w-full rounded-xl px-2 py-3 flex flex-col items-center gap-1 transition-all
                   ${isActive 
                     ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
-                    : 'text-[#a0a0a0] hover:bg-[#2a2a2a]'
+                    : tool.isComingSoon
+                      ? 'text-[#404040] opacity-50 cursor-not-allowed'
+                      : 'text-[#a0a0a0] hover:bg-[#2a2a2a]'
                   }
                 `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={tool.isComingSoon ? {} : { scale: 1.05 }}
+                whileTap={tool.isComingSoon ? {} : { scale: 0.95 }}
               >
                 {/* Emoji 图标 */}
                 <span className="text-2xl">{tool.emoji}</span>
@@ -95,17 +98,10 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                   {tool.shortName}
                 </span>
                 
-                {/* Premium 标记 */}
+                {/* Premium VIP 标记 */}
                 {tool.isPremium && !isActive && (
-                  <div className="absolute top-1 right-1 w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <span className="text-[8px]">👑</span>
-                  </div>
-                )}
-                
-                {/* Coming Soon 标记 */}
-                {tool.isComingSoon && !isActive && (
-                  <div className="absolute top-1 right-1 text-[8px] bg-slate-600 px-1 rounded">
-                    🔜
+                  <div className="absolute top-1 right-1">
+                    <span className="text-sm">👑</span>
                   </div>
                 )}
               </motion.button>

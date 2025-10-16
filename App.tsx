@@ -593,27 +593,15 @@ const Header: React.FC<{
                 <button onClick={() => onNavigate('Explore')} className="flex items-center gap-2 cursor-pointer">
                     <span className="logo-gradient" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 16, lineHeight: '24px', letterSpacing: '0.8px' }}>MyNook.AI</span>
                 </button>
-                {/* Moved and restyled Start Design button */}
-                <div className="relative hidden md:block" ref={designToolsRef}>
-                    <button
-                        onClick={() => setDesignToolsOpen(o => !o)}
-                        className={`px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 shadow-md whitespace-nowrap ${
-                            isFunctionalPage 
-                                ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200' 
-                                : isDesignToolActive 
-                                    ? 'text-white bg-[#2b2f34] ring-1 ring-white/10' 
-                                    : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f] ring-1 ring-white/10'
-                        }`}
-                        style={{ minWidth: '239.09px', height: '32px' }}
-                    >
-                        <IconSparkles className={`w-4 h-4 flex-shrink-0 ${isFunctionalPage ? 'text-indigo-500' : 'text-white'}`} />
-                        <span className="truncate" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{activeDesignToolLabel}</span>
-                        <IconChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    <AnimatePresence>
-                        {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
-                    </AnimatePresence>
-                </div>
+                {/* Start Now Button - 显眼的开始按钮 */}
+                <button
+                    onClick={() => onNavigate('Interior Design')}
+                    className="hidden md:flex px-6 py-2 rounded-full text-sm font-semibold transition-all items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:scale-105 shadow-lg"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                >
+                    <IconSparkles className="w-4 h-4" />
+                    Start Now
+                </button>
             </div>
             <div className="flex items-center gap-4">
                 {/* Right-side nav items (moved button removed) */}
