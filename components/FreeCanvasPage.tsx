@@ -54,17 +54,17 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
     const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
 
     const albumTypeLabels: Record<string, string> = {
-        "style": "Interior Designs",
-        "item_replace": "Item Replacements",
-        "wall_paint": "Wall Paints",
-        "floor_style": "Floor Styles",
-        "garden": "Garden Designs",
-        "style_match": "Style Matches",
-        "ai_advisor": "AI Advisor Chats",
-        "multi_item": "Multi-Item Previews",
-        "exterior": "Exterior Designs",
-        "festive": "Festive Decor",
-        "free_canvas": "Free Canvas Creations"
+        "style": "Interior",
+        "item_replace": "Replace",
+        "wall_paint": "Wall",
+        "floor_style": "Floor",
+        "garden": "Garden",
+        "style_match": "Style Match",
+        "ai_advisor": "AI Advisor",
+        "multi_item": "Multi-Item",
+        "exterior": "Exterior",
+        "festive": "Festive",
+        "free_canvas": "Canva"
     };
 
     const allGalleryImages = useMemo(() => {
@@ -1521,7 +1521,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             <UpgradeModal 
                 isOpen={isPermissionModalOpen}
                 onClose={() => setIsPermissionModalOpen(false)}
-                featureName="Free Canvas"
+                featureName="Canva"
                 requiredTier="premium"
                 onUpgrade={onUpgrade}
             />
