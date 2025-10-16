@@ -69,14 +69,14 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
         >
           {/* 左侧：上传模块 */}
           <div className="w-[280px] flex flex-col">
-            {/* 标题栏 */}
-            <div className="h-14 px-4 flex items-center justify-between">
+            {/* 标题栏 - 居中显示 */}
+            <div className="h-14 px-4 flex items-center justify-center relative">
               <h3 className={`text-sm font-semibold ${darkThemeClasses.textPrimary}`} style={{ fontFamily: 'Arial, sans-serif' }}>
                 {toolName}
               </h3>
               <button
                 onClick={onClose}
-                className={`w-8 h-8 rounded-lg ${darkThemeClasses.bgHover} ${darkThemeClasses.textSecondary} hover:text-white transition-colors flex items-center justify-center`}
+                className={`absolute right-4 w-8 h-8 rounded-lg ${darkThemeClasses.bgHover} ${darkThemeClasses.textSecondary} hover:text-white transition-colors flex items-center justify-center`}
               >
                 <IconX />
               </button>
@@ -172,27 +172,27 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   placeholder="Describe what you want..."
                 />
               </div> */}
-            </div>
-            
-            {/* Generate 按钮 - 固定底部 */}
-            <div className="p-4">
-              <button
-                onClick={onGenerate}
-                disabled={generateDisabled || isGenerating}
-                className={`
-                  w-full h-12 rounded-xl font-semibold text-white transition-all
-                  ${generateDisabled || isGenerating
-                    ? 'bg-[#333333] cursor-not-allowed opacity-50'
-                    : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 hover:scale-105'
-                  }
-                `}
-                style={{ fontFamily: 'Arial, sans-serif' }}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <IconSparkles className="w-5 h-5" />
-                  {isGenerating ? 'Generating...' : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : 'Generate (1 Credit)'}
-                </span>
-              </button>
+              
+              {/* Generate 按钮 - 跟随内容 */}
+              <div className="mt-6">
+                <button
+                  onClick={onGenerate}
+                  disabled={generateDisabled || isGenerating}
+                  className={`
+                    w-full h-12 rounded-xl font-semibold text-white transition-all
+                    ${generateDisabled || isGenerating
+                      ? 'bg-[#333333] cursor-not-allowed opacity-50'
+                      : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 hover:scale-105'
+                    }
+                  `}
+                  style={{ fontFamily: 'Arial, sans-serif' }}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <IconSparkles className="w-5 h-5" />
+                    {isGenerating ? 'Generating...' : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : 'Generate (1 Credit)'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
           
@@ -220,12 +220,21 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                       `}
                     >
                       {/* 图片 */}
-                      <div className="aspect-[6/5] bg-[#2a2a2a]">
+                      <div className="aspect-[6/5] bg-[#2a2a2a] relative flex items-center justify-center">
                         <img 
                           src={template.imageUrl} 
                           alt={template.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
+                        {/* 占位图标 - 当图片加载失败时显示 */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-16 h-16 text-[#404040]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                          </svg>
+                        </div>
                       </div>
                       
                       {/* 标题 */}

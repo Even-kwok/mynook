@@ -3698,9 +3698,7 @@ const App: React.FC = () => {
                                 </div>
                             );
                         })()
-                    ) : (
-                        <ResultsPlaceholder isAdvisor={isAIAdvisor} />
-                    )}
+                    ) : null}
                 </main>
                 {/* Assets Sidebar (My Designs) */}
                 <MyDesignsSidebar
