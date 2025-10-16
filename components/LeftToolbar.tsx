@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   IconHome, 
@@ -15,6 +15,7 @@ import {
 } from './Icons';
 import { darkThemeClasses } from '../config/darkTheme';
 import { UserMenu } from './UserMenu';
+import { getToolsOrder, ToolItemConfig } from '../services/toolsOrderService';
 
 // 功能工具定义
 export interface ToolItem {
@@ -27,20 +28,6 @@ export interface ToolItem {
   isPremium?: boolean;
   isComingSoon?: boolean;
 }
-
-const tools: ToolItem[] = [
-  { id: 'interior', name: 'Interior Design', shortName: 'Interior', emoji: '🛋️', isPremium: false }, 
-  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', emoji: '🏠', isPremium: false },
-  { id: 'wall', name: 'Wall Design', shortName: 'Wall', emoji: '🎨', isPremium: false },
-  { id: 'floor', name: 'Floor Style', shortName: 'Floor', emoji: '🟫', isPremium: false },
-  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', emoji: '🌳', isPremium: false },
-  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', emoji: '🎄', isPremium: false },
-  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', emoji: '➕', isPremium: true },
-  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🖼️', isPremium: true },
-  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true },
-  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true },
-  { id: 'free-canvas', name: 'Canva', shortName: 'Canva', emoji: '✏️', isPremium: true },
-];
 
 export interface LeftToolbarProps {
   activeTool: string | null;
@@ -59,6 +46,27 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
+  const [tools, setTools] = useState<ToolItemConfig[]>([]);
+
+  // Load tools order from storage
+  useEffect(() => {
+    const loadedTools = getToolsOrder();
+    setTools(loadedTools);
+    
+    // Listen for storage changes (e.g., from admin panel)
+    const handleStorageChange = () => {
+      setTools(getToolsOrder());
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Custom event for same-window updates
+    window.addEventListener('toolsOrderUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('toolsOrderUpdated', handleStorageChange);
+    };
+  }, []);
 
   const handleAvatarClick = () => {
     if (user) {

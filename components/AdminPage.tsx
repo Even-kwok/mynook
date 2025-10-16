@@ -10,6 +10,7 @@ import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
+import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
 // --- Component Props ---
 
@@ -1197,6 +1198,150 @@ const CategoryModal: React.FC<{
     );
 };
 
+// --- Tools Order Management Component ---
+const ToolsOrderManagement: React.FC = () => {
+    const [tools, setTools] = useState<ToolItemConfig[]>([]);
+
+    useEffect(() => {
+        setTools(getToolsOrder());
+    }, []);
+
+    const handleMoveUp = (index: number) => {
+        const newTools = moveToolUp(tools, index);
+        setTools(newTools);
+        // Dispatch custom event to update LeftToolbar
+        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    };
+
+    const handleMoveDown = (index: number) => {
+        const newTools = moveToolDown(tools, index);
+        setTools(newTools);
+        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    };
+
+    const handleMoveToTop = (index: number) => {
+        const newTools = moveToolToTop(tools, index);
+        setTools(newTools);
+        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    };
+
+    const handleMoveToBottom = (index: number) => {
+        const newTools = moveToolToBottom(tools, index);
+        setTools(newTools);
+        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    };
+
+    const handleReset = () => {
+        if (confirm('确定要重置功能按钮排序为默认顺序吗？')) {
+            const defaultTools = resetToolsOrder();
+            setTools(defaultTools);
+            window.dispatchEvent(new Event('toolsOrderUpdated'));
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-xl font-semibold text-slate-800">功能按钮排序</h3>
+                        <p className="text-sm text-slate-500 mt-1">调整左侧工具栏中功能按钮的显示顺序</p>
+                    </div>
+                    <button
+                        onClick={handleReset}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                        <IconX className="w-4 h-4" />
+                        重置为默认
+                    </button>
+                </div>
+
+                <div className="space-y-2">
+                    {tools.map((tool, index) => (
+                        <div
+                            key={tool.id}
+                            className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors"
+                        >
+                            {/* Tool Info */}
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                                    <span className="text-2xl">{tool.emoji}</span>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-semibold text-slate-800">{tool.name}</h4>
+                                        {tool.isPremium && (
+                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+                                                Premium
+                                            </span>
+                                        )}
+                                        {tool.isComingSoon && (
+                                            <span className="px-2 py-0.5 bg-slate-200 text-slate-600 text-xs font-semibold rounded">
+                                                Coming Soon
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-0.5">ID: {tool.id}</p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => handleMoveToTop(index)}
+                                    disabled={index === 0}
+                                    className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                                    title="置顶"
+                                >
+                                    <IconMoveToTop className="w-5 h-5 text-slate-600 group-hover:text-indigo-600" />
+                                </button>
+                                <button
+                                    onClick={() => handleMoveUp(index)}
+                                    disabled={index === 0}
+                                    className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                                    title="上移一层"
+                                >
+                                    <IconMoveUp className="w-5 h-5 text-slate-600 group-hover:text-indigo-600" />
+                                </button>
+                                <button
+                                    onClick={() => handleMoveDown(index)}
+                                    disabled={index === tools.length - 1}
+                                    className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                                    title="下移一层"
+                                >
+                                    <IconMoveDown className="w-5 h-5 text-slate-600 group-hover:text-indigo-600" />
+                                </button>
+                                <button
+                                    onClick={() => handleMoveToBottom(index)}
+                                    disabled={index === tools.length - 1}
+                                    className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                                    title="置底"
+                                >
+                                    <IconMoveToBottom className="w-5 h-5 text-slate-600 group-hover:text-indigo-600" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex gap-3">
+                        <IconSparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-blue-800">
+                            <p className="font-medium">提示：</p>
+                            <ul className="mt-2 space-y-1 list-disc list-inside">
+                                <li>排序更改会立即生效并应用到左侧工具栏</li>
+                                <li>排序信息保存在浏览器本地存储中</li>
+                                <li>点击"重置为默认"可恢复初始排序</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Admin Page Component ---
 export const AdminPage: React.FC<AdminPageProps> = ({
     users,
@@ -1217,6 +1362,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
+        { id: 'tools-order', name: 'Tools Order', icon: IconArrowUp },
         { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
         { id: 'settings', name: 'Settings', icon: IconSettings },
@@ -1236,6 +1382,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
+            case 'tools-order':
+                return <ToolsOrderManagement />;
             case 'hero-section':
                 return <HeroSectionManager onUpdate={onTemplatesUpdated} />;
             case 'home-sections':
