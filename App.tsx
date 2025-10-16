@@ -26,6 +26,7 @@ import { MEMBERSHIP_CONFIG } from './types/database';
 import { BannerHero } from './components/BannerHero';
 import { LeftToolbar } from './components/LeftToolbar';
 import { SlidingPanel } from './components/SlidingPanel';
+import { UserMenu as DarkUserMenu } from './components/UserMenu';
 
 // --- Re-styled Helper Components ---
 
@@ -644,12 +645,20 @@ const Header: React.FC<{
 
                 {user && (
                     <div className="relative" ref={userMenuRef}>
-                        <button onClick={() => setUserMenuOpen(o => !o)} className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-lg shadow-inner shadow-black/10 hover:scale-110 transition-transform">
+                        <button 
+                            onClick={() => setUserMenuOpen(o => !o)} 
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl hover:scale-110 transition-transform"
+                        >
                             🐱
                         </button>
-                        <AnimatePresence>
-                            {userMenuOpen && <UserMenu user={user} onLogout={onLogout} onNavigate={onNavigate} onClose={() => setUserMenuOpen(false)} />}
-                        </AnimatePresence>
+                        <DarkUserMenu
+                            isOpen={userMenuOpen}
+                            onClose={() => setUserMenuOpen(false)}
+                            user={user}
+                            onLogout={onLogout}
+                            anchorRef={userMenuRef}
+                            position="bottom"
+                        />
                     </div>
                 )}
             </div>

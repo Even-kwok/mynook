@@ -11,7 +11,8 @@ interface UserMenuProps {
     permissionLevel: number;
   };
   onLogout: () => void;
-  anchorRef: React.RefObject<HTMLButtonElement>;
+  anchorRef: React.RefObject<HTMLButtonElement | HTMLDivElement>;
+  position?: 'top' | 'bottom'; // 'top' = above button, 'bottom' = below button
 }
 
 const TIER_NAMES: Record<number, string> = {
@@ -40,7 +41,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   onClose, 
   user, 
   onLogout,
-  anchorRef 
+  anchorRef,
+  position = 'top'
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -69,16 +71,21 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const tierColor = TIER_COLORS[user.permissionLevel] || 'text-slate-400';
   const tierEmoji = TIER_EMOJIS[user.permissionLevel] || '🆓';
 
+  // 根据 position 设置不同的位置类
+  const positionClasses = position === 'top' 
+    ? 'bottom-full left-0 mb-2' 
+    : 'top-full right-0 mt-2';
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           ref={menuRef}
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          initial={{ opacity: 0, y: position === 'top' ? 10 : -10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+          exit={{ opacity: 0, y: position === 'top' ? 10 : -10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute bottom-full left-0 mb-2 w-64 bg-[#1a1a1a] border border-[#333333] rounded-xl shadow-2xl overflow-hidden"
+          className={`absolute ${positionClasses} w-64 bg-[#1a1a1a] border border-[#333333] rounded-xl shadow-2xl overflow-hidden`}
           style={{ 
             fontFamily: 'Arial, sans-serif',
             zIndex: 9999

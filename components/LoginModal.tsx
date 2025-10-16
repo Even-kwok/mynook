@@ -169,11 +169,36 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <div className="p-8">
             {/* Title */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-800">
-                {mode === 'signin' && 'Sign In'}
-                {mode === 'signup' && 'Sign Up'}
-                {mode === 'forgot-password' && 'Reset Password'}
-              </h2>
+              {mode === 'signin' && (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-6xl animate-bounce">
+                    🏠✨
+                  </div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Welcome Back!
+                  </h2>
+                </div>
+              )}
+              {mode === 'signup' && (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-6xl">
+                    🎉🌟
+                  </div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Join MyNook!
+                  </h2>
+                </div>
+              )}
+              {mode === 'forgot-password' && (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-6xl">
+                    🔑💫
+                  </div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Reset Password
+                  </h2>
+                </div>
+              )}
             </div>
 
             {/* Error message */}
