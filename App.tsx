@@ -1731,7 +1731,7 @@ const CustomSelect: React.FC<{
 
     return (
         <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-slate-800">{label}</h3>
+            <h3 className="text-sm font-medium text-slate-800">{label}</h3>
             <div className="relative" ref={selectRef}>
                 <button
                     type="button"
