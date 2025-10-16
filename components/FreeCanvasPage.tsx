@@ -51,12 +51,12 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
 }) => {
     const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(true);
     const [galleryViewSize, setGalleryViewSize] = useState<'sm' | 'md' | 'lg'>('md');
-    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
 
     const albumTypeLabels: Record<string, string> = {
         "style": "Interior Designs",
         "item_replace": "Item Replacements",
-        "wall_paint": "Wall Paints",
+        "wall_design": "Wall Design",
         "floor_style": "Floor Styles",
         "garden": "Garden Designs",
         "style_match": "Style Matches",
@@ -1516,7 +1516,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     };
     
     const handleDelete = (batchId: string, imageId: string) => {
-        const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+        const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
         setGenerationHistory(prevHistory => {
             const newHistory = prevHistory.map(batch => {
                 if (batch.id === batchId) {
@@ -1660,7 +1660,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 onClick={() => setIsClearConfirmOpen(o => !o)}
-                                className="absolute bottom-12 right-12 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
+                                className="absolute bottom-8 right-8 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
                                 aria-label="Clear canvas"
                             >
                                 <IconTrash className="w-6 h-6" />

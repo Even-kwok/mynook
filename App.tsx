@@ -19,6 +19,7 @@ import { getHeroSection } from './services/heroSectionService';
 import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
 import { PrivacyPage } from './components/PrivacyPage';
+import { supabase } from './config/supabase';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
@@ -36,22 +37,41 @@ const TemplateImage: React.FC<{
     const [imageError, setImageError] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
 
+    // 检查是否应该显示占位符（URL为空或包含placeholder）
+    const shouldShowFallback = !imageUrl || 
+        imageUrl === '' || 
+        imageUrl.includes('placeholder');
+
     return (
         <>
-            {!imageError && (
+            {/* 简洁占位符 - 只显示图标 */}
+            {(shouldShowFallback || imageError || !imageLoaded) && (
+                <div className={`absolute inset-0 bg-slate-100 flex items-center justify-center ${imageLoaded && !imageError && !shouldShowFallback ? 'hidden' : ''}`}>
+                    {/* 加载中动画 */}
+                    {!shouldShowFallback && !imageError && !imageLoaded && (
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-slate-600"></div>
+                    )}
+                    
+                    {/* 图标 */}
+                    {(shouldShowFallback || imageError) && (
+                        <IconPhoto className="w-12 h-12 text-slate-400" />
+                    )}
+                </div>
+            )}
+            
+            {/* 实际图片 - 仅当有有效URL时尝试加载 */}
+            {!shouldShowFallback && (
                 <img 
                     src={imageUrl} 
                     alt={templateName} 
                     className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setImageLoaded(true)}
                     onError={() => setImageError(true)}
+                    loading="lazy"
                 />
             )}
-            {(imageError || !imageLoaded) && (
-                <div className={`absolute inset-0 bg-slate-100 flex items-center justify-center ${imageLoaded ? 'hidden' : ''}`}>
-                    <IconPhoto className="w-12 h-12 text-slate-400" />
-                </div>
-            )}
+            
+            {/* 选中状态覆盖层 */}
             {isSelected && (
                 <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-10">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
@@ -919,9 +939,9 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     }, [homeSections, sectionsLoading, renderSection]);
 
     return (
-        <main className="min-h-screen bg-black relative overflow-y-auto">
-            {/* Background Image Layer */}
-            <div className="absolute inset-0 z-0">
+        <main className="min-h-screen bg-black relative w-full">
+            {/* Background Image Layer - Fixed */}
+            <div className="fixed inset-0 z-0">
                 <img 
                     src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
                     alt="Mountain background" 
@@ -931,7 +951,8 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
             </div>
             
             {/* Unified Content Container */}
-            <div className="container mx-auto px-8 pt-[188px] pb-20 relative z-10">
+            <div className="w-full relative z-10">
+                <div className="container mx-auto px-8 pt-[188px] pb-20">
                 {/* Section 1 - Hero Area (Dynamic from Database) */}
                 {!sectionsLoading && heroSection && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -1131,7 +1152,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </motion.div>
                 </div>
                 
-                {/* Section 3 - Wall Paint (Right Card, Left Text) */}
+                {/* Section 3 - Wall Design (Right Card, Left Text) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-32">
                     {/* Left Side: Text Content */}
                     <motion.div
@@ -1169,7 +1190,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         </p>
 
                         <button
-                            onClick={() => onNavigate('Wall Paint')}
+                            onClick={() => onNavigate('Wall Design')}
                             className="rounded-xl bg-[#00BCD4] hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group text-black"
                             style={{ width: '185.1px', height: '48px', fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 18, lineHeight: '28px', letterSpacing: '0px' }}
                         >
@@ -1189,12 +1210,12 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-white/70" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>AI DESIGN PREVIEW</span>
-                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Paint Design</span>
+                                <span className="text-white" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>Wall Design</span>
                             </div>
                             <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
                                 <img 
                                     src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=2000&auto=format&fit=crop" 
-                                    alt="Wall Paint Preview" 
+                                    alt="Wall Design Preview" 
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -1429,6 +1450,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 {/* Section 6 end */}
                 </>}
                 {/* END LEGACY Hardcoded Sections */}
+                </div>
             </div>
         </main>
     );
@@ -1458,12 +1480,12 @@ const MyRendersPage: React.FC<{
     const [galleryViewSize, setGalleryViewSize] = useState<'sm' | 'md' | 'lg'>('md');
     const [selectedAlbum, setSelectedAlbum] = useState<string>('all');
 
-    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_paint', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
+    const imageBatchTypes: GenerationBatch['type'][] = ['style', 'item_replace', 'wall_design', 'floor_style', 'garden', 'style_match', 'multi_item', 'exterior', 'festive', 'free_canvas'];
     
     const albumTypeLabels: Record<string, string> = {
         "style": "Interior Designs",
         "item_replace": "Item Replacements",
-        "wall_paint": "Wall Paints",
+        "wall_design": "Wall Design",
         "floor_style": "Floor Styles",
         "garden": "Garden Designs",
         "style_match": "Style Matches",
@@ -1875,37 +1897,37 @@ const App: React.FC = () => {
             
             setIsLoadingUsers(true);
             try {
-                const { supabase } = await import('./config/supabase');
                 const { data, error } = await supabase
                     .from('users')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+                    .select('*');
                 
                 if (error) {
                     console.error('Error loading users:', error);
                     setUsers([]);
                 } else {
                     // 转换 Supabase 用户数据为 App 的 User 类型
-                    const transformedUsers: User[] = (data || []).map(user => ({
-                        id: user.id,
-                        email: user.email,
-                        password: '', // 不存储密码
-                        status: 'Active',
-                        joined: user.created_at,
-                        lastIp: '',
-                        registrationIp: '',
-                        permissionLevel: (() => {
-                            switch (user.membership_tier) {
-                                case 'free': return 1;
-                                case 'pro': return 2;
-                                case 'premium': return 3;
-                                case 'business': return 4;
-                                default: return 1;
-                            }
-                        })(),
-                        credits: user.credits,
-                        membershipTier: user.membership_tier,
-                    }));
+                    const transformedUsers: User[] = ((data as any[]) || [])
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((user: any) => ({
+                            id: user.id,
+                            email: user.email,
+                            password: '', // 不存储密码
+                            status: 'Active',
+                            joined: user.created_at,
+                            lastIp: '',
+                            registrationIp: '',
+                            permissionLevel: (() => {
+                                switch (user.membership_tier) {
+                                    case 'free': return 1;
+                                    case 'pro': return 2;
+                                    case 'premium': return 3;
+                                    case 'business': return 4;
+                                    default: return 1;
+                                }
+                            })(),
+                            credits: user.credits,
+                            membershipTier: user.membership_tier,
+                        }));
                     setUsers(transformedUsers);
                 }
             } catch (err) {
@@ -2048,7 +2070,7 @@ const App: React.FC = () => {
     const [selectedBuildingType, setSelectedBuildingType] = useState<string>(BUILDING_TYPES[0].id);
     const [selectedItemType, setSelectedItemType] = useState<string>(ITEM_TYPES[0].id);
     const [selectedFestiveType, setSelectedFestiveType] = useState<string>('');
-    const [selectedWallPaintType, setSelectedWallPaintType] = useState<string>('');
+    const [selectedWallDesignType, setSelectedWallDesignType] = useState<string>('');
     const [selectedFloorType, setSelectedFloorType] = useState<string>('');
     const [selectedGardenType, setSelectedGardenType] = useState<string>('');
     
@@ -2109,12 +2131,12 @@ const App: React.FC = () => {
     const designTools = [
         { key: 'Interior Design', label: 'Interior Design', requiresPremium: false },
         { key: 'Exterior Design', label: 'Exterior Design', requiresPremium: false },
-        { key: 'Wall Paint', label: 'Wall Paint', requiresPremium: false },
+        { key: 'Wall Design', label: 'Wall Design', requiresPremium: false },
         { key: 'Floor Style', label: 'Floor Style', requiresPremium: false },
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
         { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
-        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true, comingSoon: true },
+        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true },
         { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
         { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true, comingSoon: true },
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
@@ -2239,10 +2261,10 @@ const App: React.FC = () => {
             .map(sc => ({ id: sc.name, name: sc.name }));
     }, [adminTemplateData, templatesLoading]);
 
-    // Wall Paint 色调选项
-    const availableWallPaintTypes = useMemo(() => {
+    // Wall Design 墙面类型选项
+    const availableWallDesignTypes = useMemo(() => {
         if (templatesLoading) return [];
-        const data = adminTemplateData["Wall Paint"];
+        const data = adminTemplateData["Wall Design"];
         if (!data || data.length === 0) return [];
         return data
             .filter(sc => sc.templates.length > 0)
@@ -2284,9 +2306,10 @@ const App: React.FC = () => {
             if (!selectedBuildingType || !availableBuildingTypes.some(bt => bt.id === selectedBuildingType)) {
                 setSelectedBuildingType(availableBuildingTypes[0].id);
             }
-        } else if (activePage === 'Wall Paint' && availableWallPaintTypes.length > 0) {
-            if (!selectedWallPaintType || !availableWallPaintTypes.some(wt => wt.id === selectedWallPaintType)) {
-                setSelectedWallPaintType(availableWallPaintTypes[0].id);
+        } else if (activePage === 'Wall Design' && availableWallDesignTypes.length > 0) {
+            const isCurrentWallDesignTypeAvailable = availableWallDesignTypes.some(wt => wt.id === selectedWallDesignType);
+            if (!isCurrentWallDesignTypeAvailable) {
+                setSelectedWallDesignType(availableWallDesignTypes[0].id);
             }
         } else if (activePage === 'Floor Style' && availableFloorTypes.length > 0) {
             if (!selectedFloorType || !availableFloorTypes.some(ft => ft.id === selectedFloorType)) {
@@ -2300,7 +2323,7 @@ const App: React.FC = () => {
     }, [availableRoomTypes, selectedRoomType, activePage, 
         availableFestiveTypes, selectedFestiveType,
         availableBuildingTypes, selectedBuildingType,
-        availableWallPaintTypes, selectedWallPaintType,
+        availableWallDesignTypes, selectedWallDesignType,
         availableFloorTypes, selectedFloorType,
         availableGardenTypes, selectedGardenType]);
 
@@ -2329,7 +2352,25 @@ const App: React.FC = () => {
         setError(null);
         
         try {
-            const base64Image = await toBase64(capturedFiles[0] as File);
+            const file = capturedFiles[0] as File;
+            if (!file) return;
+            
+            // First convert to base64
+            const originalBase64 = await toBase64(file);
+            
+            // Then compress the image
+            console.log(`🖼️ Compressing image for ${module}...`);
+            const { smartCompress } = await import('./utils/imageCompression');
+            const compressionResult = await smartCompress(
+                file as File,
+                (progress) => console.log(`📦 ${progress}`)
+            );
+            
+            console.log(`✅ Compression complete: ${compressionResult.reduction.toFixed(0)}% reduction (${(compressionResult.originalSize / 1024).toFixed(0)}KB → ${(compressionResult.compressedSize / 1024).toFixed(0)}KB)`);
+            
+            // Use the compressed image
+            const base64Image = compressionResult.base64;
+            
             if (module === 'm1') {
                 setModule1Images([base64Image]);
             } else if (module === 'item') {
@@ -2529,7 +2570,7 @@ const App: React.FC = () => {
         setCurrentAdvisorResponse(null);
         setAdvisorChat(null);
 
-        const isWallPaint = activePage === 'Wall Paint';
+        const isWallDesign = activePage === 'Wall Design';
         const isFloorStyle = activePage === 'Floor Style';
         const isGardenBackyard = activePage === 'Garden & Backyard Design';
         const isExteriorDesign = activePage === 'Exterior Design';
@@ -2558,7 +2599,7 @@ const App: React.FC = () => {
                 id: template.name,
                 status: 'pending',
                 imageUrl: null,
-                promptBase: isWallPaint || isGardenBackyard || isFloorStyle
+                promptBase: isWallDesign || isGardenBackyard || isFloorStyle
                     ? templatePrompt
                     : isExteriorDesign
                         ? `A ${buildingTypeName}, ${templatePrompt}`
@@ -2616,7 +2657,7 @@ const App: React.FC = () => {
     
         const newBatch: GenerationBatch = {
             id: Date.now().toString(),
-            type: isWallPaint ? 'wall_paint' : (isFloorStyle ? 'floor_style' : (isGardenBackyard ? 'garden' : (isExteriorDesign ? 'exterior' : (isFestiveDecor ? 'festive' : 'style')))),
+            type: isWallDesign ? 'wall_design' : (isFloorStyle ? 'floor_style' : (isGardenBackyard ? 'garden' : (isExteriorDesign ? 'exterior' : (isFestiveDecor ? 'festive' : 'style')))),
             timestamp: new Date(),
             subjectImage: cleanModule1[0],
             styleImages: [],
@@ -2746,7 +2787,38 @@ const App: React.FC = () => {
         const styleImageForApi = styleMatchImage.split(',')[1];
         const roomTypeName = ROOM_TYPES.find(r => r.id === selectedRoomType)?.name || selectedRoomType;
 
-        const instruction = `This is an advanced interior design style transfer task. The first image is a photo of a ${roomTypeName} that needs a complete redesign. The second image is the target style reference. Your task is to COMPLETELY transform the room in the first image to match the aesthetic, color palette, materials, furniture style, and overall mood of the second image. You MUST strictly preserve the architectural layout, window and door placements, and overall structure of the first image. The final output must be a single, photorealistic image of the redesigned room.`;
+        const instruction = `You are an expert interior designer performing a style transfer. You have TWO images:
+
+IMAGE 1 (Base Structure): A ${roomTypeName} photo. This provides the EXACT spatial structure you MUST preserve.
+IMAGE 2 (Style Reference): The target aesthetic you MUST apply to Image 1.
+
+YOUR TASK:
+1. STRICTLY PRESERVE from Image 1:
+   - Exact room dimensions, proportions, and layout
+   - All architectural elements: walls, ceiling, floor boundaries
+   - Window positions, sizes, and placements
+   - Door locations and openings
+   - Built-in fixtures and their locations
+   - Overall room geometry and perspective
+
+2. EXTRACT AND APPLY from Image 2:
+   - Design style and aesthetic (modern, traditional, minimalist, etc.)
+   - Color palette and color scheme
+   - Material choices (wood, metal, fabric, stone types)
+   - Furniture style and design language
+   - Lighting approach and fixtures
+   - Decorative elements and patterns
+   - Textures and finishes
+   - Overall mood and atmosphere
+
+3. EXECUTION REQUIREMENTS:
+   - The result MUST have Image 1's exact structure with Image 2's complete style
+   - Maintain realistic proportions and scale
+   - Ensure proper lighting consistency
+   - Create seamless integration of all elements
+   - Output a single, photorealistic, professional-quality interior design rendering
+
+Remember: Structure from Image 1 is FIXED and NON-NEGOTIABLE. Style from Image 2 should be comprehensively applied to transform the appearance while respecting the structural constraints.`;
         
         const placeholder: GeneratedImage = {
             id: `style-match-${Date.now()}`,
@@ -3080,8 +3152,8 @@ const App: React.FC = () => {
             title: 'Exterior Design',
             description: "Reimagine your property's exterior. Transform the architectural style of your home or building.",
         },
-        'Wall Paint': {
-            title: 'Wall Paint',
+        'Wall Design': {
+            title: 'Wall Design',
             description: 'Virtually repaint your walls. Choose from various colors and finishes to see an instant change.',
         },
         'Floor Style': {
@@ -3111,86 +3183,233 @@ const App: React.FC = () => {
     };
 
     const renderPage = () => {
+        // 页面过渡动画配置
+        const pageVariants = {
+            initial: { opacity: 0 },
+            animate: { opacity: 1 },
+            exit: { opacity: 0 }
+        };
+
+        const pageTransition = {
+            duration: 0.3,
+            ease: "easeInOut"
+        };
+
         switch (activePage) {
-            case 'Explore': return <ExplorePage onNavigate={setActivePage} />;
-            case 'Pricing': return <PricingPage />;
+            case 'Explore': 
+                return (
+                    <motion.div
+                        key="explore"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1"
+                    >
+                        <ExplorePage onNavigate={setActivePage} />
+                    </motion.div>
+                );
+            case 'Pricing': 
+                return (
+                    <motion.div
+                        key="pricing"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-y-auto"
+                    >
+                        <PricingPage />
+                    </motion.div>
+                );
             case 'My Designs': 
-                return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
+                return currentUser ? (
+                    <motion.div
+                        key="mydesigns"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-y-auto"
+                    >
+                        <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="login-prompt"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]"
+                    >
+                        <div>Please log in to view your designs.</div>
+                    </motion.div>
+                );
             case 'Free Canvas':
-                return <FreeCanvasPage 
-                    setGenerationHistory={setGenerationHistory} 
-                    generationHistory={generationHistory} 
-                    // FIX: Corrected a typo in the onDownload prop, changing from the undefined 'onDownload' variable to the existing 'handleDownload' function.
-                    onDownload={handleDownload} 
-                    setFullScreenImage={setFullScreenImage} 
-                    currentUser={currentUser} 
-                    onUpdateUser={handleUpdateUser} 
-                    onLoginRequest={() => auth.setShowLoginModal(true)} 
-                    onError={setError}
-                    onUpgrade={() => setActivePage('Pricing')}
-                    canvasState={freeCanvasState}
-                    setCanvasState={setFreeCanvasState}
-                />;
+                return (
+                    <motion.div
+                        key="freecanvas"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-hidden"
+                    >
+                        <FreeCanvasPage 
+                            setGenerationHistory={setGenerationHistory} 
+                            generationHistory={generationHistory} 
+                            // FIX: Corrected a typo in the onDownload prop, changing from the undefined 'onDownload' variable to the existing 'handleDownload' function.
+                            onDownload={handleDownload} 
+                            setFullScreenImage={setFullScreenImage} 
+                            currentUser={currentUser} 
+                            onUpdateUser={handleUpdateUser} 
+                            onLoginRequest={() => auth.setShowLoginModal(true)} 
+                            onError={setError}
+                            onUpgrade={() => setActivePage('Pricing')}
+                            canvasState={freeCanvasState}
+                            setCanvasState={setFreeCanvasState}
+                        />
+                    </motion.div>
+                );
             case 'Terms':
-                return <TermsPage />;
+                return (
+                    <motion.div
+                        key="terms"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-y-auto"
+                    >
+                        <TermsPage />
+                    </motion.div>
+                );
             case 'Privacy':
-                return <PrivacyPage />;
+                return (
+                    <motion.div
+                        key="privacy"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-y-auto"
+                    >
+                        <PrivacyPage />
+                    </motion.div>
+                );
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-login"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <p className="text-xl text-slate-600 mb-4">请先登录</p>
                                 <Button onClick={() => auth.setShowLoginModal(true)}>登录</Button>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 if (!isAdmin) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-denied"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <p className="text-xl text-slate-600 mb-2">访问被拒绝</p>
                                 <p className="text-sm text-slate-500">您没有管理员权限</p>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 // Show loading state while fetching users
                 if (isLoadingUsers) {
                     return (
-                        <div className="flex-1 flex items-center justify-center bg-white">
+                        <motion.div
+                            key="admin-loading"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                            className="flex-1 flex items-center justify-center bg-white"
+                        >
                             <div className="text-center">
                                 <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4 mx-auto"></div>
                                 <p className="text-slate-600">加载管理后台...</p>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 }
                 
                 // Render AdminPage with data
-                return <AdminPage 
-                    users={users} 
-                    onUpdateUser={handleUpdateUser} 
-                    onDeleteUser={handleDeleteUser} 
-                    generationHistory={generationHistory} 
-                    totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
-                    onDeleteBatch={handleDeleteGenerationBatch} 
-                    templateData={adminTemplateDataFull} 
-                    setTemplateData={setAdminTemplateDataFull} 
-                    categoryOrder={adminCategoryOrderFull} 
-                    setCategoryOrder={setAdminCategoryOrderFull}
-                    onTemplatesUpdated={refreshTemplateData}
-                  />
-            default: return renderMainGenerator();
+                return (
+                    <motion.div
+                        key="admin"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1 overflow-y-auto"
+                    >
+                        <AdminPage 
+                            users={users} 
+                            onUpdateUser={handleUpdateUser} 
+                            onDeleteUser={handleDeleteUser} 
+                            generationHistory={generationHistory} 
+                            totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
+                            onDeleteBatch={handleDeleteGenerationBatch} 
+                            templateData={adminTemplateDataFull} 
+                            setTemplateData={setAdminTemplateDataFull} 
+                            categoryOrder={adminCategoryOrderFull} 
+                            setCategoryOrder={setAdminCategoryOrderFull}
+                            onTemplatesUpdated={refreshTemplateData}
+                        />
+                    </motion.div>
+                );
+            default: 
+                return (
+                    <motion.div
+                        key={activePage}
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                        className="w-full flex-1"
+                    >
+                        {renderMainGenerator()}
+                    </motion.div>
+                );
         }
     };
     
     const renderMainGenerator = () => {
-        const isStyleBased = ['Interior Design', 'Wall Paint', 'Floor Style', 'Garden & Backyard Design', 'Exterior Design', 'Festive Decor'].includes(activePage);
+        const isStyleBased = ['Interior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Exterior Design', 'Festive Decor'].includes(activePage);
         const isItemReplace = activePage === 'Item Replace';
         const isStyleMatch = activePage === 'Reference Style Match';
         const isAIAdvisor = activePage === 'AI Design Advisor';
@@ -3234,14 +3453,14 @@ const App: React.FC = () => {
                     }];
                 }
             }
-        } else if (activePage === 'Wall Paint') {
-            const wallPaintData = adminTemplateData["Wall Paint"];
-            if (wallPaintData) {
-                const wallPaintCategory = wallPaintData.find(sc => sc.name === selectedWallPaintType);
-                if (wallPaintCategory && wallPaintCategory.templates.length > 0) {
+        } else if (activePage === 'Wall Design') {
+            const wallDesignData = adminTemplateData["Wall Design"];
+            if (wallDesignData) {
+                const wallDesignCategory = wallDesignData.find(sc => sc.name === selectedWallDesignType);
+                if (wallDesignCategory && wallDesignCategory.templates.length > 0) {
                     categories = [{
-                        name: selectedWallPaintType,
-                        templates: wallPaintCategory.templates
+                        name: selectedWallDesignType,
+                        templates: wallDesignCategory.templates
                     }];
                 }
             }
@@ -3291,8 +3510,9 @@ const App: React.FC = () => {
 
         return (
             <div className="flex-1 flex overflow-hidden">
-                <aside className="w-[380px] bg-white px-6 pb-6 pt-24 border-r border-slate-200 flex-shrink-0">
-                    <div className="h-full overflow-y-auto scrollbar-hide pr-2 -mr-2">
+                <aside className="w-[380px] bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-screen relative">
+                    {/* 可滚动内容区域 */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide pt-24 px-6 pb-24">
                         <div className="flex flex-col gap-6">
                             {currentPageInfo && (
                                 <div className="space-y-3">
@@ -3377,14 +3597,14 @@ const App: React.FC = () => {
                                     />
                                 </div>
                             )}
-                            {activePage === 'Wall Paint' && (
+                            {activePage === 'Wall Design' && (
                                 <div>
                                     <CustomSelect
-                                        label="Choose a Color Tone"
-                                        options={availableWallPaintTypes.length > 0 ? availableWallPaintTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No color tones available'}]}
-                                        value={availableWallPaintTypes.length > 0 ? selectedWallPaintType : 'loading'}
-                                        onChange={setSelectedWallPaintType}
-                                        disabled={templatesLoading || availableWallPaintTypes.length === 0}
+                                        label="Choose a Wall Type"
+                                        options={availableWallDesignTypes.length > 0 ? availableWallDesignTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No wall types available'}]}
+                                        value={availableWallDesignTypes.length > 0 ? selectedWallDesignType : 'loading'}
+                                        onChange={setSelectedWallDesignType}
+                                        disabled={templatesLoading || availableWallDesignTypes.length === 0}
                                     />
                                 </div>
                             )}
@@ -3476,36 +3696,37 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-
-                            <div className="sticky bottom-0 bg-white -mx-6 px-6 pt-4 pb-6 -mb-6 border-t border-slate-200 z-20">
-                                {isAIAdvisor ? (
-                                    <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isAdvisorLoading ? "Thinking..." : "Ask (1 Credit)"}
-                                    </Button>
-                                ) : isItemReplace ? (
-                                    <Button onClick={handleItemReplaceClick} disabled={isLoading || !hasModule1Image || !hasItemReplaceImage} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Replacing..." : "Replace (1 Credit)"}
-                                    </Button>
-                                ) : isStyleMatch ? (
-                                    <Button onClick={handleStyleMatchClick} disabled={isLoading || !hasModule1Image || !hasStyleMatchImage} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Matching Style..." : "Generate (1 Credit)"}
-                                    </Button>
-                                ) : isMultiItem ? (
-                                    <Button onClick={handleMultiItemClick} disabled={isLoading || !hasModule1Image || !hasMultiItemImages} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Placing Items..." : "Generate (1 Credit)"}
-                                    </Button>
-                                ) : (
-                                    <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
-                                        <IconSparkles className="w-5 h-5"/>
-                                        {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
-                                    </Button>
-                                )}
-                            </div>
                         </div>
+                    </div>
+                    
+                    {/* 固定在底部的生成按钮 - 使用绝对定位确保始终可见 */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-4 shadow-lg">
+                        {isAIAdvisor ? (
+                            <Button onClick={handleAskAdvisor} disabled={isAdvisorLoading} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isAdvisorLoading ? "Thinking..." : "Ask (1 Credit)"}
+                            </Button>
+                        ) : isItemReplace ? (
+                            <Button onClick={handleItemReplaceClick} disabled={isLoading || !hasModule1Image || !hasItemReplaceImage} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Replacing..." : "Replace (1 Credit)"}
+                            </Button>
+                        ) : isStyleMatch ? (
+                            <Button onClick={handleStyleMatchClick} disabled={isLoading || !hasModule1Image || !hasStyleMatchImage} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Matching Style..." : "Generate (1 Credit)"}
+                            </Button>
+                        ) : isMultiItem ? (
+                            <Button onClick={handleMultiItemClick} disabled={isLoading || !hasModule1Image || !hasMultiItemImages} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Placing Items..." : "Generate (1 Credit)"}
+                            </Button>
+                        ) : (
+                            <Button onClick={handleGenerateClick} disabled={isGenerateDisabled} primary className="w-full text-base py-3">
+                                <IconSparkles className="w-5 h-5"/>
+                                {isLoading ? "Generating..." : selectedTemplateIds.length > 1 ? `Generate (${selectedTemplateIds.length} Credits)` : "Generate (1 Credit)"}
+                            </Button>
+                        )}
                     </div>
                 </aside>
                 <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
@@ -3625,8 +3846,10 @@ const App: React.FC = () => {
                 onLogout={handleLogout}
                 designTools={designTools}
             />
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {renderPage()}
+            <div className="flex-1 flex flex-col overflow-y-auto">
+                <AnimatePresence mode="wait">
+                    {renderPage()}
+                </AnimatePresence>
             </div>
 
             {/* Hidden file input for uploads */}
