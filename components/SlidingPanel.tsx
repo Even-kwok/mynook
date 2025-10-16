@@ -161,7 +161,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                       border border-[#333333]
                       text-white
                       focus:border-indigo-500 focus:outline-none
-                      text-sm
+                      text-sm text-center
                     `}
                     style={{ fontFamily: 'Arial, sans-serif' }}
                   >
