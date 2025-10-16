@@ -3510,22 +3510,27 @@ const App: React.FC = () => {
                 </aside>
                 <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
                     {generatedImages.length > 0 ? (
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="p-8 flex flex-wrap gap-6">
                             {generatedImages.map((image, i) => (
                                 image.status === 'success' && image.imageUrl ? (
-                                    <PhotoDisplay
-                                        key={`${image.id}-${i}`}
-                                        era={image.id}
-                                        imageUrl={image.imageUrl}
-                                        onDownload={handleDownload}
-                                        onRegenerate={() => handleRegenerate(image)}
-                                        onImageClick={setFullScreenImage}
-                                        onDragStart={() => {}}
-                                    />
+                                    <div key={`${image.id}-${i}`} className="w-[332px]">
+                                        <PhotoDisplay
+                                            era={image.id}
+                                            imageUrl={image.imageUrl}
+                                            onDownload={handleDownload}
+                                            onRegenerate={() => handleRegenerate(image)}
+                                            onImageClick={setFullScreenImage}
+                                            onDragStart={() => {}}
+                                        />
+                                    </div>
                                 ) : image.status === 'pending' ? (
-                                    <LoadingCard key={`${image.id}-${i}-loading`} />
+                                    <div key={`${image.id}-${i}-loading`} className="w-[332px]">
+                                        <LoadingCard />
+                                    </div>
                                 ) : (
-                                    <ErrorCard key={`${image.id}-${i}-error`} onRegenerate={() => handleRegenerate(image)} />
+                                    <div key={`${image.id}-${i}-error`} className="w-[332px]">
+                                        <ErrorCard onRegenerate={() => handleRegenerate(image)} />
+                                    </div>
                                 )
                             ))}
                         </div>
