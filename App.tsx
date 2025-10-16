@@ -591,18 +591,18 @@ const Header: React.FC<{
                 <div className="relative hidden md:block" ref={designToolsRef}>
                     <button
                         onClick={() => setDesignToolsOpen(o => !o)}
-                        className={`px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 shadow-md ${
+                        className={`px-4 rounded-full text-sm leading-5 font-normal transition-all flex items-center justify-between gap-2 shadow-md whitespace-nowrap ${
                             isFunctionalPage 
                                 ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200' 
                                 : isDesignToolActive 
                                     ? 'text-white bg-[#2b2f34] ring-1 ring-white/10' 
                                     : 'text-white/90 bg-[#2b2f34] hover:bg-[#32383f] ring-1 ring-white/10'
                         }`}
-                        style={{ width: '239.09px', height: '32px' }}
+                        style={{ minWidth: '239.09px', height: '32px' }}
                     >
-                        <IconSparkles className={`w-4 h-4 ${isFunctionalPage ? 'text-indigo-500' : 'text-white'}`} />
-                        <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{activeDesignToolLabel}</span>
-                        <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
+                        <IconSparkles className={`w-4 h-4 flex-shrink-0 ${isFunctionalPage ? 'text-indigo-500' : 'text-white'}`} />
+                        <span className="truncate" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>{activeDesignToolLabel}</span>
+                        <IconChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${designToolsOpen ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
                         {designToolsOpen && <DesignToolsMenu onNavigate={(page) => { onNavigate(page); setDesignToolsOpen(false); }} activeItem={activeItem} designTools={designTools} user={user} />}
