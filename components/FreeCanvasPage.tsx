@@ -1636,12 +1636,23 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
                             {/* Generate 按钮 */}
                             <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Generate button clicked', {
+                                        hasUser: !!currentUser,
+                                        hasPermission: hasGeneratePermission,
+                                        membershipTier: currentUser?.membershipTier
+                                    });
+                                    
                                     if (!currentUser) {
+                                        console.log('No user, requesting login');
                                         onLoginRequest();
                                     } else if (!hasGeneratePermission) {
+                                        console.log('No permission, opening upgrade modal');
                                         setIsPermissionModalOpen(true);
                                     } else {
+                                        console.log('Has permission, generating');
                                         handleGenerate();
                                     }
                                 }}
