@@ -33,20 +33,14 @@ ON CONFLICT (tool_id) DO NOTHING;
 -- Enable RLS
 ALTER TABLE tools_order ENABLE ROW LEVEL SECURITY;
 
--- Policy: Anyone can read tools order
+-- Policy: Anyone can read tools order (public access)
 CREATE POLICY "Anyone can view tools order" ON tools_order
   FOR SELECT USING (true);
 
--- Policy: Only admins can update tools order
-CREATE POLICY "Only admins can update tools order" ON tools_order
+-- Policy: Authenticated users can update (we'll refine this later)
+CREATE POLICY "Authenticated users can update tools order" ON tools_order
   FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE user_profiles.user_id = auth.uid()
-      AND user_profiles.is_admin = true
-    )
-  );
+  USING (auth.uid() IS NOT NULL);
 
 -- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_tools_order_updated_at()
@@ -62,4 +56,5 @@ CREATE TRIGGER tools_order_updated_at
   BEFORE UPDATE ON tools_order
   FOR EACH ROW
   EXECUTE FUNCTION update_tools_order_updated_at();
+
 
