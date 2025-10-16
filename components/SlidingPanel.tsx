@@ -69,16 +69,20 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
         >
           {/* 左侧：上传模块 */}
           <div className="w-[280px] flex flex-col">
-            {/* 标题栏 - 居中显示，毛玻璃效果 */}
-            <div className="h-14 px-4 flex items-center justify-center relative">
-              <h3 className="text-sm font-semibold text-white px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20" style={{ fontFamily: 'Arial, sans-serif' }}>
-                {toolName}
-              </h3>
+            {/* 标题栏 - 渐变下划线设计 */}
+            <div className="px-4 pt-4 pb-3 relative">
+              <div className="flex items-center justify-center pb-2 relative">
+                <h3 className="text-sm font-semibold text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
+                  {toolName}
+                </h3>
+                {/* 渐变下划线 */}
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+              </div>
               <button
                 onClick={onClose}
-                className="absolute right-4 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[#a0a0a0] hover:text-white transition-colors flex items-center justify-center backdrop-blur-md"
+                className="absolute top-4 right-4 w-7 h-7 rounded-lg hover:bg-[#2a2a2a] text-[#666666] hover:text-white transition-colors flex items-center justify-center"
               >
-                <IconX />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
             

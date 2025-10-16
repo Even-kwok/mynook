@@ -220,9 +220,9 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
     return (
         <div className="relative flex-shrink-0">
             <aside className="w-[90px] h-full bg-[#0a0a0a]">
-                <div className="w-[90px] h-full px-2 pb-4 pt-6 flex flex-col">
-                    <div className="flex justify-center items-center mb-3 flex-shrink-0">
-                        <h2 className="text-xs font-semibold text-white px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/20">Assets</h2>
+                <div className="w-[90px] h-full px-2 pb-4 pt-4 flex flex-col">
+                    <div className="flex justify-center items-center mb-3 flex-shrink-0 pb-2 border-b border-indigo-500/50">
+                        <h2 className="text-xs font-semibold text-white">Assets</h2>
                     </div>
                     {/* Batch Download Button - Hidden for narrow layout */}
                     {false && allGalleryImages.length > 0 && (
