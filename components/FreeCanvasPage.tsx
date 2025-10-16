@@ -414,8 +414,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     setCanvasState
 }) => {
     // 检查用户是否有权限使用生成功能（只有 Premium 和 Business 可以生成）
-    // 未登录用户不受此限制（登录时才检查权限）
-    const hasGeneratePermission = !currentUser || (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
+    const hasGeneratePermission = currentUser && (currentUser.membershipTier === 'premium' || currentUser.membershipTier === 'business');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const workspaceRef = useRef<HTMLDivElement>(null);
@@ -1637,12 +1636,25 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
                             {/* Generate 按钮 */}
                             <button
-                                onClick={hasGeneratePermission ? handleGenerate : () => setIsPermissionModalOpen(true)}
+                                onClick={() => {
+                                    if (!currentUser) {
+                                        onLoginRequest();
+                                    } else if (!hasGeneratePermission) {
+                                        setIsPermissionModalOpen(true);
+                                    } else {
+                                        handleGenerate();
+                                    }
+                                }}
                                 disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)}
                                 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             >
-                                {hasGeneratePermission ? (
+                                {!currentUser ? (
+                                    <>
+                                        <IconSparkles className="w-5 h-5" />
+                                        {isLoading ? "Generating..." : "✨ Generate (1 Credit)"}
+                                    </>
+                                ) : hasGeneratePermission ? (
                                     <>
                                         <IconSparkles className="w-5 h-5" />
                                         {isLoading ? "Generating..." : "✨ Generate (1 Credit)"}
