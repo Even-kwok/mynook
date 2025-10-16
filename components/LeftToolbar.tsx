@@ -39,7 +39,7 @@ const tools: ToolItem[] = [
   { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🖼️', isPremium: true },
   { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true },
   { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true },
-  { id: 'free-canvas', name: 'Free Canvas', shortName: 'Canvas', emoji: '✏️', isPremium: true },
+  { id: 'free-canvas', name: 'Canva', shortName: 'Canva', emoji: '✏️', isPremium: true },
 ];
 
 export interface LeftToolbarProps {

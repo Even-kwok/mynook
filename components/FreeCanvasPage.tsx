@@ -1535,8 +1535,25 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     className="w-[280px] bg-[#0a0a0a] flex flex-col flex-shrink-0 border-r border-[#2a2a2a] overflow-hidden"
                     style={{ zIndex: 40 }}
                 >
+                    {/* 标题栏 */}
+                    <div className="flex-shrink-0 px-4 pt-4 pb-3">
+                        <div className="relative pb-3">
+                            <h3 className="text-base font-bold text-center" style={{ 
+                                fontFamily: 'Arial, sans-serif',
+                                background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                            }}>
+                                Canva
+                            </h3>
+                            {/* 渐变下划线 */}
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+                        </div>
+                    </div>
+                    
                     {/* 上传和工具区域 - 可滚动 */}
-                    <div className="flex-1 px-4 py-4 overflow-y-auto scrollbar-hide space-y-6">
+                    <div className="flex-1 px-4 pb-4 overflow-y-auto scrollbar-hide space-y-6">
                             {/* 上传按钮 */}
                             <div>
                                 <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
