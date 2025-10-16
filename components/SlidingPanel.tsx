@@ -65,7 +65,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
           animate={{ x: 0 }}
           exit={{ x: -600 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed left-[90px] top-0 bottom-0 w-[600px] bg-[#0a0a0a] z-40 flex"
+          className="fixed left-[90px] top-0 bottom-0 w-[600px] bg-[#0a0a0a] z-10 flex"
         >
           {/* 左侧：上传模块 */}
           <div className="w-[280px] flex flex-col">
