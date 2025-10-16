@@ -96,7 +96,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
               {/* 图片上传 */}
               <div>
-                <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block text-center`} style={{ fontFamily: 'Arial, sans-serif' }}>
                   📤 Upload Photo
                 </label>
                 <div
@@ -140,7 +140,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666]">
                       <IconUpload className="w-12 h-12 mb-2" />
-                      <p className="text-xs">Click or drag</p>
+                      <p className="text-xs" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag</p>
                     </div>
                   )}
                 </div>
@@ -149,7 +149,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
               {/* 选择器（如房间类型）- 放在图片下方 */}
               {selectorLabel && selectorOptions && (
                 <div>
-                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block text-center`} style={{ fontFamily: 'Arial, sans-serif' }}>
                     {selectorLabel}
                   </label>
                   <select
