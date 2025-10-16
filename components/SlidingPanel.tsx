@@ -72,7 +72,13 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             {/* 标题栏 - 渐变下划线设计 */}
             <div className="px-4 pt-4 pb-3 relative">
               <div className="flex items-center justify-center pb-2 relative">
-                <h3 className="text-sm font-semibold text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
+                <h3 className="text-base font-bold tracking-wide" style={{ 
+                  fontFamily: 'Arial, sans-serif',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {toolName}
                 </h3>
                 {/* 渐变下划线 */}

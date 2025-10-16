@@ -221,8 +221,16 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         <div className="relative flex-shrink-0">
             <aside className="w-[90px] h-full bg-[#0a0a0a]">
                 <div className="w-[90px] h-full px-2 pb-4 pt-4 flex flex-col">
-                    <div className="flex justify-center items-center mb-3 flex-shrink-0 pb-2 border-b border-indigo-500/50">
-                        <h2 className="text-xs font-semibold text-white">Assets</h2>
+                    <div className="flex justify-center items-center mb-3 flex-shrink-0 pb-2 relative">
+                        <h2 className="text-xs font-bold tracking-wide" style={{ 
+                            fontFamily: 'Arial, sans-serif',
+                            background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                        }}>Assets</h2>
+                        {/* 渐变下划线 */}
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
                     </div>
                     {/* Batch Download Button - Hidden for narrow layout */}
                     {false && allGalleryImages.length > 0 && (

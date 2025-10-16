@@ -58,8 +58,10 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
     <div className="w-[90px] bg-[#0a0a0a] flex flex-col h-full relative z-50">
       {/* Logo at top */}
       <div className="h-16 flex items-center justify-center">
-        <button onClick={() => onToolClick('explore')} className="text-white hover:text-indigo-400 transition-colors font-bold text-xl">
-          MN
+        <button onClick={() => onToolClick('explore')} className="hover:scale-110 transition-transform">
+          <span className="logo-gradient font-bold text-xl" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '1px' }}>
+            MN
+          </span>
         </button>
       </div>
       
