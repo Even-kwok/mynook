@@ -1528,15 +1528,15 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             <div className="flex flex-1 overflow-hidden bg-[#0a0a0a]">
                 {/* Left Sliding Panel - 工具和上传区 */}
                 <motion.aside
-                    initial={{ x: -600 }}
+                    initial={{ x: -280 }}
                     animate={{ x: 0 }}
-                    exit={{ x: -600 }}
+                    exit={{ x: -280 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="w-[600px] bg-[#0a0a0a] flex flex-shrink-0 border-r border-[#2a2a2a]"
+                    className="w-[280px] bg-[#0a0a0a] flex flex-col flex-shrink-0 border-r border-[#2a2a2a]"
                     style={{ zIndex: 40 }}
                 >
-                    {/* 左侧模块 - 上传和工具 */}
-                    <div className="w-[280px] flex flex-col border-r border-[#2a2a2a]">
+                    {/* 上传和工具区域 */}
+                    <div className="flex-1 flex flex-col">
                         <div className="flex-1 px-4 py-4 overflow-y-auto scrollbar-hide space-y-6">
                             {/* 上传按钮 */}
                             <div>
@@ -1639,11 +1639,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 )}
                             </button>
                         </div>
-                    </div>
-
-                    {/* 右侧模块 - 预留空间 */}
-                    <div className="flex-1 flex flex-col bg-[#0a0a0a]">
-                        {/* 预留空间，将来可用于模板预览等功能 */}
                     </div>
                 </motion.aside>
                 

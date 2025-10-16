@@ -3119,21 +3119,8 @@ const App: React.FC = () => {
             case 'Pricing': return <PricingPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
-            case 'Free Canvas':
-                return <FreeCanvasPage 
-                    setGenerationHistory={setGenerationHistory} 
-                    generationHistory={generationHistory} 
-                    // FIX: Corrected a typo in the onDownload prop, changing from the undefined 'onDownload' variable to the existing 'handleDownload' function.
-                    onDownload={handleDownload} 
-                    setFullScreenImage={setFullScreenImage} 
-                    currentUser={currentUser} 
-                    onUpdateUser={handleUpdateUser} 
-                    onLoginRequest={() => auth.setShowLoginModal(true)} 
-                    onError={setError}
-                    onUpgrade={() => setActivePage('Pricing')}
-                    canvasState={freeCanvasState}
-                    setCanvasState={setFreeCanvasState}
-                />;
+            // Free Canvas 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）
+            // case 'Free Canvas': moved to default → renderMainGenerator()
             case 'Terms':
                 return <TermsPage />;
             case 'Privacy':
@@ -3291,6 +3278,58 @@ const App: React.FC = () => {
             : 'The room you want to redesign.';
             
         const currentPageInfo = pageInfo[activePage];
+
+        // Special handling for Free Canvas - it has its own sliding panel
+        if (activePage === 'Free Canvas') {
+            return (
+                <div className="flex-1 flex overflow-hidden bg-[#0a0a0a]">
+                    {/* Left Toolbar */}
+                    <LeftToolbar 
+                        activeTool='free-canvas'
+                        onToolClick={(toolId) => {
+                            const pageMap: Record<string, string> = {
+                                'explore': 'Explore',
+                                'interior': 'Interior Design',
+                                'exterior': 'Exterior Design',
+                                'wall': 'Wall Design',
+                                'floor': 'Floor Style',
+                                'garden': 'Garden & Backyard Design',
+                                'festive': 'Festive Decor',
+                                'item-replace': 'Item Replace',
+                                'style-match': 'Reference Style Match',
+                                'ai-advisor': 'AI Design Advisor',
+                                'multi-item': 'Multi-Item Preview',
+                                'free-canvas': 'Free Canvas',
+                            };
+                            const page = pageMap[toolId] || activePage;
+                            setActivePage(page);
+                        }}
+                        user={currentUser}
+                        onOpenUserMenu={() => {
+                            if (!currentUser) {
+                                auth.setShowLoginModal(true);
+                            }
+                        }}
+                        onLogout={handleLogout}
+                    />
+                    
+                    {/* Free Canvas Page with its own sliding panel */}
+                    <FreeCanvasPage 
+                        setGenerationHistory={setGenerationHistory} 
+                        generationHistory={generationHistory} 
+                        onDownload={handleDownload} 
+                        setFullScreenImage={setFullScreenImage} 
+                        currentUser={currentUser} 
+                        onUpdateUser={handleUpdateUser} 
+                        onLoginRequest={() => auth.setShowLoginModal(true)} 
+                        onError={setError}
+                        onUpgrade={() => setActivePage('Pricing')}
+                        canvasState={freeCanvasState}
+                        setCanvasState={setFreeCanvasState}
+                    />
+                </div>
+            );
+        }
 
         return (
             <div className="flex-1 flex overflow-hidden bg-[#0a0a0a]">
