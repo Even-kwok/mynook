@@ -142,8 +142,8 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                     </>
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666] transition-colors duration-300 group-hover:text-[#888888]">
-                      <div className="mb-3 p-4 rounded-full bg-[#2a2a2a] transition-all duration-300">
-                        <IconUpload className="w-8 h-8 text-indigo-400" />
+                      <div className="mb-3 transition-all duration-300">
+                        <span className="text-6xl">📸</span>
                       </div>
                       <p className="text-sm font-medium text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag photo</p>
                       <p className="text-xs text-[#666666] mt-1" style={{ fontFamily: 'Arial, sans-serif' }}>PNG, JPG up to 10MB</p>
