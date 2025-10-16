@@ -79,10 +79,9 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
         </button>
       </div>
       
-      {/* 工具按钮区域 - 可滚动，居中对齐 */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-2 flex items-center">
-        <div className="w-full">
-          <div className="flex flex-col gap-2">
+      {/* 工具按钮区域 - 可滚动，从顶部开始 */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-2">
+        <div className="flex flex-col gap-2">
             {tools.map((tool) => {
             const isActive = activeTool === tool.id;
             
@@ -123,7 +122,6 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
               </motion.button>
             );
             })}
-          </div>
         </div>
       </div>
       
