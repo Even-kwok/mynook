@@ -23,6 +23,9 @@ import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { MEMBERSHIP_CONFIG } from './types/database';
+import { BannerHero } from './components/BannerHero';
+import { LeftToolbar } from './components/LeftToolbar';
+import { SlidingPanel } from './components/SlidingPanel';
 
 // --- Re-styled Helper Components ---
 
@@ -1830,6 +1833,9 @@ const App: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminLevel, setAdminLevel] = useState<string>('none');
     
+    // New UI state - for sliding panel
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    
     // Admin users data state
     const [users, setUsers] = useState<User[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -3293,8 +3299,81 @@ const App: React.FC = () => {
         const currentPageInfo = pageInfo[activePage];
 
         return (
-            <div className="flex-1 flex overflow-hidden">
-                <aside className="w-[380px] bg-white px-6 pb-6 pt-24 border-r border-slate-200 flex-shrink-0">
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0a0a]">
+                {/* Top Banner Hero */}
+                <BannerHero />
+                
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Left Toolbar */}
+                    <LeftToolbar 
+                        activePage={activePage}
+                        onNavigate={(page) => {
+                            setActivePage(page);
+                            setIsPanelOpen(true);
+                        }}
+                        user={currentUser}
+                    />
+                    
+                    {/* Sliding Panel */}
+                    <SlidingPanel
+                        isOpen={isPanelOpen}
+                        onClose={() => setIsPanelOpen(false)}
+                        toolName={activePage}
+                        // Upload Module
+                        imageUrl={module1Images[0]}
+                        isUploading={!!uploadingSlots['m1-0']}
+                        onFileSelect={() => handleFileSelect('m1', 0)}
+                        onRemoveImage={() => handleRemoveImage('m1', 0)}
+                        onImageClick={setFullScreenImage}
+                        onDrop={(e) => handleDropOnUploader(e, 'm1')}
+                        // Selector (Room Type, Building Type, etc.)
+                        selectorLabel={
+                            activePage === 'Interior Design' ? 'Choose a Room Type' :
+                            activePage === 'Exterior Design' ? 'Choose a Building Type' :
+                            activePage === 'Wall Design' ? 'Choose a Wall Design Type' :
+                            activePage === 'Floor Style' ? 'Choose a Floor Type' :
+                            activePage === 'Garden & Backyard Design' ? 'Choose a Garden Type' :
+                            activePage === 'Festive Decor' ? 'Choose a Festive Type' :
+                            undefined
+                        }
+                        selectorOptions={
+                            activePage === 'Interior Design' ? availableRoomTypes :
+                            activePage === 'Exterior Design' ? availableBuildingTypes :
+                            activePage === 'Wall Design' ? availableWallDesignTypes :
+                            activePage === 'Floor Style' ? availableFloorTypes :
+                            activePage === 'Garden & Backyard Design' ? availableGardenTypes :
+                            activePage === 'Festive Decor' ? availableFestiveTypes :
+                            undefined
+                        }
+                        selectorValue={
+                            activePage === 'Interior Design' ? selectedRoomType :
+                            activePage === 'Exterior Design' ? selectedBuildingType :
+                            activePage === 'Wall Design' ? selectedWallDesignType :
+                            activePage === 'Floor Style' ? selectedFloorType :
+                            activePage === 'Garden & Backyard Design' ? selectedGardenType :
+                            activePage === 'Festive Decor' ? selectedFestiveType :
+                            ''
+                        }
+                        onSelectorChange={(value) => {
+                            if (activePage === 'Interior Design') setSelectedRoomType(value);
+                            else if (activePage === 'Exterior Design') setSelectedBuildingType(value);
+                            else if (activePage === 'Wall Design') setSelectedWallDesignType(value);
+                            else if (activePage === 'Floor Style') setSelectedFloorType(value);
+                            else if (activePage === 'Garden & Backyard Design') setSelectedGardenType(value);
+                            else if (activePage === 'Festive Decor') setSelectedFestiveType(value);
+                        }}
+                        // Templates
+                        templates={categories.flatMap(cat => cat.templates)}
+                        selectedTemplateIds={selectedTemplateIds}
+                        onTemplateSelect={handleTemplateSelect}
+                        maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                        // Generate
+                        onGenerate={handleGenerateClick}
+                        isGenerating={isLoading}
+                        generateDisabled={isGenerateDisabled}
+                    />
+                    
+                <aside className="w-[380px] bg-white px-6 pb-6 pt-24 border-r border-slate-200 flex-shrink-0" style={{ display: 'none' }}>
                     <div className="h-full overflow-y-auto scrollbar-hide pr-2 -mr-2">
                         <div className="flex flex-col gap-6">
                             {currentPageInfo && (
@@ -3422,9 +3501,9 @@ const App: React.FC = () => {
                     </div>
                 </aside>
 
-                {/* Template Selection Area - Only for Style-Based Features */}
-                {isStyleBased && (
-                    <aside className="w-[380px] bg-white border-l border-slate-200 flex-shrink-0 flex flex-col">
+                {/* Template Selection Area - Only for Style-Based Features (HIDDEN - Now in SlidingPanel) */}
+                {false && isStyleBased && (
+                    <aside className="w-[380px] bg-white border-l border-slate-200 flex-shrink-0 flex flex-col" style={{ display: 'none' }}>
                         {/* Fixed Top: Title + Category Selector */}
                         <div className="px-6 pt-24 pb-4 border-b border-slate-200 bg-white z-10 space-y-3">
                             <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
@@ -3511,7 +3590,8 @@ const App: React.FC = () => {
                     </aside>
                 )}
 
-                <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
+                {/* Main Content Area */}
+                <main className="flex-1 bg-[#0a0a0a] overflow-y-auto">
                     {generatedImages.length > 0 ? (
                         <div className="p-8 flex flex-wrap gap-6">
                             {generatedImages.map((image, i) => (
@@ -3589,6 +3669,7 @@ const App: React.FC = () => {
                         <ResultsPlaceholder isAdvisor={isAIAdvisor} />
                     )}
                 </main>
+                {/* Assets Sidebar (My Designs) */}
                 <MyDesignsSidebar
                     generationHistory={generationHistory}
                     onDownload={handleDownload}
@@ -3596,6 +3677,7 @@ const App: React.FC = () => {
                     onImageDragStart={handleResultImageDragStart}
                     onDelete={handleDeleteGenerationImage}
                 />
+                </div>
             </div>
         )
     };
