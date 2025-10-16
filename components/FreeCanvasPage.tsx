@@ -219,21 +219,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
 
     return (
         <div className="relative flex-shrink-0">
-            <button
-                onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-[#1a1a1a] border border-r-0 border-[#2a2a2a] rounded-l-lg flex items-center justify-center text-[#666666] hover:bg-[#333333] transition-colors focus:outline-none"
-                aria-label={isGalleryOpen ? 'Collapse gallery' : 'Expand gallery'}
-            >
-                <motion.div animate={{ rotate: isGalleryOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <IconChevronRight className="w-4 h-4" />
-                </motion.div>
-            </button>
-            <motion.aside
-                initial={false}
-                animate={{ width: isGalleryOpen ? 90 : 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                className="h-full overflow-hidden bg-[#1a1a1a] border-l border-[#2a2a2a]"
-            >
+            <aside className="w-[90px] h-full bg-[#1a1a1a] border-l border-[#2a2a2a]">
                 <div className="w-[90px] h-full px-2 pb-4 pt-6 flex flex-col">
                     <div className="flex justify-center items-center mb-3 flex-shrink-0">
                         <h2 className="text-xs font-semibold text-white">Assets</h2>
@@ -337,7 +323,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                         )}
                     </div>
                 </div>
-            </motion.aside>
+            </aside>
         </div>
     );
 };

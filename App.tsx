@@ -3302,12 +3302,49 @@ const App: React.FC = () => {
             <div className="flex-1 flex overflow-hidden bg-[#0a0a0a]">
                     {/* Left Toolbar */}
                     <LeftToolbar 
-                        activePage={activePage}
-                        onNavigate={(page) => {
+                        activeTool={
+                            activePage === 'Interior Design' ? 'interior' :
+                            activePage === 'Exterior Design' ? 'exterior' :
+                            activePage === 'Wall Design' ? 'wall' :
+                            activePage === 'Floor Style' ? 'floor' :
+                            activePage === 'Garden & Backyard Design' ? 'garden' :
+                            activePage === 'Festive Decor' ? 'festive' :
+                            activePage === 'Item Replace' ? 'item-replace' :
+                            activePage === 'Reference Style Match' ? 'style-match' :
+                            activePage === 'AI Design Advisor' ? 'ai-advisor' :
+                            activePage === 'Multi-Item Preview' ? 'multi-item' :
+                            activePage === 'Free Canvas' ? 'free-canvas' :
+                            null
+                        }
+                        onToolClick={(toolId) => {
+                            const pageMap: Record<string, string> = {
+                                'explore': 'Explore',
+                                'interior': 'Interior Design',
+                                'exterior': 'Exterior Design',
+                                'wall': 'Wall Design',
+                                'floor': 'Floor Style',
+                                'garden': 'Garden & Backyard Design',
+                                'festive': 'Festive Decor',
+                                'item-replace': 'Item Replace',
+                                'style-match': 'Reference Style Match',
+                                'ai-advisor': 'AI Design Advisor',
+                                'multi-item': 'Multi-Item Preview',
+                                'free-canvas': 'Free Canvas',
+                            };
+                            const page = pageMap[toolId] || activePage;
                             setActivePage(page);
-                            setIsPanelOpen(true);
+                            if (toolId !== 'explore') {
+                                setIsPanelOpen(true);
+                            }
                         }}
                         user={currentUser}
+                        onOpenUserMenu={() => {
+                            if (currentUser) {
+                                // TODO: Open user menu
+                            } else {
+                                auth.setShowLoginModal(true);
+                            }
+                        }}
                     />
                     
                     {/* Sliding Panel */}
@@ -3704,14 +3741,14 @@ const App: React.FC = () => {
 
             {/* Only show Header on non-functional pages */}
             {!['Interior Design', 'Exterior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Festive Decor', 'Item Replace', 'Reference Style Match', 'AI Design Advisor', 'Multi-Item Preview', 'Free Canvas'].includes(activePage) && (
-                <Header 
-                    activeItem={activePage} 
-                    onNavigate={setActivePage} 
-                    user={currentUser} 
-                    onLoginClick={() => auth.setShowLoginModal(true)}
-                    onLogout={handleLogout}
-                    designTools={designTools}
-                />
+            <Header 
+                activeItem={activePage} 
+                onNavigate={setActivePage} 
+                user={currentUser} 
+                onLoginClick={() => auth.setShowLoginModal(true)}
+                onLogout={handleLogout}
+                designTools={designTools}
+            />
             )}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {renderPage()}

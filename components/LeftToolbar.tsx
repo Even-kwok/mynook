@@ -11,7 +11,8 @@ import {
   IconTarget, 
   IconChat, 
   IconBox, 
-  IconPencil 
+  IconPencil,
+  IconLogo
 } from './Icons';
 import { darkThemeClasses } from '../config/darkTheme';
 
@@ -54,10 +55,18 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 }) => {
   return (
     <div className={`w-[90px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} flex flex-col h-full`}>
-      {/* 工具按钮区域 - 可滚动 */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-2">
-        <div className="flex flex-col gap-2">
-          {tools.map((tool) => {
+      {/* Logo at top */}
+      <div className="h-16 flex items-center justify-center border-b border-[#2a2a2a]">
+        <button onClick={() => onToolClick('explore')} className="text-white hover:text-indigo-400 transition-colors">
+          <IconLogo className="w-8 h-8" />
+        </button>
+      </div>
+      
+      {/* 工具按钮区域 - 可滚动，居中对齐 */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-2 flex items-center">
+        <div className="w-full">
+          <div className="flex flex-col gap-2">
+            {tools.map((tool) => {
             const Icon = tool.icon;
             const isActive = activeTool === tool.id;
             
@@ -101,7 +110,8 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 )}
               </motion.button>
             );
-          })}
+            })}
+          </div>
         </div>
       </div>
       
