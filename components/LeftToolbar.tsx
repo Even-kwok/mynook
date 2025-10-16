@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   IconHome, 
@@ -14,6 +14,7 @@ import {
   IconPencil
 } from './Icons';
 import { darkThemeClasses } from '../config/darkTheme';
+import { UserMenu } from './UserMenu';
 
 // 功能工具定义
 export interface ToolItem {
@@ -46,6 +47,7 @@ export interface LeftToolbarProps {
   onToolClick: (toolId: string) => void;
   user: any;
   onOpenUserMenu?: () => void;
+  onLogout: () => void;
 }
 
 export const LeftToolbar: React.FC<LeftToolbarProps> = ({
@@ -53,7 +55,19 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onToolClick,
   user,
   onOpenUserMenu,
+  onLogout,
 }) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const avatarButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleAvatarClick = () => {
+    if (user) {
+      setIsUserMenuOpen(!isUserMenuOpen);
+    } else {
+      onOpenUserMenu?.();
+    }
+  };
+
   return (
     <div className="w-[90px] bg-[#0a0a0a] flex flex-col h-full relative z-50">
       {/* Logo at top */}
@@ -146,13 +160,23 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
             
             {/* User Avatar - 只显示圆形 */}
             <button
-              onClick={onOpenUserMenu}
-              className="w-full flex items-center justify-center transition-all hover:scale-110"
+              ref={avatarButtonRef}
+              onClick={handleAvatarClick}
+              className="w-full flex items-center justify-center transition-all hover:scale-110 relative"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl">
                 🐱
               </div>
             </button>
+            
+            {/* User Menu */}
+            <UserMenu
+              isOpen={isUserMenuOpen}
+              onClose={() => setIsUserMenuOpen(false)}
+              user={user}
+              onLogout={onLogout}
+              anchorRef={avatarButtonRef}
+            />
           </>
         )}
         

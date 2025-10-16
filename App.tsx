@@ -3327,12 +3327,11 @@ const App: React.FC = () => {
                         }}
                         user={currentUser}
                         onOpenUserMenu={() => {
-                            if (currentUser) {
-                                // TODO: Open user menu
-                            } else {
+                            if (!currentUser) {
                                 auth.setShowLoginModal(true);
                             }
                         }}
+                        onLogout={handleLogout}
                     />
                     
                     {/* Sliding Panel */}
