@@ -560,9 +560,6 @@ const Header: React.FC<{
     const isFunctionalPage = useMemo(() => {
         const functionalPages = [
             ...designToolLabels,
-            'Terms',
-            'Privacy',
-            'Pricing',
             'Admin'
         ];
         return functionalPages.includes(activeItem);
