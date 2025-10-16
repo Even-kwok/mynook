@@ -3612,7 +3612,7 @@ const App: React.FC = () => {
                 )}
 
                 {/* Main Content Area */}
-                <main className="flex-1 bg-[#0a0a0a] overflow-y-auto">
+                <main className={`flex-1 bg-[#0a0a0a] overflow-y-auto transition-all duration-300 ${isPanelOpen ? 'ml-[600px]' : 'ml-0'}`}>
                     {generatedImages.length > 0 ? (
                         <div className="p-8 flex flex-wrap gap-6">
                             {generatedImages.map((image, i) => (

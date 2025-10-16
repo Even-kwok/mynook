@@ -170,11 +170,15 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                       focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
                       transition-all duration-300
                       cursor-pointer
+                      [&>option]:bg-[#1a1a1a] [&>option]:text-white [&>option]:py-2
                     `}
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    style={{ 
+                      fontFamily: 'Arial, sans-serif',
+                      colorScheme: 'dark'
+                    }}
                   >
                     {selectorOptions.map(opt => (
-                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                      <option key={opt.id} value={opt.id} className="bg-[#1a1a1a] text-white">{opt.name}</option>
                     ))}
                   </select>
                 </div>
