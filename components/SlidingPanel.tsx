@@ -238,23 +238,46 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                     value={selectorValue}
                     onChange={(e) => onSelectorChange?.(e.target.value)}
                     className={`
-                      w-full h-11 px-4 rounded-xl
-                      bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]
-                      border border-[#333333]
-                      text-white text-sm text-center font-medium
-                      hover:border-indigo-500/50 hover:from-[#252525] hover:to-[#0f0f0f]
-                      focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+                      w-full h-12 px-4 rounded-xl
+                      bg-[#1a1a1a]
+                      border-2 border-[#333333]
+                      text-white text-sm text-center font-semibold
+                      hover:border-indigo-500/50 hover:bg-[#252525]
+                      focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30
                       transition-all duration-300
                       cursor-pointer
-                      [&>option]:bg-[#1a1a1a] [&>option]:text-white [&>option]:py-2
+                      appearance-none
+                      [&>option]:bg-[#0a0a0a] 
+                      [&>option]:text-white 
+                      [&>option]:py-3
+                      [&>option]:px-4
+                      [&>option]:font-medium
+                      [&>option:hover]:bg-indigo-600
+                      [&>option:checked]:bg-indigo-600
+                      [&>option:checked]:font-bold
                     `}
                     style={{ 
                       fontFamily: 'Arial, sans-serif',
-                      colorScheme: 'dark'
+                      colorScheme: 'dark',
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em',
+                      paddingRight: '2.5rem'
                     }}
                   >
                     {selectorOptions.map(opt => (
-                      <option key={opt.id} value={opt.id} className="bg-[#1a1a1a] text-white">{opt.name}</option>
+                      <option 
+                        key={opt.id} 
+                        value={opt.id}
+                        style={{
+                          backgroundColor: '#0a0a0a',
+                          color: 'white',
+                          padding: '12px 16px'
+                        }}
+                      >
+                        {opt.name}
+                      </option>
                     ))}
                   </select>
                 </div>
