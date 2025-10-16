@@ -174,8 +174,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className="text-center mb-8">
               {mode === 'signin' && (
                 <div className="flex items-center justify-center">
-                  <div className="text-8xl animate-bounce">
-                    😎
+                  <div className="text-6xl animate-bounce">
+                    😺
                   </div>
                 </div>
               )}
