@@ -266,32 +266,32 @@ export const PricingPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 overflow-y-auto bg-white text-slate-900 scrollbar-hide">
+        <main className="flex-1 overflow-y-auto bg-[#0a0a0a] text-white scrollbar-hide" style={{ fontFamily: 'Arial, sans-serif' }}>
             <div className="pt-[136px] pb-16 sm:pt-[168px] sm:pb-24 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto text-center">
-                    <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
+                    <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl">
                         Plans & pricing
                     </h1>
-                    <p className="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+                    <p className="mt-4 text-xl text-slate-400 max-w-2xl mx-auto">
                         Choose the plan that's right for you and unlock the full power of AI interior design.
                     </p>
 
                     {error && (
-                        <div className="mt-6 mx-auto max-w-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <div className="mt-6 mx-auto max-w-md bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg">
                             {error}
                         </div>
                     )}
 
                     <div className="mt-10 flex justify-center">
-                        <div className="relative flex items-center p-1 bg-slate-100 rounded-full">
+                        <div className="relative flex items-center p-1 bg-[#1a1a1a] border border-[#333333] rounded-full">
                             <button
                                 onClick={() => setBillingCycle('monthly')}
-                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-700"
+                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-300"
                             >
                                 {billingCycle === 'monthly' && (
                                     <motion.div
                                         layoutId="billing-highlight"
-                                        className="absolute inset-0 bg-white rounded-full shadow-sm"
+                                        className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
@@ -299,18 +299,18 @@ export const PricingPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setBillingCycle('yearly')}
-                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-700"
+                                className="px-6 py-2 text-sm font-semibold rounded-full focus:outline-none transition-colors relative text-slate-300"
                             >
                                 {billingCycle === 'yearly' && (
                                     <motion.div
                                         layoutId="billing-highlight"
-                                        className="absolute inset-0 bg-white rounded-full shadow-sm"
+                                        className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
                                 <span className="relative z-10">Yearly</span>
                                 <div className="absolute -top-3 -right-5">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 ring-4 ring-white">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white ring-4 ring-[#0a0a0a]">
                                         Save 50%+
                                     </span>
                                 </div>
@@ -327,12 +327,12 @@ export const PricingPage: React.FC = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             className={`relative border rounded-3xl p-8 flex flex-col h-full ${
-                                plan.isPopular ? 'bg-indigo-50 border-indigo-300 shadow-lg shadow-indigo-500/10' : 'bg-white border-slate-200 shadow-sm'
+                                plan.isPopular ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] border-purple-500/50 shadow-lg shadow-purple-500/20' : 'bg-[#1a1a1a] border-[#333333] shadow-sm'
                             }`}
                         >
                             {plan.isPopular && (
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-indigo-500 text-white">
+                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
                                         Most Popular
                                     </span>
                                 </div>
@@ -340,18 +340,18 @@ export const PricingPage: React.FC = () => {
 
                             <div className="flex items-center gap-3">
                                 <span className="text-4xl">{plan.icon}</span>
-                                <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                                <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
                             </div>
                             
-                            <div className="mt-2 inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full">
+                            <div className="mt-2 inline-block px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-semibold rounded-full">
                                 {plan.credits.toLocaleString()} Credits
                             </div>
                             
                             <div className="mt-6 flex items-baseline gap-x-2">
-                                <span className="text-5xl font-extrabold tracking-tight text-slate-900">
+                                <span className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                                     ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                                 </span>
-                                <span className="text-base font-medium text-slate-500">
+                                <span className="text-base font-medium text-slate-400">
                                     / month
                                 </span>
                             </div>
@@ -363,8 +363,8 @@ export const PricingPage: React.FC = () => {
                             <button
                                 onClick={() => handleSubscribe(plan.id)}
                                 disabled={loadingPlanId !== null}
-                                className={`mt-8 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    plan.isPopular ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-800 text-white hover:bg-slate-900'
+                                className={`mt-8 w-full py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${
+                                    plan.isPopular ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700' : 'bg-[#2a2a2a] text-white hover:bg-[#333333]'
                                 }`}
                             >
                                 {loadingPlanId === plan.id ? (
@@ -379,7 +379,7 @@ export const PricingPage: React.FC = () => {
                             </button>
 
                             <div className="mt-10 flex-1 space-y-4">
-                                {plan.description && <p className="text-sm font-semibold text-slate-600">{plan.description}</p>}
+                                {plan.description && <p className="text-sm font-semibold text-slate-400">{plan.description}</p>}
                                 <ul role="list" className="space-y-4 text-sm leading-6">
                                     {plan.features.map((feature) => {
                                         const isAvailable = feature.startsWith('✓');
@@ -388,11 +388,11 @@ export const PricingPage: React.FC = () => {
                                         return (
                                             <li key={feature} className="flex gap-x-3">
                                                 {isAvailable ? (
-                                                    <IconCheck className="h-6 w-5 flex-none text-green-500" aria-hidden="true" />
+                                                    <IconCheck className="h-6 w-5 flex-none text-green-400" aria-hidden="true" />
                                                 ) : (
-                                                    <IconXMark className="h-6 w-5 flex-none text-red-400" aria-hidden="true" />
+                                                    <IconXMark className="h-6 w-5 flex-none text-red-400/60" aria-hidden="true" />
                                                 )}
-                                                <span className="text-slate-600">{featureText}</span>
+                                                <span className="text-slate-300">{featureText}</span>
                                             </li>
                                         );
                                     })}
@@ -405,10 +405,10 @@ export const PricingPage: React.FC = () => {
                 {/* Credit Packs Section */}
                 <div className="mt-24 max-w-7xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">
+                        <h2 className="text-4xl font-extrabold tracking-tight text-white">
                             💎 Top up your credits
                         </h2>
-                        <p className="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+                        <p className="mt-4 text-xl text-slate-400 max-w-2xl mx-auto">
                             Need more credits? Purchase one-time credit packs anytime.
                         </p>
                     </div>
@@ -425,7 +425,7 @@ export const PricingPage: React.FC = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                                     className={`relative border rounded-2xl p-6 flex flex-col ${
-                                        pack.isPopular ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-lg' : 'bg-white border-slate-200 shadow-sm'
+                                        pack.isPopular ? 'bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-amber-500/50 shadow-lg shadow-amber-500/20' : 'bg-[#1a1a1a] border-[#333333] shadow-sm'
                                     }`}
                                 >
                                     {pack.isPopular && (
@@ -438,15 +438,15 @@ export const PricingPage: React.FC = () => {
 
                                     <div className="text-center">
                                         <span className="text-5xl">{pack.icon}</span>
-                                        <h3 className="mt-4 text-xl font-bold text-slate-900">{pack.name}</h3>
-                                        <p className="mt-2 text-sm text-slate-500">{pack.description}</p>
+                                        <h3 className="mt-4 text-xl font-bold text-white">{pack.name}</h3>
+                                        <p className="mt-2 text-sm text-slate-400">{pack.description}</p>
                                         
-                                        <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-lg font-bold rounded-full">
+                                        <div className="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 text-lg font-bold rounded-full">
                                             {pack.credits.toLocaleString()} Credits
                                         </div>
 
                                         <div className="mt-6 flex items-baseline justify-center gap-x-2">
-                                            <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                            <span className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                                                 ${pack.price}
                                             </span>
                                         </div>
@@ -456,8 +456,8 @@ export const PricingPage: React.FC = () => {
                                         </p>
 
                                         {isFreeUser && (
-                                            <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                                                <p className="text-xs text-amber-700 font-medium">
+                                            <div className="mt-4 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                                <p className="text-xs text-amber-300 font-medium">
                                                     ⭐ Upgrade to Pro, Premium or Business to purchase credits
                                                 </p>
                                             </div>
@@ -466,10 +466,10 @@ export const PricingPage: React.FC = () => {
                                         <button
                                             onClick={() => handlePurchaseCredits(pack.id)}
                                             disabled={isDisabled}
-                                            className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-transform duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
+                                            className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${
                                                 pack.isPopular 
                                                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600' 
-                                                    : 'bg-slate-800 text-white hover:bg-slate-900'
+                                                    : 'bg-[#2a2a2a] text-white hover:bg-[#333333]'
                                             }`}
                                         >
                                             {loadingPackId === pack.id ? 'Processing...' : isFreeUser ? '🔒 Upgrade Required' : 'Buy Now'}

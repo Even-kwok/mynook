@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const TermsPage: React.FC = () => {
     return (
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+        <div className="flex-1 overflow-y-auto bg-[#0a0a0a]" style={{ fontFamily: 'Arial, sans-serif' }}>
             <div className="max-w-5xl mx-auto px-6 pt-24 pb-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -12,13 +12,13 @@ export const TermsPage: React.FC = () => {
                 >
                     {/* Header */}
                     <div className="mb-12 text-center">
-                        <h1 className="text-5xl font-bold text-slate-900 mb-4">Terms of Service</h1>
-                        <p className="text-lg text-slate-600">Last updated: October 15, 2025</p>
+                        <h1 className="text-5xl font-bold text-white mb-4">Terms of Service</h1>
+                        <p className="text-lg text-slate-400">Last updated: October 15, 2025</p>
                     </div>
 
                     {/* Important Notice */}
-                    <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 mb-10">
-                        <p className="text-amber-900 font-semibold text-center leading-relaxed">
+                    <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-6 mb-10">
+                        <p className="text-amber-300 font-semibold text-center leading-relaxed">
                             PLEASE READ THESE TERMS OF SERVICE ("AGREEMENT" OR "TERMS OF SERVICE") CAREFULLY BEFORE USING THE SERVICES OFFERED BY MYNOOK. 
                             THIS AGREEMENT SETS FORTH THE LEGALLY BINDING TERMS AND CONDITIONS FOR YOUR USE OF THE MYNOOK WEBSITE AND ALL RELATED SERVICES. 
                             BY USING THE SERVICES IN ANY MANNER, YOU AGREE TO BE BOUND BY THIS AGREEMENT.
@@ -26,10 +26,10 @@ export const TermsPage: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="space-y-8 text-slate-700">
+                    <div className="space-y-8 text-slate-300">
                         
                         {/* Definition */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
                             <p className="leading-relaxed">
                                 "The Site" refers to the websites and services operated by MyNook, including but not limited to mynook.ai, 
                                 as well as any associated applications, services, features, content, and functionalities offered by MyNook.
@@ -37,8 +37,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Acceptance of Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Acceptance of Terms of Service</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Acceptance of Terms of Service</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     The Service is offered subject to acceptance without modification of all of these Terms of Service and all other operating rules, 
@@ -54,7 +54,7 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Rules and Conduct */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
                             <h2 className="text-3xl font-bold text-slate-900 mb-6">Rules and Conduct</h2>
                             
                             <div className="space-y-6">
@@ -125,8 +125,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* DMCA Policy */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">DMCA and Takedowns Policy</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">DMCA and Takedowns Policy</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     MyNook utilizes artificial intelligence systems to produce design visualizations. Such outputs may be unintentionally similar to 
@@ -145,8 +145,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Modification of Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Modification of Terms of Service</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Modification of Terms of Service</h2>
                             <p className="leading-relaxed">
                                 At its sole discretion, MyNook may modify or replace any of the Terms of Service, or change, suspend, or discontinue the Service 
                                 (including without limitation, the availability of any feature, database, or content) at any time by posting a notice on the MyNook 
@@ -157,8 +157,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Trademarks and Patents */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Trademarks and Patents</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Trademarks and Patents</h2>
                             <p className="leading-relaxed">
                                 All MyNook logos, marks and designations are trademarks or registered trademarks of MyNook. All other trademarks mentioned in this 
                                 website are the property of their respective owners. The trademarks and logos displayed on this website may not be used without the prior 
@@ -168,8 +168,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Licensing Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Licensing Terms</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Licensing Terms</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     Subject to your compliance with this Agreement, the conditions herein and any limitations applicable to MyNook or by law:
@@ -195,8 +195,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Fees and Payments */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Fees and Payments</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Fees and Payments</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     You agree that MyNook provides you immediate access to digital content and begins service consumption immediately upon purchase, 
@@ -222,8 +222,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Subscription Plans and Pricing */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Subscription Plans and Pricing</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Subscription Plans and Pricing</h2>
                             <div className="space-y-6">
                                 <p className="leading-relaxed">
                                     MyNook offers four membership tiers with different features and credit allocations. All paid subscriptions can be billed monthly or yearly.
@@ -305,8 +305,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Subscription Terms */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Subscription Terms and Renewal</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Subscription Terms and Renewal</h2>
                             <div className="space-y-4">
                                 <div>
                                     <h3 className="text-xl font-semibold text-slate-800 mb-3">Automatic Renewal</h3>
@@ -368,8 +368,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Payment Processing */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Payment Processing</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Payment Processing</h2>
                             <p className="leading-relaxed">
                                 MyNook uses <strong>Creem.io as our Merchant of Record</strong> for payment processing. When you make a purchase, your payment information 
                                 is processed securely by Creem.io. We do not store your credit card information. All payment transactions are handled securely through 
@@ -379,8 +379,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Termination */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Termination</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Termination</h2>
                             <p className="leading-relaxed">
                                 MyNook may terminate your access to all or any part of the Service at any time if you fail to comply with these Terms of Service, which may 
                                 result in the forfeiture and destruction of all information associated with your account. Further, either party may terminate the Services for 
@@ -392,8 +392,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Indemnification */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Indemnification</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Indemnification</h2>
                             <p className="leading-relaxed">
                                 You shall defend, indemnify, and hold harmless MyNook, its affiliates and each of its employees, contractors, directors, suppliers and 
                                 representatives from all liabilities, losses, claims, and expenses, including reasonable attorneys' fees, that arise from or relate to (i) your 
@@ -404,8 +404,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Limitation of Liability */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Limitation of Liability</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Limitation of Liability</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed font-semibold">
                                     IN NO EVENT SHALL MYNOOK OR ITS DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, SUPPLIERS OR CONTENT PROVIDERS, BE LIABLE UNDER CONTRACT, TORT, 
@@ -426,8 +426,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Disclaimer */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Disclaimer</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Disclaimer</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed font-semibold">
                                     ALL USE OF THE SERVICE AND ANY CONTENT IS UNDERTAKEN ENTIRELY AT YOUR OWN RISK. THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" AND IS 
@@ -446,8 +446,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Links to Other Websites */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Links to and From Other Websites</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Links to and From Other Websites</h2>
                             <p className="leading-relaxed">
                                 You may gain access to other websites via links on the Site. These Terms apply to the Site only and do not apply to other parties' websites. 
                                 MyNook assumes no responsibility for any terms of service or material outside of the Site accessed via any link. You are free to establish a 
@@ -456,8 +456,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Choice of Law */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Choice of Law and Dispute Resolution</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Choice of Law and Dispute Resolution</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     You agree that any claim or cause of action arising out of or related to these Terms, the Site, or any services provided must be filed 
@@ -472,8 +472,8 @@ export const TermsPage: React.FC = () => {
                         </section>
 
                         {/* Miscellaneous */}
-                        <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Miscellaneous</h2>
+                        <section className="bg-[#1a1a1a] rounded-2xl p-8 shadow-sm border border-[#333333]">
+                            <h2 className="text-3xl font-bold text-white mb-4">Miscellaneous</h2>
                             <div className="space-y-4">
                                 <p className="leading-relaxed">
                                     The Terms of Service are the entire agreement between you and MyNook with respect to the Service, and supersede all prior or contemporaneous 
