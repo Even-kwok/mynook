@@ -244,11 +244,13 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                         <div key={albumType}>
                                             <button
                                                 onClick={() => toggleAlbum(albumType)}
-                                                className="w-full text-left p-2 rounded-xl hover:bg-[#2a2a2a] transition-colors flex justify-between items-center"
+                                                className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-[#2a2a2a] transition-colors flex justify-between items-center"
                                                 aria-expanded={isExpanded}
                                             >
-                                                <h3 className="font-semibold text-sm text-[#a0a0a0]">{albumTypeLabels[albumType]} ({imagesInAlbum.length})</h3>
-                                                <IconChevronDown className={`w-4 h-4 text-[#666666] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                <h3 className="font-medium text-xs text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                    {albumTypeLabels[albumType]} ({imagesInAlbum.length})
+                                                </h3>
+                                                <IconChevronDown className={`w-3.5 h-3.5 text-[#666666] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </button>
                                             <AnimatePresence initial={false}>
                                                 {isExpanded && (
