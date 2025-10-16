@@ -1636,6 +1636,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
 
                             {/* Generate 按钮 */}
                             <button
+                                type="button"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();

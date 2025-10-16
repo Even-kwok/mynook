@@ -26,6 +26,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 }) => {
   const { membershipTier } = useAuth();
 
+  console.log('UpgradeModal props:', { isOpen, featureName, requiredTier, membershipTier });
+
   // Tier configuration
   const tierConfig = {
     premium: {
@@ -59,6 +61,12 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const config = tierConfig[requiredTier];
 
   if (!isOpen) return null;
+  
+  // 防御性检查：如果 config 不存在，使用默认的 premium 配置
+  if (!config) {
+    console.error('Invalid requiredTier:', requiredTier);
+    return null;
+  }
 
   const handleUpgrade = () => {
     onClose();
