@@ -1645,7 +1645,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                         handleGenerate();
                                     }
                                 }}
-                                disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)}
+                                disabled={hasGeneratePermission && (isLoading || !prompt || (images.length === 0 && paths.length === 0))}
                                 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             >
