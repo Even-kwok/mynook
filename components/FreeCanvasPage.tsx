@@ -221,7 +221,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
         <div className="relative flex-shrink-0">
             <button
                 onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-white border border-r-0 border-slate-300 rounded-l-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors focus:outline-none"
+                className="absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-24 bg-[#1a1a1a] border border-r-0 border-[#2a2a2a] rounded-l-lg flex items-center justify-center text-[#666666] hover:bg-[#333333] transition-colors focus:outline-none"
                 aria-label={isGalleryOpen ? 'Collapse gallery' : 'Expand gallery'}
             >
                 <motion.div animate={{ rotate: isGalleryOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -230,19 +230,19 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
             </button>
             <motion.aside
                 initial={false}
-                animate={{ width: isGalleryOpen ? 320 : 0 }}
+                animate={{ width: isGalleryOpen ? 220 : 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                className="h-full overflow-hidden bg-white border-l border-slate-200"
+                className="h-full overflow-hidden bg-[#1a1a1a] border-l border-[#2a2a2a]"
             >
-                <div className="w-[320px] h-full px-4 pb-4 pt-[88px] flex flex-col">
-                    <div className="flex justify-between items-center mb-2 px-2 flex-shrink-0">
-                        <h2 className="text-lg font-semibold text-slate-800">My Designs</h2>
-                        <div className="flex items-center gap-1 p-0.5 bg-slate-200 rounded-xl">
+                <div className="w-[220px] h-full px-3 pb-4 pt-[88px] flex flex-col">
+                    <div className="flex justify-between items-center mb-2 px-1 flex-shrink-0">
+                        <h2 className="text-sm font-semibold text-white">Assets</h2>
+                        <div className="flex items-center gap-1 p-0.5 bg-[#2a2a2a] rounded-xl">
                             {(['lg', 'md', 'sm'] as const).map(size => (
                                 <button
                                     key={size}
                                     onClick={() => setGalleryViewSize(size)}
-                                    className={`p-1.5 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-300'}`}
+                                    className={`p-1.5 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-[#333333] text-indigo-500 shadow-sm' : 'text-[#666666] hover:bg-[#333333]'}`}
                                     aria-label={`${size} view`}
                                 >
                                     {size === 'lg' && <IconViewLarge className="w-4 h-4" />}
@@ -274,11 +274,11 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                         <div key={albumType}>
                                             <button
                                                 onClick={() => toggleAlbum(albumType)}
-                                                className="w-full text-left p-2 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                                className="w-full text-left p-2 rounded-xl hover:bg-[#2a2a2a] transition-colors flex justify-between items-center"
                                                 aria-expanded={isExpanded}
                                             >
-                                                <h3 className="font-semibold text-sm text-slate-700">{albumTypeLabels[albumType]} ({imagesInAlbum.length})</h3>
-                                                <IconChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                <h3 className="font-semibold text-sm text-[#a0a0a0]">{albumTypeLabels[albumType]} ({imagesInAlbum.length})</h3>
+                                                <IconChevronDown className={`w-4 h-4 text-[#666666] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </button>
                                             <AnimatePresence initial={false}>
                                                 {isExpanded && (
@@ -301,7 +301,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                                                     initial={{ opacity: 0, scale: 0.9 }}
                                                                     animate={{ opacity: 1, scale: 1 }}
                                                                     transition={{ duration: 0.2, delay: index * 0.05 }}
-                                                                    className="relative group aspect-square rounded-2xl overflow-hidden bg-slate-200 shadow-sm"
+                                                                    className="relative group aspect-square rounded-2xl overflow-hidden bg-[#2a2a2a] shadow-sm"
                                                                 >
                                                                     <img
                                                                         src={image.imageUrl!}
@@ -344,9 +344,9 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                 })}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4">
-                                <IconPhoto className="w-12 h-12 text-slate-300" />
-                                <p className="mt-4 text-sm font-medium text-slate-500">No Designs Yet</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center text-[#666666] p-4">
+                                <IconPhoto className="w-12 h-12 text-[#404040]" />
+                                <p className="mt-4 text-sm font-medium text-[#666666]">No Designs Yet</p>
                             </div>
                         )}
                     </div>
