@@ -6,7 +6,7 @@ import { GeneratedImage, PromptTemplateCategory, GenerationBatch, PromptTemplate
 import { toBase64 } from './utils/imageUtils';
 import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
-import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconLogo, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark, IconLock } from './components/Icons';
+import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX, IconPlus, IconPhoto, IconBell, IconUserCircle, IconCheck, IconCrown, IconChevronDown, IconGoogle, IconApple, IconViewLarge, IconViewMedium, IconViewSmall, IconTrash, IconBookmark, IconLock } from './components/Icons';
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
@@ -1443,8 +1443,8 @@ const ComingSoonPage: React.FC<{ pageName: string }> = ({ pageName }) => {
     return (
         <div className="flex-1 flex items-center justify-center text-center p-4">
             <div>
-                <motion.div initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5}}>
-                    <IconLogo />
+                <motion.div initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5}} className="text-6xl font-bold text-indigo-600">
+                    MN
                 </motion.div>
                 <motion.h2 initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5, delay: 0.1}} className="mt-6 text-4xl font-bold text-slate-900">Coming Soon</motion.h2>
                 <motion.p initial={{opacity: 0, y:20}} animate={{opacity: 1, y: 0}} transition={{duration: 0.5, delay: 0.2}} className="text-slate-500 mt-2">{`The "${pageName}" page is under construction. Stay tuned!`}</motion.p>

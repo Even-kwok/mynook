@@ -65,7 +65,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
           animate={{ x: 0 }}
           exit={{ x: -600 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className={`fixed left-[90px] top-[60px] bottom-0 w-[600px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} z-40 flex shadow-2xl`}
+          className={`fixed left-[90px] top-0 bottom-0 w-[600px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} z-40 flex`}
         >
           {/* 左侧：上传模块 */}
           <div className="w-[280px] border-r border-[#2a2a2a] flex flex-col">
@@ -84,6 +84,32 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             
             {/* 上传区域 */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
+              {/* 选择器（如房间类型）- 移到这里 */}
+              {selectorLabel && selectorOptions && (
+                <div>
+                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                    {selectorLabel}
+                  </label>
+                  <select
+                    value={selectorValue}
+                    onChange={(e) => onSelectorChange?.(e.target.value)}
+                    className={`
+                      w-full h-10 px-3 rounded-lg
+                      ${darkThemeClasses.bgTertiary} 
+                      border ${darkThemeClasses.borderLight}
+                      ${darkThemeClasses.textPrimary}
+                      focus:border-indigo-500 focus:outline-none
+                      text-sm
+                    `}
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  >
+                    {selectorOptions.map(opt => (
+                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {/* 图片上传 */}
               <div>
                 <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -157,7 +183,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   w-full h-12 rounded-xl font-semibold text-white transition-all
                   ${generateDisabled || isGenerating
                     ? 'bg-[#333333] cursor-not-allowed opacity-50'
-                    : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105'
+                    : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 hover:scale-105'
                   }
                 `}
                 style={{ fontFamily: 'Arial, sans-serif' }}
@@ -170,35 +196,9 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             </div>
           </div>
           
-          {/* 右侧：模板选择 */}
+          {/* 右侧：模板选择 - 顶天立地 */}
           <div className="w-[320px] flex flex-col">
-            {/* 选择器（如房间类型）*/}
-            {selectorLabel && selectorOptions && (
-              <div className="p-4 border-b border-[#2a2a2a]">
-                <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
-                  {selectorLabel}
-                </label>
-                <select
-                  value={selectorValue}
-                  onChange={(e) => onSelectorChange?.(e.target.value)}
-                  className={`
-                    w-full h-10 px-3 rounded-lg
-                    ${darkThemeClasses.bgTertiary} 
-                    border ${darkThemeClasses.borderLight}
-                    ${darkThemeClasses.textPrimary}
-                    focus:border-indigo-500 focus:outline-none
-                    text-sm
-                  `}
-                  style={{ fontFamily: 'Arial, sans-serif' }}
-                >
-                  {selectorOptions.map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            
-            {/* 模板网格 - 可滚动 */}
+            {/* 模板网格 - 顶天立地，可滚动 */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
               <div className="space-y-4">
                 {templates.map((template) => {

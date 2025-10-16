@@ -11,8 +11,7 @@ import {
   IconTarget, 
   IconChat, 
   IconBox, 
-  IconPencil,
-  IconLogo
+  IconPencil
 } from './Icons';
 import { darkThemeClasses } from '../config/darkTheme';
 
@@ -22,22 +21,23 @@ export interface ToolItem {
   name: string;
   shortName: string;
   icon: React.ComponentType<{ className?: string }>;
+  color?: string;
   isPremium?: boolean;
   isComingSoon?: boolean;
 }
 
 const tools: ToolItem[] = [
-  { id: 'interior', name: 'Interior Design', shortName: 'Interior', icon: IconSparkles },
-  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', icon: IconHome },
-  { id: 'wall', name: 'Wall Design', shortName: 'Wall', icon: IconPaint },
-  { id: 'floor', name: 'Floor Style', shortName: 'Floor', icon: IconFloor },
-  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', icon: IconTree },
-  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', icon: IconGift },
-  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', icon: IconPlus, isPremium: true },
-  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', icon: IconTarget, isPremium: true },
-  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', icon: IconChat, isComingSoon: true },
-  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', icon: IconBox, isComingSoon: true },
-  { id: 'free-canvas', name: 'Free Canvas', shortName: 'Canvas', icon: IconPencil, isPremium: true },
+  { id: 'interior', name: 'Interior Design', shortName: 'Interior', icon: IconSparkles, color: '#8B5CF6' }, // Purple
+  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', icon: IconHome, color: '#EF4444' }, // Red
+  { id: 'wall', name: 'Wall Design', shortName: 'Wall', icon: IconPaint, color: '#EC4899' }, // Pink
+  { id: 'floor', name: 'Floor Style', shortName: 'Floor', icon: IconFloor, color: '#A855F7' }, // Violet
+  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', icon: IconTree, color: '#10B981' }, // Green
+  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', icon: IconGift, color: '#F59E0B' }, // Orange
+  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', icon: IconPlus, color: '#3B82F6', isPremium: true }, // Blue
+  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', icon: IconTarget, color: '#06B6D4', isPremium: true }, // Cyan
+  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', icon: IconChat, color: '#8B5CF6', isComingSoon: true }, // Purple
+  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', icon: IconBox, color: '#6366F1', isComingSoon: true }, // Indigo
+  { id: 'free-canvas', name: 'Free Canvas', shortName: 'Canvas', icon: IconPencil, color: '#F97316', isPremium: true }, // Orange
 ];
 
 export interface LeftToolbarProps {
@@ -57,8 +57,8 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
     <div className={`w-[90px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} flex flex-col h-full`}>
       {/* Logo at top */}
       <div className="h-16 flex items-center justify-center border-b border-[#2a2a2a]">
-        <button onClick={() => onToolClick('explore')} className="text-white hover:text-indigo-400 transition-colors">
-          <IconLogo className="w-8 h-8" />
+        <button onClick={() => onToolClick('explore')} className="text-white hover:text-indigo-400 transition-colors font-bold text-xl">
+          MN
         </button>
       </div>
       
@@ -77,15 +77,15 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 className={`
                   relative w-full rounded-xl px-2 py-3 flex flex-col items-center gap-1 transition-all
                   ${isActive 
-                    ? darkThemeClasses.iconActive + ' shadow-lg shadow-indigo-500/50'
-                    : darkThemeClasses.iconDefault + ' ' + darkThemeClasses.bgHover
+                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
+                    : 'text-[#a0a0a0] hover:bg-[#2a2a2a]'
                   }
                 `}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {/* 图标 */}
-                <Icon className="w-5 h-5" />
+                <Icon className="w-5 h-5" style={{ color: isActive ? 'white' : tool.color }} />
                 
                 {/* 文字标签 */}
                 <span 

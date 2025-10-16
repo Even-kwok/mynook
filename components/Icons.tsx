@@ -74,17 +74,6 @@ export const IconEye = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
-export const IconLogo = () => (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="logoGradient" x1="2" y1="30" x2="30" y2="2" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#3B82F6"/>
-                <stop offset="1" stopColor="#A855F7"/>
-            </linearGradient>
-        </defs>
-        <path d="M16 2L30 15V30H20V20H12V30H2V15L16 2Z" fill="url(#logoGradient)"/>
-    </svg>
-);
 
 export const IconBrush = ({ className = "w-6 h-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>

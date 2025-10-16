@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconLogo, IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload } from './Icons';
+import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload } from './Icons';
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
@@ -1249,7 +1249,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div className="flex-1 flex overflow-hidden bg-slate-100 pt-[72px]">
             <aside className="w-64 bg-white p-4 border-r border-slate-200 flex flex-col">
                 <div className="flex items-center gap-2 px-2 pb-6 border-b border-slate-200">
-                    <IconLogo />
+                    <span className="text-2xl font-bold text-indigo-600">MN</span>
                     <span className="text-xl font-bold text-slate-800">Admin Panel</span>
                 </div>
                 <nav className="mt-6 space-y-2">
