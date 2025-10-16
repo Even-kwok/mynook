@@ -71,10 +71,10 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   return (
     <div className="w-[90px] bg-[#0a0a0a] flex flex-col h-full relative z-50">
       {/* Logo at top */}
-      <div className="h-16 flex items-center justify-center">
+      <div className="h-16 flex items-center justify-center px-2">
         <button onClick={() => onToolClick('explore')} className="hover:scale-110 transition-transform">
-          <span className="logo-gradient font-bold text-xl" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '1px' }}>
-            MN
+          <span className="logo-gradient" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 13, lineHeight: '20px', letterSpacing: '0.8px' }}>
+            MyNook.AI
           </span>
         </button>
       </div>
