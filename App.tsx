@@ -3299,11 +3299,7 @@ const App: React.FC = () => {
         const currentPageInfo = pageInfo[activePage];
 
         return (
-            <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0a0a]">
-                {/* Top Banner Hero */}
-                <BannerHero />
-                
-                <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 flex overflow-hidden bg-[#0a0a0a]">
                     {/* Left Toolbar */}
                     <LeftToolbar 
                         activePage={activePage}
@@ -3437,7 +3433,7 @@ const App: React.FC = () => {
 
                             {isAIAdvisor && (
                                 <div className="space-y-4">
-                                    <div>
+                                <div>
                                         <h3 className="text-lg font-semibold text-slate-800">Ask an AI Advisor</h3>
                                         <textarea
                                             value={advisorQuestion}
@@ -3509,84 +3505,84 @@ const App: React.FC = () => {
                             <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
                             
                             {activePage === 'Interior Design' && (
-                                <CustomSelect
-                                    label="Choose a Room Type"
-                                    options={availableRoomTypes.length > 0 ? availableRoomTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No room types available'}]}
-                                    value={availableRoomTypes.length > 0 ? selectedRoomType : 'loading'}
-                                    onChange={setSelectedRoomType}
-                                    disabled={templatesLoading || availableRoomTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Room Type"
+                                        options={availableRoomTypes.length > 0 ? availableRoomTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No room types available'}]}
+                                        value={availableRoomTypes.length > 0 ? selectedRoomType : 'loading'}
+                                        onChange={setSelectedRoomType}
+                                        disabled={templatesLoading || availableRoomTypes.length === 0}
+                                    />
                             )}
                             {activePage === 'Festive Decor' && (
-                                <CustomSelect
-                                    label="Choose a Festive Type"
-                                    options={availableFestiveTypes.length > 0 ? availableFestiveTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No festive types available'}]}
-                                    value={availableFestiveTypes.length > 0 ? selectedFestiveType : 'loading'}
-                                    onChange={setSelectedFestiveType}
-                                    disabled={templatesLoading || availableFestiveTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Festive Type"
+                                        options={availableFestiveTypes.length > 0 ? availableFestiveTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No festive types available'}]}
+                                        value={availableFestiveTypes.length > 0 ? selectedFestiveType : 'loading'}
+                                        onChange={setSelectedFestiveType}
+                                        disabled={templatesLoading || availableFestiveTypes.length === 0}
+                                    />
                             )}
                             {activePage === 'Exterior Design' && (
-                                <CustomSelect
-                                    label="Choose a Building Type"
-                                    options={availableBuildingTypes.length > 0 ? availableBuildingTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No building types available'}]}
-                                    value={availableBuildingTypes.length > 0 ? selectedBuildingType : 'loading'}
-                                    onChange={setSelectedBuildingType}
-                                    disabled={templatesLoading || availableBuildingTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Building Type"
+                                        options={availableBuildingTypes.length > 0 ? availableBuildingTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No building types available'}]}
+                                        value={availableBuildingTypes.length > 0 ? selectedBuildingType : 'loading'}
+                                        onChange={setSelectedBuildingType}
+                                        disabled={templatesLoading || availableBuildingTypes.length === 0}
+                                    />
                             )}
                             {activePage === 'Wall Design' && (
-                                <CustomSelect
-                                    label="Choose a Wall Type"
-                                    options={availableWallDesignTypes.length > 0 ? availableWallDesignTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No wall types available'}]}
-                                    value={availableWallDesignTypes.length > 0 ? selectedWallDesignType : 'loading'}
-                                    onChange={setSelectedWallDesignType}
-                                    disabled={templatesLoading || availableWallDesignTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Wall Type"
+                                        options={availableWallDesignTypes.length > 0 ? availableWallDesignTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No wall types available'}]}
+                                        value={availableWallDesignTypes.length > 0 ? selectedWallDesignType : 'loading'}
+                                        onChange={setSelectedWallDesignType}
+                                        disabled={templatesLoading || availableWallDesignTypes.length === 0}
+                                    />
                             )}
                             {activePage === 'Floor Style' && (
-                                <CustomSelect
-                                    label="Choose a Floor Type"
-                                    options={availableFloorTypes.length > 0 ? availableFloorTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No floor types available'}]}
-                                    value={availableFloorTypes.length > 0 ? selectedFloorType : 'loading'}
-                                    onChange={setSelectedFloorType}
-                                    disabled={templatesLoading || availableFloorTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Floor Type"
+                                        options={availableFloorTypes.length > 0 ? availableFloorTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No floor types available'}]}
+                                        value={availableFloorTypes.length > 0 ? selectedFloorType : 'loading'}
+                                        onChange={setSelectedFloorType}
+                                        disabled={templatesLoading || availableFloorTypes.length === 0}
+                                    />
                             )}
                             {activePage === 'Garden & Backyard Design' && (
-                                <CustomSelect
-                                    label="Choose a Garden Type"
-                                    options={availableGardenTypes.length > 0 ? availableGardenTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No garden types available'}]}
-                                    value={availableGardenTypes.length > 0 ? selectedGardenType : 'loading'}
-                                    onChange={setSelectedGardenType}
-                                    disabled={templatesLoading || availableGardenTypes.length === 0}
-                                />
+                                    <CustomSelect
+                                        label="Choose a Garden Type"
+                                        options={availableGardenTypes.length > 0 ? availableGardenTypes : [{id: 'loading', name: templatesLoading ? 'Loading...' : 'No garden types available'}]}
+                                        value={availableGardenTypes.length > 0 ? selectedGardenType : 'loading'}
+                                        onChange={setSelectedGardenType}
+                                        disabled={templatesLoading || availableGardenTypes.length === 0}
+                                    />
                             )}
                         </div>
                         
                         {/* Scrollable Template Area - No Category Names */}
                         <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-4">
-                            {templatesLoading ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mx-auto mb-2"></div>
-                                    <p className="text-slate-500 text-sm">Loading templates...</p>
-                                </div>
-                            ) : categories.length > 0 ? (
-                                <PromptTemplates 
-                                    categories={categories} 
-                                    onTemplateSelect={handleTemplateSelect} 
-                                    selectedTemplateIds={selectedTemplateIds}
-                                    maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
+                                    {templatesLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mx-auto mb-2"></div>
+                                            <p className="text-slate-500 text-sm">Loading templates...</p>
+                                        </div>
+                                    ) : categories.length > 0 ? (
+                                        <PromptTemplates 
+                                            categories={categories} 
+                                            onTemplateSelect={handleTemplateSelect} 
+                                            selectedTemplateIds={selectedTemplateIds}
+                                            maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
                                     showCategoryNames={false}
-                                />
-                            ) : (
-                                <div className="text-center py-8 px-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <IconPhoto className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                                    <p className="text-slate-600 text-sm font-medium">No templates available</p>
-                                    <p className="text-slate-500 text-xs mt-1">Please contact support if this persists</p>
+                                        />
+                                    ) : (
+                                        <div className="text-center py-8 px-4 bg-slate-50 rounded-xl border border-slate-200">
+                                            <IconPhoto className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+                                            <p className="text-slate-600 text-sm font-medium">No templates available</p>
+                                            <p className="text-slate-500 text-xs mt-1">Please contact support if this persists</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
                     </aside>
                 )}
 
@@ -3597,14 +3593,14 @@ const App: React.FC = () => {
                             {generatedImages.map((image, i) => (
                                 image.status === 'success' && image.imageUrl ? (
                                     <div key={`${image.id}-${i}`} className="w-[332px]">
-                                        <PhotoDisplay
-                                            era={image.id}
-                                            imageUrl={image.imageUrl}
-                                            onDownload={handleDownload}
-                                            onRegenerate={() => handleRegenerate(image)}
-                                            onImageClick={setFullScreenImage}
-                                            onDragStart={() => {}}
-                                        />
+                                    <PhotoDisplay
+                                        era={image.id}
+                                        imageUrl={image.imageUrl}
+                                        onDownload={handleDownload}
+                                        onRegenerate={() => handleRegenerate(image)}
+                                        onImageClick={setFullScreenImage}
+                                        onDragStart={() => {}}
+                                    />
                                     </div>
                                 ) : image.status === 'pending' ? (
                                     <div key={`${image.id}-${i}-loading`} className="w-[332px]">
@@ -3677,7 +3673,6 @@ const App: React.FC = () => {
                     onImageDragStart={handleResultImageDragStart}
                     onDelete={handleDeleteGenerationImage}
                 />
-                </div>
             </div>
         )
     };
@@ -3707,14 +3702,17 @@ const App: React.FC = () => {
                 onClose={() => setIsResetPasswordModalOpen(false)}
             />
 
-            <Header 
-                activeItem={activePage} 
-                onNavigate={setActivePage} 
-                user={currentUser} 
-                onLoginClick={() => auth.setShowLoginModal(true)}
-                onLogout={handleLogout}
-                designTools={designTools}
-            />
+            {/* Only show Header on non-functional pages */}
+            {!['Interior Design', 'Exterior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Festive Decor', 'Item Replace', 'Reference Style Match', 'AI Design Advisor', 'Multi-Item Preview', 'Free Canvas'].includes(activePage) && (
+                <Header 
+                    activeItem={activePage} 
+                    onNavigate={setActivePage} 
+                    user={currentUser} 
+                    onLoginClick={() => auth.setShowLoginModal(true)}
+                    onLogout={handleLogout}
+                    designTools={designTools}
+                />
+            )}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {renderPage()}
             </div>

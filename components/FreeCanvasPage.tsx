@@ -230,30 +230,16 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
             </button>
             <motion.aside
                 initial={false}
-                animate={{ width: isGalleryOpen ? 220 : 0 }}
+                animate={{ width: isGalleryOpen ? 90 : 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                 className="h-full overflow-hidden bg-[#1a1a1a] border-l border-[#2a2a2a]"
             >
-                <div className="w-[220px] h-full px-3 pb-4 pt-[88px] flex flex-col">
-                    <div className="flex justify-between items-center mb-2 px-1 flex-shrink-0">
-                        <h2 className="text-sm font-semibold text-white">Assets</h2>
-                        <div className="flex items-center gap-1 p-0.5 bg-[#2a2a2a] rounded-xl">
-                            {(['lg', 'md', 'sm'] as const).map(size => (
-                                <button
-                                    key={size}
-                                    onClick={() => setGalleryViewSize(size)}
-                                    className={`p-1.5 rounded-lg transition-colors ${galleryViewSize === size ? 'bg-[#333333] text-indigo-500 shadow-sm' : 'text-[#666666] hover:bg-[#333333]'}`}
-                                    aria-label={`${size} view`}
-                                >
-                                    {size === 'lg' && <IconViewLarge className="w-4 h-4" />}
-                                    {size === 'md' && <IconViewMedium className="w-4 h-4" />}
-                                    {size === 'sm' && <IconViewSmall className="w-4 h-4" />}
-                                </button>
-                            ))}
-                        </div>
+                <div className="w-[90px] h-full px-2 pb-4 pt-6 flex flex-col">
+                    <div className="flex justify-center items-center mb-3 flex-shrink-0">
+                        <h2 className="text-xs font-semibold text-white">Assets</h2>
                     </div>
-                    {/* Batch Download Button */}
-                    {allGalleryImages.length > 0 && (
+                    {/* Batch Download Button - Hidden for narrow layout */}
+                    {false && allGalleryImages.length > 0 && (
                         <div className="px-2 mb-4 flex-shrink-0">
                             <button
                                 onClick={handleBatchDownload}
@@ -294,7 +280,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                                         className="overflow-hidden"
                                                     >
-                                                        <div className={`grid ${viewSizeClasses} gap-4 mt-2`}>
+                                                        <div className="grid grid-cols-1 gap-2 mt-2">
                                                             {imagesInAlbum.map((image, index) => (
                                                                 <motion.div
                                                                     key={`${image.id}-${index}`}
