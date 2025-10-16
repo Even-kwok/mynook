@@ -644,21 +644,38 @@ const Header: React.FC<{
                 {/* 升级按钮已移除 */}
 
                 {user && (
-                    <div className="relative" ref={userMenuRef}>
-                        <button 
-                            onClick={() => setUserMenuOpen(o => !o)} 
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl hover:scale-110 transition-transform"
-                        >
-                            🐱
-                        </button>
-                        <DarkUserMenu
-                            isOpen={userMenuOpen}
-                            onClose={() => setUserMenuOpen(false)}
-                            user={user}
-                            onLogout={onLogout}
-                            anchorRef={userMenuRef}
-                            position="bottom"
-                        />
+                    <div className="flex items-center gap-3">
+                        {/* FREE 用户订阅提示框 - 在头像左边，简洁显眼 */}
+                        {user.membershipTier === 'free' && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                onClick={() => onNavigate('Pricing')}
+                                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 hover:border-purple-400/80 hover:from-purple-500/30 hover:to-pink-500/30 transition-all group shadow-lg"
+                            >
+                                <span className="text-xl">👑</span>
+                                <span className="text-sm font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent group-hover:from-purple-200 group-hover:to-pink-200 transition-all" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    Upgrade to Pro
+                                </span>
+                            </motion.button>
+                        )}
+                        
+                        <div className="relative" ref={userMenuRef}>
+                            <button 
+                                onClick={() => setUserMenuOpen(o => !o)} 
+                                className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl hover:scale-110 transition-transform"
+                            >
+                                🐱
+                            </button>
+                            <DarkUserMenu
+                                isOpen={userMenuOpen}
+                                onClose={() => setUserMenuOpen(false)}
+                                user={user}
+                                onLogout={onLogout}
+                                anchorRef={userMenuRef}
+                                position="bottom"
+                            />
+                        </div>
                     </div>
                 )}
             </div>
@@ -1847,6 +1864,18 @@ const App: React.FC = () => {
             // 清除URL hash，避免刷新页面时再次触发
             window.history.replaceState(null, '', window.location.pathname);
         }
+    }, []);
+
+    // Listen for pricing navigation event from LeftToolbar
+    useEffect(() => {
+        const handleNavigateToPricing = () => {
+            setActivePage('Pricing');
+        };
+        
+        window.addEventListener('navigate-to-pricing', handleNavigateToPricing);
+        return () => {
+            window.removeEventListener('navigate-to-pricing', handleNavigateToPricing);
+        };
     }, []);
 
     // Check admin access on mount and user change
