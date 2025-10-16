@@ -13,7 +13,7 @@ interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   featureName: string; // Feature name, e.g., "Free Canvas"
-  requiredTier: 'premium' | 'business'; // Required membership tier
+  requiredTier: 'pro' | 'premium' | 'business'; // Required membership tier
   onUpgrade?: () => void; // Callback to upgrade page
 }
 
@@ -30,6 +30,19 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   // Tier configuration
   const tierConfig = {
+    pro: {
+      name: 'Pro',
+      icon: '⭐',
+      price: '$19/month',
+      color: 'from-blue-500 to-cyan-500',
+      features: [
+        '1,000 credits/month',
+        'Generate up to 4 designs simultaneously',
+        'All basic features',
+        'Email support',
+        'Commercial use license',
+      ]
+    },
     premium: {
       name: 'Premium',
       icon: '👑',

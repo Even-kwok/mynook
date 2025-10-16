@@ -2531,7 +2531,6 @@ const App: React.FC = () => {
         
         // 特别处理：免费用户点击生成时直接提示升级
         if (membershipTier === 'free') {
-            setError('Please upgrade to Pro or higher to generate design images.');
             setIsUpgradeModalOpen(true);
             setUpgradeFeatureName('Design Image Generation');
             setUpgradeRequiredTier('pro');
