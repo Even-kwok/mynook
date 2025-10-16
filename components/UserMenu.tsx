@@ -78,8 +78,11 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute bottom-full left-0 mb-2 w-64 bg-[#1a1a1a] border border-[#333333] rounded-xl shadow-2xl overflow-hidden z-50"
-          style={{ fontFamily: 'Arial, sans-serif' }}
+          className="absolute bottom-full left-0 mb-2 w-64 bg-[#1a1a1a] border border-[#333333] rounded-xl shadow-2xl overflow-hidden"
+          style={{ 
+            fontFamily: 'Arial, sans-serif',
+            zIndex: 9999
+          }}
         >
           {/* User Info Section */}
           <div className="p-4 bg-gradient-to-br from-[#252525] to-[#1a1a1a] border-b border-[#333333]">
