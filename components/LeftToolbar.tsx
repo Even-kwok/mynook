@@ -170,58 +170,45 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
               </span>
             </div>
             
-            {/* User Avatar with Menu - 添加 relative 容器 */}
-            <div className="relative flex items-center justify-center">
-              <button
-                ref={avatarButtonRef}
-                onClick={handleAvatarClick}
-                className="transition-all hover:scale-110"
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl">
-                  🐱
-                </div>
-              </button>
-              
-              {/* FREE 用户订阅提示框 - 悬浮在右边，与头像水平居中 */}
-              {user.permissionLevel === 1 && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="absolute left-full ml-3 whitespace-nowrap"
-                  style={{ 
-                    zIndex: 50,
-                    top: '50%',
-                    transform: 'translateY(-50%)'
-                  }}
+            {/* User Avatar with Upgrade Tooltip */}
+            <div className="flex items-center justify-center gap-3">
+              <div className="relative flex items-center justify-center">
+                <button
+                  ref={avatarButtonRef}
+                  onClick={handleAvatarClick}
+                  className="transition-all hover:scale-110"
                 >
-                  <button
-                    onClick={() => {
-                      // 导航到定价页面 - 需要从外部传入
-                      window.dispatchEvent(new CustomEvent('navigate-to-pricing'));
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-purple-500/30 hover:border-purple-500/60 hover:bg-[#222222] transition-all group shadow-lg"
-                  >
-                    <span className="text-base">👑</span>
-                    <div className="flex flex-col items-start">
-                      <span className="text-[10px] font-semibold text-purple-300 group-hover:text-purple-200 transition-colors" style={{ fontFamily: 'Arial, sans-serif' }}>
-                        Upgrade to Pro
-                      </span>
-                      <span className="text-[8px] text-purple-400/60" style={{ fontFamily: 'Arial, sans-serif' }}>
-                        Unlock features
-                      </span>
-                    </div>
-                  </button>
-                </motion.div>
-              )}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center font-bold text-xl">
+                    🐱
+                  </div>
+                </button>
+                
+                {/* User Menu */}
+                <UserMenu
+                  isOpen={isUserMenuOpen}
+                  onClose={() => setIsUserMenuOpen(false)}
+                  user={user}
+                  onLogout={onLogout}
+                  anchorRef={avatarButtonRef}
+                />
+              </div>
               
-              {/* User Menu */}
-              <UserMenu
-                isOpen={isUserMenuOpen}
-                onClose={() => setIsUserMenuOpen(false)}
-                user={user}
-                onLogout={onLogout}
-                anchorRef={avatarButtonRef}
-              />
+              {/* FREE 用户订阅提示框 - 与头像同行显示，更简洁显眼 */}
+              {user.permissionLevel === 1 && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigate-to-pricing'));
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 hover:border-purple-400/80 hover:from-purple-500/30 hover:to-pink-500/30 transition-all group shadow-lg whitespace-nowrap"
+                >
+                  <span className="text-lg">👑</span>
+                  <span className="text-[11px] font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent group-hover:from-purple-200 group-hover:to-pink-200 transition-all" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Upgrade
+                  </span>
+                </motion.button>
+              )}
             </div>
           </>
         )}

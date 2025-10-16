@@ -645,23 +645,18 @@ const Header: React.FC<{
 
                 {user && (
                     <div className="flex items-center gap-3">
-                        {/* FREE 用户订阅提示框 - 在头像左边 */}
+                        {/* FREE 用户订阅提示框 - 在头像左边，简洁显眼 */}
                         {user.membershipTier === 'free' && (
                             <motion.button
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 onClick={() => onNavigate('Pricing')}
-                                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/60 transition-all group"
+                                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 hover:border-purple-400/80 hover:from-purple-500/30 hover:to-pink-500/30 transition-all group shadow-lg"
                             >
                                 <span className="text-xl">👑</span>
-                                <div className="flex flex-col items-start">
-                                    <span className="text-xs font-semibold text-purple-300 group-hover:text-purple-200 transition-colors" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                        Upgrade to Pro
-                                    </span>
-                                    <span className="text-[10px] text-purple-400/60" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                        Unlock all features
-                                    </span>
-                                </div>
+                                <span className="text-sm font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent group-hover:from-purple-200 group-hover:to-pink-200 transition-all" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    Upgrade to Pro
+                                </span>
                             </motion.button>
                         )}
                         
