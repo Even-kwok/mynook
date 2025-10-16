@@ -24,6 +24,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false); // 单独的 Google 登录加载状态
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -41,6 +42,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setFullName('');
     setError(null);
     setSuccessMessage(null);
+    setLoading(false);
+    setGoogleLoading(false); // 重置 Google 登录状态
   };
 
   // Toggle mode
@@ -91,20 +94,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
     setError(null);
-    setLoading(true);
+    setGoogleLoading(true); // 使用独立的 Google loading 状态
 
     try {
       const { error } = await signInWithGoogle();
       
       if (error) {
         setError('Google sign in failed, please try again later');
-        setLoading(false);
+        setGoogleLoading(false);
       }
       // Note: If successful, Google OAuth will redirect the page.
       // Don't set loading to false here as the page will reload.
     } catch (err) {
       setError('Google sign in failed, please try again later');
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -378,10 +381,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {/* Google sign in */}
             <button
               onClick={handleGoogleSignIn}
-              disabled={loading}
+              disabled={googleLoading}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {googleLoading ? (
                 <>
                   <motion.span
                     animate={{ rotate: 360 }}
