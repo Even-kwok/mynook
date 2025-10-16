@@ -3,7 +3,7 @@
  * Supports email/password and Google login
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconX, IconGoogle } from './Icons';
 import { Button } from './Button';
@@ -17,7 +17,7 @@ interface LoginModalProps {
 type AuthMode = 'signin' | 'signup' | 'forgot-password';
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { signIn, signUp, signInWithGoogle, sendPasswordResetEmail } = useAuth();
+  const { signIn, signUp, signInWithGoogle, sendPasswordResetEmail, user } = useAuth();
   
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
@@ -26,6 +26,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Auto-close modal when user successfully logs in
+  useEffect(() => {
+    if (user && isOpen) {
+      onClose();
+    }
+  }, [user, isOpen, onClose]);
 
   // Reset form
   const resetForm = () => {
@@ -91,11 +98,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       
       if (error) {
         setError('Google sign in failed, please try again later');
+        setLoading(false);
       }
-      // Google OAuth will redirect, no need to manually close modal
+      // Note: If successful, Google OAuth will redirect the page.
+      // Don't set loading to false here as the page will reload.
     } catch (err) {
       setError('Google sign in failed, please try again later');
-    } finally {
       setLoading(false);
     }
   };
