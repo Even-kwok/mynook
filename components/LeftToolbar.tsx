@@ -182,6 +182,34 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 </div>
               </button>
               
+              {/* FREE 用户订阅提示框 - 悬浮在右边 */}
+              {user.permissionLevel === 1 && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="absolute left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap"
+                  style={{ zIndex: 50 }}
+                >
+                  <button
+                    onClick={() => {
+                      // 导航到定价页面 - 需要从外部传入
+                      window.dispatchEvent(new CustomEvent('navigate-to-pricing'));
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-purple-500/30 hover:border-purple-500/60 hover:bg-[#222222] transition-all group shadow-lg"
+                  >
+                    <span className="text-base">👑</span>
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] font-semibold text-purple-300 group-hover:text-purple-200 transition-colors" style={{ fontFamily: 'Arial, sans-serif' }}>
+                        Upgrade to Pro
+                      </span>
+                      <span className="text-[8px] text-purple-400/60" style={{ fontFamily: 'Arial, sans-serif' }}>
+                        Unlock features
+                      </span>
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+              
               {/* User Menu */}
               <UserMenu
                 isOpen={isUserMenuOpen}
