@@ -2114,7 +2114,7 @@ const App: React.FC = () => {
         { key: 'Garden & Backyard Design', label: 'Garden & Backyard Design', requiresPremium: false },
         { key: 'Festive Decor', label: 'Festive Decor', requiresPremium: false },
         { key: 'Item Replace', label: 'Item Replace', requiresPremium: true },
-        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true, comingSoon: true },
+        { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true },
         { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
         { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true, comingSoon: true },
         { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
