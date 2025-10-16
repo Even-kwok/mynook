@@ -3347,6 +3347,44 @@ const App: React.FC = () => {
                         onRemoveImage={() => handleRemoveImage('m1', 0)}
                         onImageClick={setFullScreenImage}
                         onDrop={(e) => handleDropOnUploader(e, 'm1')}
+                        // Second Upload Module (for Item Replace, Style Match, Multi-Item)
+                        secondImageUrl={
+                            activePage === 'Item Replace' ? itemReplaceImage :
+                            activePage === 'Reference Style Match' ? styleMatchImage :
+                            activePage === 'Multi-Item Preview' ? multiItemImages[0] :
+                            null
+                        }
+                        isSecondUploading={
+                            activePage === 'Item Replace' ? !!uploadingSlots['item-0'] :
+                            activePage === 'Reference Style Match' ? !!uploadingSlots['sm-0'] :
+                            activePage === 'Multi-Item Preview' ? !!uploadingSlots['multi-0'] :
+                            false
+                        }
+                        onSecondFileSelect={
+                            activePage === 'Item Replace' ? () => handleFileSelect('item', 0) :
+                            activePage === 'Reference Style Match' ? () => handleFileSelect('sm', 0) :
+                            activePage === 'Multi-Item Preview' ? () => handleFileSelect('multi', 0) :
+                            undefined
+                        }
+                        onRemoveSecondImage={
+                            activePage === 'Item Replace' ? handleRemoveItemImage :
+                            activePage === 'Reference Style Match' ? handleRemoveStyleMatchImage :
+                            activePage === 'Multi-Item Preview' ? () => handleRemoveMultiItemImage(0) :
+                            undefined
+                        }
+                        onSecondImageClick={setFullScreenImage}
+                        onSecondDrop={
+                            activePage === 'Item Replace' ? (e) => handleDropOnUploader(e, 'item') :
+                            activePage === 'Reference Style Match' ? (e) => handleDropOnUploader(e, 'sm') :
+                            activePage === 'Multi-Item Preview' ? (e) => handleDropOnUploader(e, 'multi') :
+                            undefined
+                        }
+                        secondImageLabel={
+                            activePage === 'Item Replace' ? '🛋️ Item to Place' :
+                            activePage === 'Reference Style Match' ? '🎨 Target Style Photo' :
+                            activePage === 'Multi-Item Preview' ? '📦 Item to Preview' :
+                            undefined
+                        }
                         // Selector (Room Type, Building Type, etc.)
                         selectorLabel={
                             activePage === 'Interior Design' ? 'Choose a Room Type' :

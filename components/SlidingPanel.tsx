@@ -9,13 +9,22 @@ interface SlidingPanelProps {
   onClose: () => void;
   toolName: string;
   
-  // 上传模块
+  // 第一个上传模块
   imageUrl: string | null;
   isUploading: boolean;
   onFileSelect: () => void;
   onRemoveImage: () => void;
   onImageClick?: (url: string) => void;
   onDrop?: (e: React.DragEvent) => void;
+  
+  // 第二个上传模块（可选，用于 Item Replace, Style Match, Multi-Item）
+  secondImageUrl?: string | null;
+  isSecondUploading?: boolean;
+  onSecondFileSelect?: () => void;
+  onRemoveSecondImage?: () => void;
+  onSecondImageClick?: (url: string) => void;
+  onSecondDrop?: (e: React.DragEvent) => void;
+  secondImageLabel?: string;
   
   // 选择器（如房间类型）
   selectorLabel?: string;
@@ -45,6 +54,13 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
   onRemoveImage,
   onImageClick,
   onDrop,
+  secondImageUrl,
+  isSecondUploading,
+  onSecondFileSelect,
+  onRemoveSecondImage,
+  onSecondImageClick,
+  onSecondDrop,
+  secondImageLabel,
   selectorLabel,
   selectorOptions,
   selectorValue,
@@ -151,6 +167,66 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   )}
                 </div>
               </div>
+              
+              {/* 第二个图片上传 - 仅用于特定功能 */}
+              {secondImageLabel && onSecondFileSelect && (
+                <div>
+                  <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    {secondImageLabel}
+                  </label>
+                  <div
+                    onClick={!secondImageUrl && !isSecondUploading ? onSecondFileSelect : undefined}
+                    onDrop={onSecondDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    className={`
+                      relative aspect-square rounded-xl border transition-all duration-300 overflow-hidden
+                      ${secondImageUrl 
+                        ? 'border-[#333333] bg-[#0a0a0a]' 
+                        : 'border-[#333333] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] hover:border-indigo-500/50 hover:from-[#252525] hover:to-[#0f0f0f] cursor-pointer'
+                      }
+                    `}
+                  >
+                    {isSecondUploading ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="animate-spin rounded-full h-10 w-10 border-2 border-indigo-500 border-t-transparent"></div>
+                          <p className="text-xs text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Uploading...</p>
+                        </div>
+                      </div>
+                    ) : secondImageUrl ? (
+                      <>
+                        <img 
+                          src={secondImageUrl} 
+                          alt="Uploaded" 
+                          className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSecondImageClick) onSecondImageClick(secondImageUrl);
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveSecondImage?.();
+                          }}
+                          className="absolute top-3 right-3 w-8 h-8 bg-black/70 hover:bg-red-500 rounded-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-110"
+                        >
+                          <IconX className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666] transition-colors duration-300 group-hover:text-[#888888]">
+                        <div className="mb-3 transition-all duration-300">
+                          <span className="text-6xl">📸</span>
+                        </div>
+                        <p className="text-sm font-medium text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag photo</p>
+                        <p className="text-xs text-[#666666] mt-1" style={{ fontFamily: 'Arial, sans-serif' }}>PNG, JPG up to 10MB</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* 选择器（如房间类型）- 放在图片下方 */}
               {selectorLabel && selectorOptions && (
