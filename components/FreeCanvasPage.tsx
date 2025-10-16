@@ -1532,12 +1532,11 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                     animate={{ x: 0 }}
                     exit={{ x: -280 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="w-[280px] bg-[#0a0a0a] flex flex-col flex-shrink-0 border-r border-[#2a2a2a]"
+                    className="w-[280px] bg-[#0a0a0a] flex flex-col flex-shrink-0 border-r border-[#2a2a2a] overflow-hidden"
                     style={{ zIndex: 40 }}
                 >
-                    {/* 上传和工具区域 */}
-                    <div className="flex-1 flex flex-col">
-                        <div className="flex-1 px-4 py-4 overflow-y-auto scrollbar-hide space-y-6">
+                    {/* 上传和工具区域 - 可滚动 */}
+                    <div className="flex-1 px-4 py-4 overflow-y-auto scrollbar-hide space-y-6">
                             {/* 上传按钮 */}
                             <div>
                                 <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -1638,7 +1637,6 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                     </>
                                 )}
                             </button>
-                        </div>
                     </div>
                 </motion.aside>
                 
