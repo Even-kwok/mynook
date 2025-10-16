@@ -96,7 +96,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
               {/* 图片上传 */}
               <div>
-                <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block text-center`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
                   📤 Upload Photo
                 </label>
                 <div
@@ -104,43 +104,49 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   onDrop={onDrop}
                   onDragOver={(e) => e.preventDefault()}
                   className={`
-                    relative aspect-square rounded-2xl border-2 border-dashed transition-all cursor-pointer
+                    relative aspect-square rounded-xl border transition-all duration-300 overflow-hidden
                     ${imageUrl 
-                      ? 'border-[#333333]' 
-                      : 'border-[#404040] hover:border-indigo-500/50 hover:bg-[#333333]'
+                      ? 'border-[#333333] bg-[#0a0a0a]' 
+                      : 'border-[#333333] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] hover:border-indigo-500/50 hover:from-[#252525] hover:to-[#0f0f0f] cursor-pointer'
                     }
-                    ${darkThemeClasses.bgTertiary}
                   `}
                 >
                   {isUploading ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-indigo-500 border-t-transparent"></div>
+                        <p className="text-xs text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Uploading...</p>
+                      </div>
                     </div>
                   ) : imageUrl ? (
                     <>
                       <img 
                         src={imageUrl} 
                         alt="Uploaded" 
-                        className="w-full h-full object-cover rounded-xl cursor-pointer"
+                        className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onImageClick) onImageClick(imageUrl);
                         }}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onRemoveImage();
                         }}
-                        className="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
+                        className="absolute top-3 right-3 w-8 h-8 bg-black/70 hover:bg-red-500 rounded-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-110"
                       >
-                        <IconX />
+                        <IconX className="w-4 h-4" />
                       </button>
                     </>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666]">
-                      <IconUpload className="w-12 h-12 mb-2" />
-                      <p className="text-xs" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666] transition-colors duration-300 group-hover:text-[#888888]">
+                      <div className="mb-3 p-4 rounded-full bg-[#2a2a2a] transition-all duration-300">
+                        <IconUpload className="w-8 h-8 text-indigo-400" />
+                      </div>
+                      <p className="text-sm font-medium text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag photo</p>
+                      <p className="text-xs text-[#666666] mt-1" style={{ fontFamily: 'Arial, sans-serif' }}>PNG, JPG up to 10MB</p>
                     </div>
                   )}
                 </div>
@@ -149,19 +155,21 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
               {/* 选择器（如房间类型）- 放在图片下方 */}
               {selectorLabel && selectorOptions && (
                 <div>
-                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block text-center`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                  <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
                     {selectorLabel}
                   </label>
                   <select
                     value={selectorValue}
                     onChange={(e) => onSelectorChange?.(e.target.value)}
                     className={`
-                      w-full h-10 px-3 rounded-lg
-                      bg-[#0a0a0a]
+                      w-full h-11 px-4 rounded-xl
+                      bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]
                       border border-[#333333]
-                      text-white
-                      focus:border-indigo-500 focus:outline-none
-                      text-sm text-center
+                      text-white text-sm text-center font-medium
+                      hover:border-indigo-500/50 hover:from-[#252525] hover:to-[#0f0f0f]
+                      focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+                      transition-all duration-300
+                      cursor-pointer
                     `}
                     style={{ fontFamily: 'Arial, sans-serif' }}
                   >
