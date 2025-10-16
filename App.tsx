@@ -585,7 +585,7 @@ const Header: React.FC<{
         }
     }, [user]);
 
-    const navItems = ['Terms', 'Privacy', 'Pricing'];
+    const navItems: string[] = []; // 移到页底
 
     return (
         <header className={`fixed top-2 left-0 right-0 flex items-center justify-between pl-8 h-[72px] z-40 transition-all ${isFunctionalPage ? 'bg-white shadow-sm' : 'bg-transparent'}`} style={{ paddingRight: '38px' }}>
@@ -629,27 +629,7 @@ const Header: React.FC<{
                         </a>
                     )}
                 </nav>
-                {user && (
-                    <div className="flex items-center gap-2">
-                        {/* 会员等级徽章 */}
-                        <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                            user.permissionLevel === 1 ? 'bg-slate-100 text-slate-700' :
-                            user.permissionLevel === 2 ? 'bg-blue-100 text-blue-700' :
-                            user.permissionLevel === 3 ? 'bg-purple-100 text-purple-700' :
-                            'bg-amber-100 text-amber-700'
-                        }`}>
-                            {user.permissionLevel === 1 ? '🆓 FREE' :
-                             user.permissionLevel === 2 ? '⭐ PRO' :
-                             user.permissionLevel === 3 ? '👑 PREMIUM' :
-                             '💼 BUSINESS'}
-                        </div>
-                        {/* 信用点显示 */}
-                        <div className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-1.5">
-                            <IconSparkles className="w-3.5 h-3.5 text-indigo-500" />
-                            <span>{user.credits.toLocaleString()}</span>
-                        </div>
-                    </div>
-                )}
+                {/* 用户徽章和信用点已移除 */}
 
                 {!user && (
                     <button
@@ -660,17 +640,7 @@ const Header: React.FC<{
                         REGISTER for FREE
                     </button>
                 )}
-                {user && upgradeButton.visible && (
-                    <Button 
-                        primary 
-                        className="rounded-full !px-4 !py-2 text-sm font-bold hidden md:flex" 
-                        onClick={() => onNavigate('Pricing')}
-                        disabled={upgradeButton.disabled}
-                    >
-                        <IconCrown className="w-4 h-4 mr-1.5" />
-                        <span>{upgradeButton.text}</span>
-                    </Button>
-                )}
+                {/* 升级按钮已移除 */}
 
                 {user && (
                     <div className="relative" ref={userMenuRef}>
@@ -1422,6 +1392,33 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 {/* Section 6 end */}
                 </>}
                 {/* END LEGACY Hardcoded Sections */}
+                
+                {/* Footer - Terms, Privacy, Pricing */}
+                <footer className="mt-32 pt-16 pb-8 border-t border-white/10">
+                    <div className="flex justify-center items-center gap-8">
+                        <button
+                            onClick={() => onNavigate('Terms')}
+                            className="text-slate-300 hover:text-white transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                        >
+                            Terms
+                        </button>
+                        <button
+                            onClick={() => onNavigate('Privacy')}
+                            className="text-slate-300 hover:text-white transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                        >
+                            Privacy
+                        </button>
+                        <button
+                            onClick={() => onNavigate('Pricing')}
+                            className="text-slate-300 hover:text-white transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                        >
+                            Pricing
+                        </button>
+                    </div>
+                </footer>
             </div>
         </main>
     );
