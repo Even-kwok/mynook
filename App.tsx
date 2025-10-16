@@ -16,7 +16,6 @@ import { ImageComparison } from './components/ImageComparison';
 import { HomeSection, HeroSection } from './types';
 import { getAllHomeSections } from './services/homeSectionService';
 import { getHeroSection } from './services/heroSectionService';
-import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { TermsPage } from './components/TermsPage';
 import { PrivacyPage } from './components/PrivacyPage';
 import { useAuth } from './context/AuthContext';

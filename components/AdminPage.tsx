@@ -6,8 +6,6 @@ import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
-import { GalleryManager } from './GalleryManager';
-import { HeroBannerManager } from './HeroBannerManager';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
@@ -1221,8 +1219,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'templates', name: 'Templates', icon: IconSparkles },
         { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
-        { id: 'hero-banner', name: 'Hero Banner', icon: IconSparkles },
-        { id: 'gallery', name: 'Gallery', icon: IconPhoto },
         { id: 'settings', name: 'Settings', icon: IconSettings },
     ];
 
@@ -1244,10 +1240,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <HeroSectionManager onUpdate={onTemplatesUpdated} />;
             case 'home-sections':
                 return <HomeSectionManager onUpdate={onTemplatesUpdated} />;
-            case 'hero-banner':
-                return <HeroBannerManager />;
-            case 'gallery':
-                return <GalleryManager />;
             default:
                 return <div className="bg-white p-6 rounded-2xl shadow-sm">Coming soon...</div>;
         }
