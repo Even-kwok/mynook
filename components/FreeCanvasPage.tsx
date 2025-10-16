@@ -376,18 +376,20 @@ const ClearConfirmationModal: React.FC<ClearConfirmationModalProps> = ({ isOpen,
                     transition={{ duration: 0.15, ease: 'easeOut' }}
                     className="absolute bottom-12 right-28 z-30 w-full max-w-xs"
                 >
-                    <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-slate-200">
-                        <div className="absolute top-1/2 -right-[7px] transform -translate-y-1/2 w-4 h-4 bg-white/90 border-t border-r border-slate-200 rotate-45 z-0 rounded-sm"></div>
+                    <div className="relative bg-[#1a1a1a] rounded-2xl p-6 shadow-2xl border border-[#333333]">
+                        <div className="absolute top-1/2 -right-[7px] transform -translate-y-1/2 w-4 h-4 bg-[#1a1a1a] border-t border-r border-[#333333] rotate-45 z-0 rounded-sm"></div>
                         <div className="relative z-10">
-                            <h3 className="text-lg font-semibold mb-2 text-slate-800">Clear Canvas?</h3>
-                            <p className="text-sm text-slate-600 mb-6">
+                            <h3 className="text-lg font-semibold mb-2 text-white" style={{ fontFamily: 'Arial, sans-serif' }}>Clear Canvas?</h3>
+                            <p className="text-sm text-[#a0a0a0] mb-6" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Are you sure you want to clear everything on the canvas? This action cannot be undone.
                             </p>
-                            <div className="flex justify-between">
-                                <Button onClick={() => setIsOpen(false)}>Cancel</Button>
-                                <Button onClick={onConfirm} className="!bg-red-600 hover:!bg-red-700 !border-red-600 text-white">
+                            <div className="flex justify-between gap-2">
+                                <button onClick={() => setIsOpen(false)} className="flex-1 px-4 py-2 rounded-lg bg-[#0a0a0a] hover:bg-[#2a2a2a] text-white border border-[#333333] transition-colors font-medium text-sm" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    Cancel
+                                </button>
+                                <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white border border-red-600 transition-colors font-medium text-sm" style={{ fontFamily: 'Arial, sans-serif' }}>
                                     Clear Canvas
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1523,111 +1525,149 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                 requiredTier="premium"
                 onUpgrade={onUpgrade}
             />
-            <div className="flex flex-1 overflow-hidden">
-                <aside className="w-[380px] bg-white flex flex-col overflow-hidden flex-shrink-0 border-r border-slate-200">
-                    <div className="flex-1 px-6 pb-6 pt-24 overflow-y-auto scrollbar-hide">
-                        <div className="flex flex-col gap-6">
-                            <div className="space-y-3">
-                                <h2 className="text-xl font-bold text-slate-800">Free Canvas</h2>
-                                <p className="text-sm text-slate-500">Combine images, draw annotations, and use a prompt to generate a new creation.</p>
-                            </div>
-
-                            <Button onClick={() => fileInputRef.current?.click()} disabled={!!uploadProgress && !uploadProgress.includes('✨')}>
-                                <IconUpload />
-                                Upload Image
-                            </Button>
-                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
+            <div className="flex flex-1 overflow-hidden bg-[#0a0a0a]">
+                {/* Left Sliding Panel - 工具和上传区 */}
+                <motion.aside
+                    initial={{ x: -600 }}
+                    animate={{ x: 0 }}
+                    exit={{ x: -600 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="w-[600px] bg-[#0a0a0a] flex flex-shrink-0 border-r border-[#2a2a2a]"
+                    style={{ zIndex: 40 }}
+                >
+                    {/* 左侧模块 - 上传和工具 */}
+                    <div className="w-[280px] flex flex-col border-r border-[#2a2a2a]">
+                        <div className="flex-1 px-4 py-4 overflow-y-auto scrollbar-hide space-y-6">
+                            {/* 上传按钮 */}
+                            <div>
+                                <label className="text-xs font-semibold text-[#a0a0a0] mb-3 block text-center" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    📤 Upload Photo
+                                </label>
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()} 
+                                    disabled={!!uploadProgress && !uploadProgress.includes('✨')}
+                                    className="relative aspect-square rounded-xl border border-[#333333] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] hover:border-indigo-500/50 hover:from-[#252525] hover:to-[#0f0f0f] cursor-pointer transition-all duration-300 overflow-hidden w-full group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-[#666666] transition-colors duration-300 group-hover:text-[#888888]">
+                                        <div className="mb-3 transition-all duration-300">
+                                            <span className="text-6xl">📸</span>
+                                        </div>
+                                        <p className="text-sm font-medium text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>Click or drag photo</p>
+                                        <p className="text-xs text-[#666666] mt-1" style={{ fontFamily: 'Arial, sans-serif' }}>PNG, JPG up to 10MB</p>
+                                    </div>
+                                </button>
+                                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
                             
                             {uploadProgress && (
-                                <div className={`text-xs px-3 py-2 rounded-lg ${uploadProgress.includes('✨') ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'} animate-fade-in`}>
+                                <div className={`text-xs px-3 py-2 rounded-lg mt-3 ${uploadProgress.includes('✨') ? 'bg-green-900/30 text-green-400 border border-green-700/30' : 'bg-blue-900/30 text-blue-400 border border-blue-700/30'} animate-fade-in`} style={{ fontFamily: 'Arial, sans-serif' }}>
                                     {uploadProgress}
                                 </div>
                             )}
+                            </div>
                             
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-4">
-                                <h3 className="text-base font-semibold text-slate-800">Tools</h3>
-                                <div className="flex gap-2 p-1 bg-slate-200 rounded-xl">
-                                    <button onClick={() => setActiveTool('select')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'select' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
+                            {/* 工具选择 */}
+                            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#333333]">
+                                <h3 className="text-sm font-bold text-white mb-3" style={{ fontFamily: 'Arial, sans-serif' }}>Tools</h3>
+                                <div className="flex gap-2 p-1 bg-[#0a0a0a] rounded-xl border border-[#2a2a2a]">
+                                    <button onClick={() => setActiveTool('select')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'select' ? 'bg-indigo-600 text-white shadow-sm' : 'text-[#a0a0a0] hover:bg-[#2a2a2a]'}`} style={{ fontFamily: 'Arial, sans-serif' }}>
                                         <IconCursorArrow className="w-5 h-5"/> Select
                                     </button>
-                                     <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-white/70'}`}>
+                                     <button onClick={() => setActiveTool('draw')} className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${activeTool === 'draw' ? 'bg-indigo-600 text-white shadow-sm' : 'text-[#a0a0a0] hover:bg-[#2a2a2a]'}`} style={{ fontFamily: 'Arial, sans-serif' }}>
                                         <IconBrush className="w-5 h-5"/> Draw
                                     </button>
                                 </div>
                                 {activeTool === 'draw' && (
-                                    <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden">
+                                    <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} className="space-y-4 overflow-hidden mt-4">
                                         <div className="space-y-2">
-                                            <label htmlFor="brushColor" className="text-sm font-medium text-slate-700 flex justify-between">
-                                                Brush Color <span>{brushColor}</span>
+                                            <label htmlFor="brushColor" className="text-sm font-medium text-[#a0a0a0] flex justify-between" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                Brush Color <span className="text-white">{brushColor}</span>
                                             </label>
-                                            <input id="brushColor" type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} className="w-full h-10 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer" />
+                                            <input id="brushColor" type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} className="w-full h-10 p-1 bg-[#0a0a0a] border border-[#333333] rounded-lg cursor-pointer" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="brushSize" className="text-sm font-medium text-slate-700 flex justify-between">
-                                                Brush Size <span>{brushSize}px</span>
+                                            <label htmlFor="brushSize" className="text-sm font-medium text-[#a0a0a0] flex justify-between" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                Brush Size <span className="text-white">{brushSize}px</span>
                                             </label>
-                                            <input id="brushSize" type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                                            <input id="brushSize" type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full h-2 bg-[#2a2a2a] rounded-lg appearance-none cursor-pointer" />
                                         </div>
-                                        <div className="space-y-2 pt-2 border-t border-slate-200">
-                                            <h4 className="text-sm font-medium text-slate-700">Drawing Actions</h4>
+                                        <div className="space-y-2 pt-2 border-t border-[#2a2a2a]">
+                                            <h4 className="text-sm font-medium text-[#a0a0a0] mb-2" style={{ fontFamily: 'Arial, sans-serif' }}>Drawing Actions</h4>
                                             <div className="flex gap-2">
-                                                <Button onClick={handleUndo} disabled={paths.length === 0} className="w-full !py-2 !px-3 text-sm">
+                                                <button onClick={handleUndo} disabled={paths.length === 0} className="flex-1 py-2 px-3 text-sm rounded-lg bg-[#0a0a0a] hover:bg-[#2a2a2a] text-white border border-[#333333] disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2" style={{ fontFamily: 'Arial, sans-serif' }}>
                                                     <IconUndo className="w-4 h-4" />
                                                     Undo
-                                                </Button>
-                                                <Button onClick={handleClearDrawings} disabled={paths.length === 0} className="w-full !py-2 !px-3 text-sm">
+                                                </button>
+                                                <button onClick={handleClearDrawings} disabled={paths.length === 0} className="flex-1 py-2 px-3 text-sm rounded-lg bg-[#0a0a0a] hover:bg-[#2a2a2a] text-white border border-[#333333] disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2" style={{ fontFamily: 'Arial, sans-serif' }}>
                                                     <IconTrash className="w-4 h-4" />
                                                     Clear
-                                                </Button>
+                                                </button>
                                             </div>
                                         </div>
                                     </motion.div>
                                 )}
                             </div>
 
-                            <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-                                <h3 className="text-base font-semibold text-slate-800">Prompt</h3>
+                            {/* Prompt 输入区 */}
+                            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#333333]">
+                                <h3 className="text-sm font-bold text-white mb-3" style={{ fontFamily: 'Arial, sans-serif' }}>Prompt</h3>
                                 <textarea 
                                     value={prompt} 
                                     onChange={(e) => setPrompt(e.target.value)} 
                                     placeholder="Describe what you want to create..." 
-                                    className="w-full p-3 h-32 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                                    className="w-full p-3 h-32 bg-[#0a0a0a] border border-[#333333] rounded-xl text-white placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all" 
+                                    style={{ fontFamily: 'Arial, sans-serif' }}
+                                />
                             </div>
+
+                            {/* Generate 按钮 */}
+                            <button
+                                onClick={hasGeneratePermission ? handleGenerate : () => setIsPermissionModalOpen(true)}
+                                disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)}
+                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            >
+                                {hasGeneratePermission ? (
+                                    <>
+                                        <IconSparkles className="w-5 h-5" />
+                                        {isLoading ? "Generating..." : "✨ Generate (1 Credit)"}
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-xl">👑</span>
+                                        Premium Feature
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
 
-                    <div className="p-6 pt-4 border-t border-slate-200">
-                        <Button 
-                            onClick={handleGenerate} 
-                            disabled={isLoading || !prompt || (images.length === 0 && paths.length === 0)} 
-                            primary 
-                            className="w-full text-base py-3"
-                            locked={!hasGeneratePermission}
-                            onLockedClick={() => setIsPermissionModalOpen(true)}
-                        >
-                            <IconSparkles className="w-5 h-5" />
-                            {isLoading ? "Generating your vision..." : "Generate (1 Credit)"}
-                        </Button>
+                    {/* 右侧模块 - 占位，为将来的模板预览 */}
+                    <div className="flex-1 flex flex-col">
+                        <div className="flex-1 flex items-center justify-center text-[#666666]">
+                            <p className="text-sm" style={{ fontFamily: 'Arial, sans-serif' }}>Canvas Workspace</p>
+                        </div>
                     </div>
-                </aside>
-                <main className="flex-1 p-8 pt-[104px] flex items-center justify-center bg-slate-50 relative">
+                </motion.aside>
+                
+                {/* Main Canvas Area - 深色主题 */}
+                <main className="flex-1 p-8 flex items-center justify-center bg-[#0a0a0a] relative">
                      {isLoading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
-                            <div className="flex flex-col items-center space-y-4 bg-white px-8 py-6 rounded-2xl shadow-xl">
-                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm z-20">
+                            <div className="flex flex-col items-center space-y-4 bg-[#1a1a1a] px-8 py-6 rounded-2xl shadow-2xl border border-[#333333]">
+                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600/30 border-t-indigo-600"></div>
                                 {generationProgress && (
-                                    <p className="text-base text-gray-800 font-semibold animate-pulse">
+                                    <p className="text-base text-white font-semibold animate-pulse" style={{ fontFamily: 'Arial, sans-serif' }}>
                                         {generationProgress}
                                     </p>
                                 )}
                                 <div className="text-center space-y-1">
-                                    <p className="text-sm text-gray-600 font-medium">
+                                    <p className="text-sm text-[#a0a0a0] font-medium" style={{ fontFamily: 'Arial, sans-serif' }}>
                                         ⚡ Optimizing image for faster processing...
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-[#666666]" style={{ fontFamily: 'Arial, sans-serif' }}>
                                         Usually takes 20-60 seconds
                                     </p>
-                                    <p className="text-xs text-indigo-600 font-medium mt-2">
+                                    <p className="text-xs text-indigo-400 font-medium mt-2" style={{ fontFamily: 'Arial, sans-serif' }}>
                                         💡 Tip: Smaller images process faster!
                                     </p>
                                 </div>
@@ -1642,7 +1682,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 onClick={() => setIsClearConfirmOpen(o => !o)}
-                                className="absolute bottom-12 right-12 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
+                                className="absolute bottom-12 right-12 z-20 w-12 h-12 bg-[#1a1a1a] border border-[#333333] rounded-full shadow-lg flex items-center justify-center text-[#a0a0a0] hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
                                 aria-label="Clear canvas"
                             >
                                 <IconTrash className="w-6 h-6" />
@@ -1655,13 +1695,27 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         onConfirm={handleConfirmClear}
                         clearButtonRef={clearButtonRef}
                      />
-                    <div className="w-full max-h-full aspect-[4/5] bg-slate-100 border border-slate-200 shadow-inner rounded-3xl relative overflow-hidden">
+                    {/* 画布 - 带透明网格背景 */}
+                    <div 
+                        className="w-full max-h-full aspect-[4/5] border border-[#333333] shadow-2xl rounded-3xl relative overflow-hidden"
+                        style={{
+                            backgroundColor: '#1a1a1a',
+                            backgroundImage: `
+                                linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+                                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+                                linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+                                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%)
+                            `,
+                            backgroundSize: '20px 20px',
+                            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                        }}
+                    >
                         <>
                             {images.length === 0 && paths.length === 0 && !cropState && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
-                                    <IconPhoto className="w-16 h-16" />
-                                    <h3 className="text-xl font-semibold mt-4 text-slate-600">Your Creative Canvas</h3>
-                                    <p className="mt-1">Upload images and start bringing your ideas to life.</p>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-[#666666]">
+                                    <IconPhoto className="w-16 h-16 text-[#444444]" />
+                                    <h3 className="text-xl font-semibold mt-4 text-[#888888]" style={{ fontFamily: 'Arial, sans-serif' }}>Your Creative Canvas</h3>
+                                    <p className="mt-1 text-[#666666]" style={{ fontFamily: 'Arial, sans-serif' }}>Upload images and start bringing your ideas to life.</p>
                                 </div>
                             )}
                             <div 
