@@ -1201,41 +1201,91 @@ const CategoryModal: React.FC<{
 // --- Tools Order Management Component ---
 const ToolsOrderManagement: React.FC = () => {
     const [tools, setTools] = useState<ToolItemConfig[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setTools(getToolsOrder());
+        const loadTools = async () => {
+            try {
+                const loadedTools = await getToolsOrder();
+                setTools(loadedTools);
+            } catch (err) {
+                console.error('Failed to load tools:', err);
+                setError('加载工具列表失败');
+            }
+        };
+        loadTools();
     }, []);
 
-    const handleMoveUp = (index: number) => {
-        const newTools = moveToolUp(tools, index);
-        setTools(newTools);
-        // Dispatch custom event to update LeftToolbar
-        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    const handleMoveUp = async (index: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const newTools = await moveToolUp(tools, index);
+            setTools(newTools);
+        } catch (err) {
+            console.error('Failed to move tool up:', err);
+            setError('移动失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleMoveDown = (index: number) => {
-        const newTools = moveToolDown(tools, index);
-        setTools(newTools);
-        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    const handleMoveDown = async (index: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const newTools = await moveToolDown(tools, index);
+            setTools(newTools);
+        } catch (err) {
+            console.error('Failed to move tool down:', err);
+            setError('移动失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleMoveToTop = (index: number) => {
-        const newTools = moveToolToTop(tools, index);
-        setTools(newTools);
-        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    const handleMoveToTop = async (index: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const newTools = await moveToolToTop(tools, index);
+            setTools(newTools);
+        } catch (err) {
+            console.error('Failed to move tool to top:', err);
+            setError('移动失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleMoveToBottom = (index: number) => {
-        const newTools = moveToolToBottom(tools, index);
-        setTools(newTools);
-        window.dispatchEvent(new Event('toolsOrderUpdated'));
+    const handleMoveToBottom = async (index: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const newTools = await moveToolToBottom(tools, index);
+            setTools(newTools);
+        } catch (err) {
+            console.error('Failed to move tool to bottom:', err);
+            setError('移动失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (confirm('确定要重置功能按钮排序为默认顺序吗？')) {
-            const defaultTools = resetToolsOrder();
-            setTools(defaultTools);
-            window.dispatchEvent(new Event('toolsOrderUpdated'));
+            setIsLoading(true);
+            setError(null);
+            try {
+                const defaultTools = await resetToolsOrder();
+                setTools(defaultTools);
+            } catch (err) {
+                console.error('Failed to reset tools order:', err);
+                setError('重置失败，请重试');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -1249,12 +1299,27 @@ const ToolsOrderManagement: React.FC = () => {
                     </div>
                     <button
                         onClick={handleReset}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                        disabled={isLoading}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <IconX className="w-4 h-4" />
                         重置为默认
                     </button>
                 </div>
+
+                {/* Error message */}
+                {error && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                )}
+
+                {/* Loading indicator */}
+                {isLoading && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <p className="text-sm text-blue-800">正在更新排序...</p>
+                    </div>
+                )}
 
                 <div className="space-y-2">
                     {tools.map((tool, index) => (
@@ -1289,7 +1354,7 @@ const ToolsOrderManagement: React.FC = () => {
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => handleMoveToTop(index)}
-                                    disabled={index === 0}
+                                    disabled={isLoading || index === 0}
                                     className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
                                     title="置顶"
                                 >
@@ -1297,7 +1362,7 @@ const ToolsOrderManagement: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => handleMoveUp(index)}
-                                    disabled={index === 0}
+                                    disabled={isLoading || index === 0}
                                     className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
                                     title="上移一层"
                                 >
@@ -1305,7 +1370,7 @@ const ToolsOrderManagement: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => handleMoveDown(index)}
-                                    disabled={index === tools.length - 1}
+                                    disabled={isLoading || index === tools.length - 1}
                                     className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
                                     title="下移一层"
                                 >
@@ -1313,7 +1378,7 @@ const ToolsOrderManagement: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => handleMoveToBottom(index)}
-                                    disabled={index === tools.length - 1}
+                                    disabled={isLoading || index === tools.length - 1}
                                     className="p-2 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
                                     title="置底"
                                 >

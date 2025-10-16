@@ -1,6 +1,9 @@
 /**
  * Service for managing the order of toolbar tools/features
+ * Now fetches from database with localStorage as cache
  */
+
+import { getToolsOrderFromDB, updateToolsOrderInDB } from '../api/toolsOrder';
 
 export interface ToolItemConfig {
   id: string;
@@ -11,9 +14,11 @@ export interface ToolItemConfig {
   isComingSoon?: boolean;
 }
 
-const STORAGE_KEY = 'mynook_tools_order';
+const CACHE_KEY = 'mynook_tools_order_cache';
+const CACHE_TIMESTAMP_KEY = 'mynook_tools_order_timestamp';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Default tools order (matches LeftToolbar.tsx)
+// Default tools order (fallback if database is unavailable)
 export const DEFAULT_TOOLS: ToolItemConfig[] = [
   { id: 'interior', name: 'Interior Design', shortName: 'Interior', emoji: '🛋️', isPremium: false }, 
   { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', emoji: '🏠', isPremium: false },
@@ -29,107 +34,153 @@ export const DEFAULT_TOOLS: ToolItemConfig[] = [
 ];
 
 /**
- * Get the current tools order from localStorage
+ * Get tools order from cache if valid
  */
-export const getToolsOrder = (): ToolItemConfig[] => {
+const getCachedToolsOrder = (): ToolItemConfig[] | null => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsedOrder: ToolItemConfig[] = JSON.parse(stored);
-      
-      // Validate that all default tools are present
-      const storedIds = new Set(parsedOrder.map(t => t.id));
-      const defaultIds = new Set(DEFAULT_TOOLS.map(t => t.id));
-      
-      // If mismatch, merge with defaults
-      if (parsedOrder.length !== DEFAULT_TOOLS.length || 
-          ![...defaultIds].every(id => storedIds.has(id))) {
-        // Merge: keep custom order but add any new tools at the end
-        const merged = [...parsedOrder];
-        DEFAULT_TOOLS.forEach(defaultTool => {
-          if (!storedIds.has(defaultTool.id)) {
-            merged.push(defaultTool);
-          }
-        });
-        saveToolsOrder(merged);
-        return merged;
+    const cached = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    
+    if (cached && timestamp) {
+      const age = Date.now() - parseInt(timestamp, 10);
+      if (age < CACHE_DURATION) {
+        return JSON.parse(cached);
       }
-      
-      return parsedOrder;
     }
   } catch (error) {
-    console.error('Failed to load tools order:', error);
+    console.error('Failed to read cache:', error);
+  }
+  return null;
+};
+
+/**
+ * Save tools order to cache
+ */
+const setCachedToolsOrder = (tools: ToolItemConfig[]): void => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(tools));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    console.error('Failed to save cache:', error);
+  }
+};
+
+/**
+ * Clear tools order cache
+ */
+export const clearToolsOrderCache = (): void => {
+  try {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+  } catch (error) {
+    console.error('Failed to clear cache:', error);
+  }
+};
+
+/**
+ * Get the current tools order from database (with cache)
+ */
+export const getToolsOrder = async (): Promise<ToolItemConfig[]> => {
+  // Try cache first
+  const cached = getCachedToolsOrder();
+  if (cached && cached.length > 0) {
+    return cached;
+  }
+
+  // Fetch from database
+  try {
+    const tools = await getToolsOrderFromDB();
+    if (tools && tools.length > 0) {
+      setCachedToolsOrder(tools);
+      return tools;
+    }
+  } catch (error) {
+    console.error('Failed to load tools order from database:', error);
   }
   
+  // Fallback to defaults
   return DEFAULT_TOOLS;
 };
 
 /**
- * Save tools order to localStorage
+ * Get tools order synchronously (uses cache or defaults)
+ * Use this for initial render, then call getToolsOrder() to fetch latest
  */
-export const saveToolsOrder = (tools: ToolItemConfig[]): void => {
+export const getToolsOrderSync = (): ToolItemConfig[] => {
+  return getCachedToolsOrder() || DEFAULT_TOOLS;
+};
+
+/**
+ * Save tools order to database and update cache
+ */
+export const saveToolsOrder = async (tools: ToolItemConfig[]): Promise<void> => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tools));
+    await updateToolsOrderInDB(tools);
+    setCachedToolsOrder(tools);
+    
+    // Dispatch event to notify other components
+    window.dispatchEvent(new Event('toolsOrderUpdated'));
   } catch (error) {
     console.error('Failed to save tools order:', error);
+    throw error;
   }
 };
 
 /**
  * Reset tools order to default
  */
-export const resetToolsOrder = (): ToolItemConfig[] => {
-  saveToolsOrder(DEFAULT_TOOLS);
+export const resetToolsOrder = async (): Promise<ToolItemConfig[]> => {
+  await saveToolsOrder(DEFAULT_TOOLS);
   return DEFAULT_TOOLS;
 };
 
 /**
  * Move a tool up by one position
  */
-export const moveToolUp = (tools: ToolItemConfig[], index: number): ToolItemConfig[] => {
+export const moveToolUp = async (tools: ToolItemConfig[], index: number): Promise<ToolItemConfig[]> => {
   if (index <= 0 || index >= tools.length) return tools;
   
   const newOrder = [...tools];
   [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-  saveToolsOrder(newOrder);
+  await saveToolsOrder(newOrder);
   return newOrder;
 };
 
 /**
  * Move a tool down by one position
  */
-export const moveToolDown = (tools: ToolItemConfig[], index: number): ToolItemConfig[] => {
+export const moveToolDown = async (tools: ToolItemConfig[], index: number): Promise<ToolItemConfig[]> => {
   if (index < 0 || index >= tools.length - 1) return tools;
   
   const newOrder = [...tools];
   [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-  saveToolsOrder(newOrder);
+  await saveToolsOrder(newOrder);
   return newOrder;
 };
 
 /**
  * Move a tool to the top
  */
-export const moveToolToTop = (tools: ToolItemConfig[], index: number): ToolItemConfig[] => {
+export const moveToolToTop = async (tools: ToolItemConfig[], index: number): Promise<ToolItemConfig[]> => {
   if (index <= 0 || index >= tools.length) return tools;
   
   const newOrder = [...tools];
   const [tool] = newOrder.splice(index, 1);
   newOrder.unshift(tool);
-  saveToolsOrder(newOrder);
+  await saveToolsOrder(newOrder);
   return newOrder;
 };
 
 /**
  * Move a tool to the bottom
  */
-export const moveToolToBottom = (tools: ToolItemConfig[], index: number): ToolItemConfig[] => {
+export const moveToolToBottom = async (tools: ToolItemConfig[], index: number): Promise<ToolItemConfig[]> => {
   if (index < 0 || index >= tools.length - 1) return tools;
   
   const newOrder = [...tools];
   const [tool] = newOrder.splice(index, 1);
   newOrder.push(tool);
-  saveToolsOrder(newOrder);
+  await saveToolsOrder(newOrder);
   return newOrder;
 };
 

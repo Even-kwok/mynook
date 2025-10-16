@@ -15,7 +15,7 @@ import {
 } from './Icons';
 import { darkThemeClasses } from '../config/darkTheme';
 import { UserMenu } from './UserMenu';
-import { getToolsOrder, ToolItemConfig } from '../services/toolsOrderService';
+import { getToolsOrder, getToolsOrderSync, ToolItemConfig } from '../services/toolsOrderService';
 
 // 功能工具定义
 export interface ToolItem {
@@ -46,25 +46,31 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
-  const [tools, setTools] = useState<ToolItemConfig[]>([]);
+  // Initialize with sync version (cache or defaults)
+  const [tools, setTools] = useState<ToolItemConfig[]>(getToolsOrderSync());
 
-  // Load tools order from storage
+  // Load tools order from database
   useEffect(() => {
-    const loadedTools = getToolsOrder();
-    setTools(loadedTools);
-    
-    // Listen for storage changes (e.g., from admin panel)
-    const handleStorageChange = () => {
-      setTools(getToolsOrder());
+    const loadTools = async () => {
+      try {
+        const loadedTools = await getToolsOrder();
+        setTools(loadedTools);
+      } catch (error) {
+        console.error('Failed to load tools order:', error);
+      }
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    // Custom event for same-window updates
-    window.addEventListener('toolsOrderUpdated', handleStorageChange);
+    loadTools();
+    
+    // Listen for toolsOrderUpdated event (e.g., from admin panel)
+    const handleToolsUpdate = () => {
+      loadTools();
+    };
+    
+    window.addEventListener('toolsOrderUpdated', handleToolsUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('toolsOrderUpdated', handleStorageChange);
+      window.removeEventListener('toolsOrderUpdated', handleToolsUpdate);
     };
   }, []);
 
