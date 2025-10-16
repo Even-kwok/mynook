@@ -1641,11 +1641,9 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                         </div>
                     </div>
 
-                    {/* 右侧模块 - 占位，为将来的模板预览 */}
-                    <div className="flex-1 flex flex-col">
-                        <div className="flex-1 flex items-center justify-center text-[#666666]">
-                            <p className="text-sm" style={{ fontFamily: 'Arial, sans-serif' }}>Canvas Workspace</p>
-                        </div>
+                    {/* 右侧模块 - 预留空间 */}
+                    <div className="flex-1 flex flex-col bg-[#0a0a0a]">
+                        {/* 预留空间，将来可用于模板预览等功能 */}
                     </div>
                 </motion.aside>
                 
