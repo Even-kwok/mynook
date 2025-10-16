@@ -65,12 +65,12 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
           animate={{ x: 0 }}
           exit={{ x: -600 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className={`fixed left-[90px] top-0 bottom-0 w-[600px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} z-40 flex`}
+          className="fixed left-[90px] top-0 bottom-0 w-[600px] bg-[#0a0a0a] z-40 flex"
         >
           {/* 左侧：上传模块 */}
-          <div className="w-[280px] border-r border-[#2a2a2a] flex flex-col">
+          <div className="w-[280px] flex flex-col">
             {/* 标题栏 */}
-            <div className="h-14 border-b border-[#2a2a2a] px-4 flex items-center justify-between">
+            <div className="h-14 px-4 flex items-center justify-between">
               <h3 className={`text-sm font-semibold ${darkThemeClasses.textPrimary}`} style={{ fontFamily: 'Arial, sans-serif' }}>
                 {toolName}
               </h3>
@@ -84,32 +84,6 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             
             {/* 上传区域 */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
-              {/* 选择器（如房间类型）- 移到这里 */}
-              {selectorLabel && selectorOptions && (
-                <div>
-                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
-                    {selectorLabel}
-                  </label>
-                  <select
-                    value={selectorValue}
-                    onChange={(e) => onSelectorChange?.(e.target.value)}
-                    className={`
-                      w-full h-10 px-3 rounded-lg
-                      ${darkThemeClasses.bgTertiary} 
-                      border ${darkThemeClasses.borderLight}
-                      ${darkThemeClasses.textPrimary}
-                      focus:border-indigo-500 focus:outline-none
-                      text-sm
-                    `}
-                    style={{ fontFamily: 'Arial, sans-serif' }}
-                  >
-                    {selectorOptions.map(opt => (
-                      <option key={opt.id} value={opt.id}>{opt.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              
               {/* 图片上传 */}
               <div>
                 <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -162,6 +136,32 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                 </div>
               </div>
               
+              {/* 选择器（如房间类型）- 放在图片下方 */}
+              {selectorLabel && selectorOptions && (
+                <div>
+                  <label className={`text-xs font-semibold ${darkThemeClasses.textSecondary} mb-2 block`} style={{ fontFamily: 'Arial, sans-serif' }}>
+                    {selectorLabel}
+                  </label>
+                  <select
+                    value={selectorValue}
+                    onChange={(e) => onSelectorChange?.(e.target.value)}
+                    className={`
+                      w-full h-10 px-3 rounded-lg
+                      bg-[#0a0a0a]
+                      border border-[#333333]
+                      text-white
+                      focus:border-indigo-500 focus:outline-none
+                      text-sm
+                    `}
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  >
+                    {selectorOptions.map(opt => (
+                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {/* 未来：Text输入区域 */}
               {/* <div>
                 <label className="text-xs font-semibold text-[#a0a0a0] mb-2 block">
@@ -175,7 +175,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
             </div>
             
             {/* Generate 按钮 - 固定底部 */}
-            <div className="p-4 border-t border-[#2a2a2a]">
+            <div className="p-4">
               <button
                 onClick={onGenerate}
                 disabled={generateDisabled || isGenerating}

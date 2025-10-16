@@ -20,24 +20,25 @@ export interface ToolItem {
   id: string;
   name: string;
   shortName: string;
-  icon: React.ComponentType<{ className?: string }>;
+  emoji?: string;
+  icon?: React.ComponentType<{ className?: string }>;
   color?: string;
   isPremium?: boolean;
   isComingSoon?: boolean;
 }
 
 const tools: ToolItem[] = [
-  { id: 'interior', name: 'Interior Design', shortName: 'Interior', icon: IconSparkles, color: '#8B5CF6' }, // Purple
-  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', icon: IconHome, color: '#EF4444' }, // Red
-  { id: 'wall', name: 'Wall Design', shortName: 'Wall', icon: IconPaint, color: '#EC4899' }, // Pink
-  { id: 'floor', name: 'Floor Style', shortName: 'Floor', icon: IconFloor, color: '#A855F7' }, // Violet
-  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', icon: IconTree, color: '#10B981' }, // Green
-  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', icon: IconGift, color: '#F59E0B' }, // Orange
-  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', icon: IconPlus, color: '#3B82F6', isPremium: true }, // Blue
-  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', icon: IconTarget, color: '#06B6D4', isPremium: true }, // Cyan
-  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', icon: IconChat, color: '#8B5CF6', isComingSoon: true }, // Purple
-  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', icon: IconBox, color: '#6366F1', isComingSoon: true }, // Indigo
-  { id: 'free-canvas', name: 'Free Canvas', shortName: 'Canvas', icon: IconPencil, color: '#F97316', isPremium: true }, // Orange
+  { id: 'interior', name: 'Interior Design', shortName: 'Interior', emoji: '🛋️', isPremium: false }, 
+  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', emoji: '🏠', isPremium: false },
+  { id: 'wall', name: 'Wall Design', shortName: 'Wall', emoji: '🎨', isPremium: false },
+  { id: 'floor', name: 'Floor Style', shortName: 'Floor', emoji: '🪵', isPremium: false },
+  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', emoji: '🌳', isPremium: false },
+  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', emoji: '🎁', isPremium: false },
+  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', emoji: '➕', isPremium: true },
+  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🎯', isPremium: true },
+  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true },
+  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true },
+  { id: 'free-canvas', name: 'Free Canvas', shortName: 'Canvas', emoji: '✏️', isPremium: true },
 ];
 
 export interface LeftToolbarProps {
@@ -54,9 +55,9 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onOpenUserMenu,
 }) => {
   return (
-    <div className={`w-[90px] ${darkThemeClasses.bgSecondary} border-r ${darkThemeClasses.borderDefault} flex flex-col h-full`}>
+    <div className="w-[90px] bg-[#0a0a0a] flex flex-col h-full">
       {/* Logo at top */}
-      <div className="h-16 flex items-center justify-center border-b border-[#2a2a2a]">
+      <div className="h-16 flex items-center justify-center">
         <button onClick={() => onToolClick('explore')} className="text-white hover:text-indigo-400 transition-colors font-bold text-xl">
           MN
         </button>
@@ -67,7 +68,6 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
         <div className="w-full">
           <div className="flex flex-col gap-2">
             {tools.map((tool) => {
-            const Icon = tool.icon;
             const isActive = activeTool === tool.id;
             
             return (
@@ -84,8 +84,8 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {/* 图标 */}
-                <Icon className="w-5 h-5" style={{ color: isActive ? 'white' : tool.color }} />
+                {/* Emoji 图标 */}
+                <span className="text-2xl">{tool.emoji}</span>
                 
                 {/* 文字标签 */}
                 <span 
@@ -116,7 +116,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
       </div>
       
       {/* 底部用户信息区 */}
-      <div className={`border-t ${darkThemeClasses.borderDefault} p-3 space-y-2`}>
+      <div className="p-3 space-y-2">
         {user && (
           <>
             {/* Credits */}

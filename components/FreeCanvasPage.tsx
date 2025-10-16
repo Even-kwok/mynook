@@ -219,7 +219,7 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
 
     return (
         <div className="relative flex-shrink-0">
-            <aside className="w-[90px] h-full bg-[#1a1a1a] border-l border-[#2a2a2a]">
+            <aside className="w-[90px] h-full bg-[#0a0a0a]">
                 <div className="w-[90px] h-full px-2 pb-4 pt-6 flex flex-col">
                     <div className="flex justify-center items-center mb-3 flex-shrink-0">
                         <h2 className="text-xs font-semibold text-white">Assets</h2>
