@@ -232,18 +232,8 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                         {/* 渐变下划线 */}
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
                     </div>
-                    {/* Batch Download Button - Hidden for narrow layout */}
-                    {false && allGalleryImages.length > 0 && (
-                        <div className="px-2 mb-4 flex-shrink-0">
-                            <button
-                                onClick={handleBatchDownload}
-                                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-                            >
-                                <IconDownload className="w-4 h-4" />
-                                Download All ({allGalleryImages.length})
-                            </button>
-                        </div>
-                    )}
+                    
+                    {/* 图片列表区域 */}
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {allGalleryImages.length > 0 ? (
                             <div className="space-y-2">
@@ -325,6 +315,21 @@ export const MyDesignsSidebar: React.FC<MyDesignsSidebarProps> = ({
                             </div>
                         ) : null}
                     </div>
+                    
+                    {/* 批量下载按钮 - 底部 */}
+                    {allGalleryImages.length > 0 && (
+                        <div className="flex-shrink-0 mt-4 pt-4 border-t border-[#2a2a2a]">
+                            <button
+                                onClick={handleBatchDownload}
+                                className="w-full flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-[#2a2a2a] transition-colors"
+                            >
+                                <IconDownload className="w-5 h-5 text-indigo-400" />
+                                <span className="text-[10px] font-medium text-[#a0a0a0]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    Download
+                                </span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </aside>
         </div>
