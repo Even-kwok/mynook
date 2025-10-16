@@ -3424,7 +3424,7 @@ const App: React.FC = () => {
 
                 {/* Template Selection Area - Only for Style-Based Features */}
                 {isStyleBased && (
-                    <aside className="w-[380px] bg-white flex-shrink-0 flex flex-col">
+                    <aside className="w-[380px] bg-white border-l border-slate-200 flex-shrink-0 flex flex-col">
                         {/* Fixed Top: Title + Category Selector */}
                         <div className="px-6 pt-24 pb-4 border-b border-slate-200 bg-white z-10 space-y-3">
                             <h3 className="text-lg font-semibold text-slate-800">Choose a Style</h3>
@@ -3511,7 +3511,7 @@ const App: React.FC = () => {
                     </aside>
                 )}
 
-                <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px] border-r border-slate-200">
+                <main className="flex-1 bg-slate-50 overflow-y-auto pt-[72px]">
                     {generatedImages.length > 0 ? (
                         <div className="p-8 flex flex-wrap gap-6">
                             {generatedImages.map((image, i) => (
