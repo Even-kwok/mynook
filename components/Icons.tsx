@@ -244,3 +244,10 @@ export const IconMoveToBottom = ({ className = "w-4 h-4" }: { className?: string
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V9M3 3h18" />
     </svg>
 );
+
+// X mark icon for unavailable features
+export const IconXMark = ({ className = "w-5 h-5", ...props }: {className?: string, [key: string]: any}) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+);

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { IconCheck } from './Icons';
+import { IconCheck, IconXMark } from './Icons';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
@@ -381,12 +381,21 @@ export const PricingPage: React.FC = () => {
                             <div className="mt-10 flex-1 space-y-4">
                                 {plan.description && <p className="text-sm font-semibold text-slate-600">{plan.description}</p>}
                                 <ul role="list" className="space-y-4 text-sm leading-6">
-                                    {plan.features.map((feature) => (
-                                        <li key={feature} className="flex gap-x-3">
-                                            <IconCheck className="h-6 w-5 flex-none text-indigo-500" aria-hidden="true" />
-                                            <span className="text-slate-600">{feature}</span>
-                                        </li>
-                                    ))}
+                                    {plan.features.map((feature) => {
+                                        const isAvailable = feature.startsWith('✓');
+                                        const featureText = feature.replace(/^[✓✗]\s*/, '');
+                                        
+                                        return (
+                                            <li key={feature} className="flex gap-x-3">
+                                                {isAvailable ? (
+                                                    <IconCheck className="h-6 w-5 flex-none text-green-500" aria-hidden="true" />
+                                                ) : (
+                                                    <IconXMark className="h-6 w-5 flex-none text-red-400" aria-hidden="true" />
+                                                )}
+                                                <span className="text-slate-600">{featureText}</span>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
                         </motion.div>
