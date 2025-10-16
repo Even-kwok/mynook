@@ -755,18 +755,14 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
     const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
     const [sectionsLoading, setSectionsLoading] = useState(true);
-    const [loadedRef] = useState({ current: false }); // 防止重复加载
 
     useEffect(() => {
-        // 防止重复加载
-        if (loadedRef.current) return;
-        loadedRef.current = true;
-        
         loadAllSections();
-    }, []);
+    }, []); // useEffect 的空依赖数组本身就能防止重复加载
 
     const loadAllSections = async () => {
         try {
+            setSectionsLoading(true); // 重新加载时显示 loading 状态
             // 并行加载 Hero Section 和 Home Sections
             const [hero, sections] = await Promise.all([
                 getHeroSection(),
@@ -3140,8 +3136,8 @@ const App: React.FC = () => {
 
     const renderPage = () => {
         switch (activePage) {
-            case 'Explore': return <ExplorePage onNavigate={setActivePage} />;
-            case 'Pricing': return <PricingPage />;
+            case 'Explore': return <ExplorePage key="explore-page" onNavigate={setActivePage} />;
+            case 'Pricing': return <PricingPage key="pricing-page" />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
             // Free Canvas 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）
