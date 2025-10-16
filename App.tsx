@@ -1403,26 +1403,26 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 {/* END LEGACY Hardcoded Sections */}
                 
                 {/* Footer - Terms, Privacy, Pricing */}
-                <footer className="mt-32 pt-16 pb-8 border-t border-white/10">
+                <footer className="mt-16 py-6">
                     <div className="flex justify-center items-center gap-8">
                         <button
                             onClick={() => onNavigate('Terms')}
-                            className="text-slate-300 hover:text-white transition-colors"
-                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                            className="text-slate-400 hover:text-slate-200 transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, lineHeight: '18px' }}
                         >
                             Terms
                         </button>
                         <button
                             onClick={() => onNavigate('Privacy')}
-                            className="text-slate-300 hover:text-white transition-colors"
-                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                            className="text-slate-400 hover:text-slate-200 transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, lineHeight: '18px' }}
                         >
                             Privacy
                         </button>
                         <button
                             onClick={() => onNavigate('Pricing')}
-                            className="text-slate-300 hover:text-white transition-colors"
-                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 14, lineHeight: '20px' }}
+                            className="text-slate-400 hover:text-slate-200 transition-colors"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, lineHeight: '18px' }}
                         >
                             Pricing
                         </button>
