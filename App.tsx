@@ -824,13 +824,28 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                     </div>
                     
                     {/* 媒体显示区域 */}
-                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 overflow-hidden">
+                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 overflow-hidden relative">
                         {section.media_type === 'image' && (
                             <img 
                                 src={section.media_url} 
                                 alt={section.title}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                    const target = e.currentTarget;
+                                    target.style.display = 'none';
+                                    const placeholder = target.nextElementSibling as HTMLElement;
+                                    if (placeholder) placeholder.style.display = 'flex';
+                                }}
                             />
+                        )}
+                        {section.media_type === 'image' && (
+                            <div className="hidden absolute inset-0 bg-slate-200 items-center justify-center">
+                                <div className="text-center text-slate-500">
+                                    <IconPhoto className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">Image unavailable</p>
+                                </div>
+                            </div>
                         )}
                         {section.media_type === 'video' && (
                             <video 
@@ -840,6 +855,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 loop
                                 muted
                                 playsInline
+                                preload="metadata"
                             />
                         )}
                         {section.media_type === 'comparison' && section.comparison_before_url && section.comparison_after_url && (
@@ -929,11 +945,16 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
     return (
         <main className="min-h-screen bg-black relative overflow-y-auto">
             {/* Background Image Layer */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 bg-black">
                 <img 
                     src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" 
                     alt="Mountain background" 
                     className="w-full h-full object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/90" />
             </div>
@@ -996,13 +1017,28 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                                 
                                 {/* Preview Area */}
-                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
+                                <div className="aspect-[4/3] bg-slate-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden relative">
                                     {heroSection.preview_media_type === 'image' && (
-                                        <img 
-                                            src={heroSection.preview_media_url} 
-                                            alt="Preview" 
-                                            className="w-full h-full object-cover"
-                                        />
+                                        <>
+                                            <img 
+                                                src={heroSection.preview_media_url} 
+                                                alt="Preview" 
+                                                className="w-full h-full object-cover"
+                                                loading="eager"
+                                                onError={(e) => {
+                                                    const target = e.currentTarget;
+                                                    target.style.display = 'none';
+                                                    const placeholder = target.nextElementSibling as HTMLElement;
+                                                    if (placeholder) placeholder.style.display = 'flex';
+                                                }}
+                                            />
+                                            <div className="hidden absolute inset-0 bg-slate-200 items-center justify-center">
+                                                <div className="text-center text-slate-500">
+                                                    <IconPhoto className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">Preview unavailable</p>
+                                                </div>
+                                            </div>
+                                        </>
                                     )}
                                     {heroSection.preview_media_type === 'video' && (
                                         <video 
@@ -1012,6 +1048,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                             loop
                                             muted
                                             playsInline
+                                            preload="metadata"
                                         />
                                     )}
                                     {heroSection.preview_media_type === 'comparison' && 

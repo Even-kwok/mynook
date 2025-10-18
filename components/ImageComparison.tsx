@@ -82,6 +82,11 @@ export const ImageComparison: React.FC<ImageComparisonProps> = ({
           alt="After"
           className="w-full h-full object-cover"
           draggable={false}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.style.opacity = '0.5';
+            e.currentTarget.alt = 'After image failed to load';
+          }}
         />
       </div>
 
@@ -95,6 +100,11 @@ export const ImageComparison: React.FC<ImageComparisonProps> = ({
           alt="Before"
           className="w-full h-full object-cover"
           draggable={false}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.style.opacity = '0.5';
+            e.currentTarget.alt = 'Before image failed to load';
+          }}
         />
       </div>
 
