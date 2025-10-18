@@ -1845,6 +1845,32 @@ const App: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     
+    // 自动打开功能页面的面板
+    useEffect(() => {
+        // 定义需要自动打开面板的功能页面
+        const functionalPages = [
+            'Interior Design',
+            'Exterior Design', 
+            'Wall Design',
+            'Floor Style',
+            'Garden & Backyard Design',
+            'Festive Decor',
+            'Item Replace',
+            'Reference Style Match',
+            'AI Design Advisor',
+            'Multi-Item Preview',
+            'Free Canvas'
+        ];
+        
+        // 如果切换到功能页面，自动打开面板
+        if (functionalPages.includes(activePage)) {
+            setIsPanelOpen(true);
+        } else {
+            // 如果切换到非功能页面（如Explore、Pricing等），关闭面板
+            setIsPanelOpen(false);
+        }
+    }, [activePage]);
+    
     // 检测密码重置URL
     useEffect(() => {
         // 检查URL hash中是否包含密码重置的token
