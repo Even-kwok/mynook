@@ -169,11 +169,31 @@ export default async function handler(req, res) {
       }
 
       const session = await creemResponse.json();
-      console.log('✅ CREEM checkout session created:', session.id);
+      
+      // 🔍 详细调试日志
+      console.log('========== CREEM API Response ==========');
+      console.log('🔍 Full Response:', JSON.stringify(session, null, 2));
+      console.log('🔍 Response Keys:', Object.keys(session));
+      console.log('🔍 session.url:', session.url);
+      console.log('🔍 session.id:', session.id);
+      console.log('🔍 session.checkout_url:', session.checkout_url);
+      console.log('🔍 session.payment_url:', session.payment_url);
+      console.log('========================================');
+      
+      console.log('✅ CREEM checkout session created:', session.id || 'NO ID');
+
+      // 尝试多个可能的 URL 字段
+      const checkoutUrl = session.url || session.checkout_url || session.payment_url || session.link;
+      
+      if (!checkoutUrl) {
+        console.error('❌ No checkout URL found in response');
+        console.error('Available fields:', Object.keys(session));
+        throw new Error('No checkout URL in CREEM response');
+      }
 
       return res.status(200).json({
         success: true,
-        checkoutUrl: session.url,
+        checkoutUrl: checkoutUrl,
         sessionId: session.id,
         message: 'Checkout session created successfully'
       });
