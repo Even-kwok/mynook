@@ -244,6 +244,73 @@ const MAIN_CATEGORIES = [
   { id: 'festive', label: '节日装饰 (Festive Decor)', value: 'Festive Decor' },
 ];
 
+// 室内设计房间类型选择器（二级分类）
+const INTERIOR_ROOM_TYPES = [
+  { id: 'auto', label: '🤖 自动识别', value: null, displayName: null },
+  { id: 'living-room', label: '客厅 (Living Room)', value: 'living-room', displayName: 'Living Room' },
+  { id: 'bedroom', label: '卧室 (Bedroom)', value: 'bedroom', displayName: 'Bedroom' },
+  { id: 'master-bedroom', label: '主卧 (Master Bedroom)', value: 'master-bedroom', displayName: 'Master Bedroom' },
+  { id: 'guest-bedroom', label: '客卧 (Guest Bedroom)', value: 'guest-bedroom', displayName: 'Guest Bedroom' },
+  { id: 'kids-room', label: '儿童房 (Kids Room)', value: 'kids-room', displayName: 'Kids Room' },
+  { id: 'teen-room', label: '青少年房 (Teen Room)', value: 'teen-room', displayName: 'Teen Room' },
+  { id: 'nursery', label: '婴儿房 (Nursery)', value: 'nursery', displayName: 'Nursery' },
+  { id: 'kitchen', label: '厨房 (Kitchen)', value: 'kitchen', displayName: 'Kitchen' },
+  { id: 'dining-room', label: '餐厅 (Dining Room)', value: 'dining-room', displayName: 'Dining Room' },
+  { id: 'bathroom', label: '浴室 (Bathroom)', value: 'bathroom', displayName: 'Bathroom' },
+  { id: 'master-bathroom', label: '主浴室 (Master Bathroom)', value: 'master-bathroom', displayName: 'Master Bathroom' },
+  { id: 'powder-room', label: '化妆间 (Powder Room)', value: 'powder-room', displayName: 'Powder Room' },
+  { id: 'home-office', label: '家庭办公室 (Home Office)', value: 'home-office', displayName: 'Home Office' },
+  { id: 'study-library', label: '书房 (Study/Library)', value: 'study-library', displayName: 'Study / Library' },
+  { id: 'laundry-room', label: '洗衣房 (Laundry Room)', value: 'laundry-room', displayName: 'Laundry Room' },
+  { id: 'mudroom-entryway', label: '玄关 (Mudroom/Entryway)', value: 'mudroom-entryway', displayName: 'Mudroom / Entryway' },
+  { id: 'walk-in-closet', label: '步入式衣柜 (Walk-in Closet)', value: 'walk-in-closet', displayName: 'Walk-in Closet' },
+  { id: 'pantry', label: '储藏室 (Pantry)', value: 'pantry', displayName: 'Pantry' },
+  { id: 'attic', label: '阁楼 (Attic)', value: 'attic', displayName: 'Attic' },
+  { id: 'basement', label: '地下室 (Basement)', value: 'basement', displayName: 'Basement' },
+  { id: 'home-theater', label: '家庭影院 (Home Theater)', value: 'home-theater', displayName: 'Home Theater' },
+  { id: 'game-room', label: '游戏室 (Game Room)', value: 'game-room', displayName: 'Game Room' },
+  { id: 'home-gym', label: '家庭健身房 (Home Gym)', value: 'home-gym', displayName: 'Home Gym' },
+  { id: 'yoga-meditation-room', label: '瑜伽/冥想室 (Yoga/Meditation Room)', value: 'yoga-meditation-room', displayName: 'Yoga / Meditation Room' },
+  { id: 'home-bar', label: '家庭酒吧 (Home Bar)', value: 'home-bar', displayName: 'Home Bar' },
+  { id: 'music-room', label: '音乐室 (Music Room)', value: 'music-room', displayName: 'Music Room' },
+  { id: 'craft-hobby-room', label: '手工室 (Craft/Hobby Room)', value: 'craft-hobby-room', displayName: 'Craft / Hobby Room' },
+  { id: 'hallway-corridor', label: '走廊 (Hallway/Corridor)', value: 'hallway-corridor', displayName: 'Hallway / Corridor' },
+  { id: 'staircase', label: '楼梯 (Staircase)', value: 'staircase', displayName: 'Staircase' },
+  { id: 'sunroom-conservatory', label: '阳光房 (Sunroom/Conservatory)', value: 'sunroom-conservatory', displayName: 'Sunroom / Conservatory' },
+  { id: 'balcony-terrace', label: '阳台 (Balcony/Terrace)', value: 'balcony-terrace', displayName: 'Balcony / Terrace' },
+  { id: 'garage', label: '车库 (Garage)', value: 'garage', displayName: 'Garage' },
+];
+
+// 建筑设计建筑类型选择器（二级分类）
+const EXTERIOR_BUILDING_TYPES = [
+  { id: 'auto', label: '🤖 自动识别', value: null, displayName: null },
+  { id: 'modern-house', label: '现代住宅 (Modern House)', value: 'modern-house', displayName: 'Modern House' },
+  { id: 'a-frame', label: 'A字型房屋 (A-Frame)', value: 'a-frame', displayName: 'A-Frame' },
+  { id: 'apartment-building', label: '公寓楼 (Apartment Building)', value: 'apartment-building', displayName: 'Apartment Building' },
+  { id: 'art-deco-house', label: '装饰艺术住宅 (Art Deco House)', value: 'art-deco-house', displayName: 'Art Deco House' },
+  { id: 'beach-house', label: '海滨别墅 (Beach House)', value: 'beach-house', displayName: 'Beach House' },
+  { id: 'bungalow', label: '平房 (Bungalow)', value: 'bungalow', displayName: 'Bungalow' },
+  { id: 'cape-cod', label: '科德角式 (Cape Cod)', value: 'cape-cod', displayName: 'Cape Cod' },
+  { id: 'chateau', label: '城堡 (Chateau)', value: 'chateau', displayName: 'Chateau' },
+  { id: 'colonial-house', label: '殖民地式住宅 (Colonial House)', value: 'colonial-house', displayName: 'Colonial House' },
+  { id: 'container-home', label: '集装箱房屋 (Container Home)', value: 'container-home', displayName: 'Container Home' },
+  { id: 'cottage', label: '小别墅 (Cottage)', value: 'cottage', displayName: 'Cottage' },
+  { id: 'farmhouse', label: '农舍 (Farmhouse)', value: 'farmhouse', displayName: 'Farmhouse' },
+  { id: 'georgian', label: '乔治亚式 (Georgian)', value: 'georgian', displayName: 'Georgian' },
+  { id: 'greek-revival', label: '希腊复兴式 (Greek Revival)', value: 'greek-revival', displayName: 'Greek Revival' },
+  { id: 'log-cabin', label: '木屋 (Log Cabin)', value: 'log-cabin', displayName: 'Log Cabin' },
+  { id: 'mansion', label: '豪宅 (Mansion)', value: 'mansion', displayName: 'Mansion' },
+  { id: 'mediterranean-villa', label: '地中海别墅 (Mediterranean Villa)', value: 'mediterranean-villa', displayName: 'Mediterranean Villa' },
+  { id: 'mid-century-modern', label: '中世纪现代 (Mid-Century Modern)', value: 'mid-century-modern', displayName: 'Mid-Century Modern' },
+  { id: 'prairie-style', label: '草原式 (Prairie Style)', value: 'prairie-style', displayName: 'Prairie Style' },
+  { id: 'ranch-house', label: '牧场式住宅 (Ranch House)', value: 'ranch-house', displayName: 'Ranch House' },
+  { id: 'spanish-colonial', label: '西班牙殖民式 (Spanish Colonial)', value: 'spanish-colonial', displayName: 'Spanish Colonial' },
+  { id: 'tiny-house', label: '微型房屋 (Tiny House)', value: 'tiny-house', displayName: 'Tiny House' },
+  { id: 'townhouse', label: '联排别墅 (Townhouse)', value: 'townhouse', displayName: 'Townhouse' },
+  { id: 'tudor-house', label: '都铎式住宅 (Tudor House)', value: 'tudor-house', displayName: 'Tudor House' },
+  { id: 'victorian-house', label: '维多利亚式住宅 (Victorian House)', value: 'victorian-house', displayName: 'Victorian House' },
+];
+
 // 节日装饰子分类
 const FESTIVE_SUB_CATEGORIES = [
   { id: 'halloween', label: '万圣节 (Halloween)', value: 'Halloween' },
@@ -320,6 +387,8 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(MAIN_CATEGORIES[0]);
+  const [selectedInteriorRoom, setSelectedInteriorRoom] = useState(INTERIOR_ROOM_TYPES[0]); // 默认"自动识别"
+  const [selectedExteriorBuilding, setSelectedExteriorBuilding] = useState(EXTERIOR_BUILDING_TYPES[0]); // 默认"自动识别"
   const [selectedFestiveSub, setSelectedFestiveSub] = useState(FESTIVE_SUB_CATEGORIES[0]);
   const [selectedWallPaintSub, setSelectedWallPaintSub] = useState(WALL_PAINT_SUB_CATEGORIES[0]);
   const [selectedFloorSub, setSelectedFloorSub] = useState(FLOOR_STYLE_SUB_CATEGORIES[0]);
@@ -400,47 +469,63 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
       let parsed: Omit<ParsedTemplate, 'file' | 'preview' | 'status' | 'prompt'>;
       
       if (selectedCategory.value === 'Interior Design') {
-        // 室内设计：自动识别房间类型
-        const roomMatch = ROOM_TYPE_PATTERNS.find(room => room.pattern.test(nameWithoutExt));
-        if (roomMatch) {
-          parsed = {
-            name: nameWithoutExt,
-            mainCategory: 'Interior Design',
-            subCategory: 'Design Aesthetics',
-            roomType: roomMatch.displayName,
-            roomTypeId: roomMatch.roomTypeId,
-          };
+        // 室内设计：优先使用手动选择，否则自动识别
+        let roomType: string;
+        let roomTypeId: string;
+        
+        if (selectedInteriorRoom.value) {
+          // 用户手动选择了房间类型
+          roomType = selectedInteriorRoom.displayName!;
+          roomTypeId = selectedInteriorRoom.value;
         } else {
-          // 默认为 Living Room
-          parsed = {
-            name: nameWithoutExt,
-            mainCategory: 'Interior Design',
-            subCategory: 'Design Aesthetics',
-            roomType: 'Living Room',
-            roomTypeId: 'living-room',
-          };
+          // 自动识别房间类型
+          const roomMatch = ROOM_TYPE_PATTERNS.find(room => room.pattern.test(nameWithoutExt));
+          if (roomMatch) {
+            roomType = roomMatch.displayName;
+            roomTypeId = roomMatch.roomTypeId;
+          } else {
+            // 默认为 Living Room
+            roomType = 'Living Room';
+            roomTypeId = 'living-room';
+          }
         }
+        
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Interior Design',
+          subCategory: 'Design Aesthetics',
+          roomType,
+          roomTypeId,
+        };
       } else if (selectedCategory.value === 'Exterior Design') {
-        // 建筑设计：自动识别建筑类型
-        const buildingMatch = BUILDING_TYPE_PATTERNS.find(building => building.pattern.test(nameWithoutExt));
-        if (buildingMatch) {
-          parsed = {
-            name: nameWithoutExt,
-            mainCategory: 'Exterior Design',
-            subCategory: 'House Exterior',
-            roomType: buildingMatch.displayName,
-            roomTypeId: buildingMatch.buildingTypeId,
-          };
+        // 建筑设计：优先使用手动选择，否则自动识别
+        let roomType: string;
+        let roomTypeId: string;
+        
+        if (selectedExteriorBuilding.value) {
+          // 用户手动选择了建筑类型
+          roomType = selectedExteriorBuilding.displayName!;
+          roomTypeId = selectedExteriorBuilding.value;
         } else {
-          // 默认为 Modern House
-          parsed = {
-            name: nameWithoutExt,
-            mainCategory: 'Exterior Design',
-            subCategory: 'House Exterior',
-            roomType: 'Modern House',
-            roomTypeId: 'modern-house',
-          };
+          // 自动识别建筑类型
+          const buildingMatch = BUILDING_TYPE_PATTERNS.find(building => building.pattern.test(nameWithoutExt));
+          if (buildingMatch) {
+            roomType = buildingMatch.displayName;
+            roomTypeId = buildingMatch.buildingTypeId;
+          } else {
+            // 默认为 Modern House
+            roomType = 'Modern House';
+            roomTypeId = 'modern-house';
+          }
         }
+        
+        parsed = {
+          name: nameWithoutExt,
+          mainCategory: 'Exterior Design',
+          subCategory: 'House Exterior',
+          roomType,
+          roomTypeId,
+        };
       } else if (selectedCategory.value === 'Wall Paint') {
         // 墙面涂料：使用选择的子分类
         parsed = {
@@ -495,7 +580,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
     }
     
     setTemplates(prev => [...prev, ...newTemplates]);
-  }, [selectedCategory, selectedFestiveSub, selectedWallPaintSub, selectedFloorSub, selectedGardenSub]);
+  }, [selectedCategory, selectedInteriorRoom, selectedExteriorBuilding, selectedFestiveSub, selectedWallPaintSub, selectedFloorSub, selectedGardenSub]);
 
   // 拖放处理
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -708,6 +793,60 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
                 </select>
               </div>
               
+              {/* Interior Design Room Type Selector (二级分类) */}
+              {selectedCategory.value === 'Interior Design' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择房间类型（二级分类）
+                  </label>
+                  <select
+                    value={selectedInteriorRoom.id}
+                    onChange={(e) => {
+                      const room = INTERIOR_ROOM_TYPES.find(r => r.id === e.target.value);
+                      if (room) {
+                        setSelectedInteriorRoom(room);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {INTERIOR_ROOM_TYPES.map(room => (
+                      <option key={room.id} value={room.id}>
+                        {room.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* Exterior Design Building Type Selector (二级分类) */}
+              {selectedCategory.value === 'Exterior Design' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    选择建筑类型（二级分类）
+                  </label>
+                  <select
+                    value={selectedExteriorBuilding.id}
+                    onChange={(e) => {
+                      const building = EXTERIOR_BUILDING_TYPES.find(b => b.id === e.target.value);
+                      if (building) {
+                        setSelectedExteriorBuilding(building);
+                        setTemplates([]); // 清空已选文件
+                      }
+                    }}
+                    disabled={isUploading}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {EXTERIOR_BUILDING_TYPES.map(building => (
+                      <option key={building.id} value={building.id}>
+                        {building.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {/* Wall Paint Sub-category */}
               {selectedCategory.value === 'Wall Paint' && (
                 <div>
@@ -819,10 +958,24 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
               {/* Category Tips */}
               <div className="text-xs text-slate-600 bg-white rounded-lg p-3 border border-slate-200">
                 {selectedCategory.id === 'interior' && (
-                  <p>💡 文件名中包含房间类型会自动识别，如 "Modern Living Room.png"</p>
+                  <div className="space-y-1">
+                    {selectedInteriorRoom.value ? (
+                      <p>✅ <strong>已选择房间类型：</strong>{selectedInteriorRoom.label}</p>
+                    ) : (
+                      <p>🤖 <strong>自动识别模式：</strong>系统会从文件名识别房间类型</p>
+                    )}
+                    <p className="text-slate-500">💡 文件名示例: "Modern Living Room.png"</p>
+                  </div>
                 )}
                 {selectedCategory.id === 'exterior' && (
-                  <p>💡 文件名中包含建筑类型会自动识别，如 "Modern House.png"</p>
+                  <div className="space-y-1">
+                    {selectedExteriorBuilding.value ? (
+                      <p>✅ <strong>已选择建筑类型：</strong>{selectedExteriorBuilding.label}</p>
+                    ) : (
+                      <p>🤖 <strong>自动识别模式：</strong>系统会从文件名识别建筑类型</p>
+                    )}
+                    <p className="text-slate-500">💡 文件名示例: "Modern House.png"</p>
+                  </div>
                 )}
                 {selectedCategory.id === 'wall-paint' && (
                   <p>💡 所有模板将归类到 {selectedWallPaintSub.label}，可根据需要更换色调</p>
