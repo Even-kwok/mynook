@@ -7,6 +7,7 @@ import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateD
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
+import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
@@ -281,6 +282,7 @@ const TemplateManagement: React.FC<{
     const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
     const [isSorting, setIsSorting] = useState(false);
     const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
+    const [isBatchImageMatcherOpen, setIsBatchImageMatcherOpen] = useState(false);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -705,6 +707,13 @@ const TemplateManagement: React.FC<{
                         <IconUpload className="w-4 h-4 mr-1" />
                         Batch Upload
                     </Button>
+                    <Button 
+                        onClick={() => setIsBatchImageMatcherOpen(true)}
+                        className="!bg-blue-50 hover:!bg-blue-100 !text-blue-600 !border-blue-200"
+                    >
+                        <IconPhoto className="w-4 h-4 mr-1" />
+                        Match Images
+                    </Button>
                 </div>
             </div>
             <div className="mt-4 space-y-4">
@@ -919,6 +928,21 @@ const TemplateManagement: React.FC<{
             <BatchTemplateUpload
                 isOpen={isBatchUploadOpen}
                 onClose={() => setIsBatchUploadOpen(false)}
+                onSuccess={async () => {
+                    // 刷新模板列表
+                    const freshTemplates = await getAllTemplates();
+                    setTemplateData(freshTemplates);
+                    setCategoryOrder(Object.keys(freshTemplates));
+                    
+                    // 通知父组件刷新前端模板数据
+                    if (onTemplatesUpdated) {
+                        await onTemplatesUpdated();
+                    }
+                }}
+            />
+            <BatchImageMatcher
+                isOpen={isBatchImageMatcherOpen}
+                onClose={() => setIsBatchImageMatcherOpen(false)}
                 onSuccess={async () => {
                     // 刷新模板列表
                     const freshTemplates = await getAllTemplates();
