@@ -143,7 +143,7 @@ export default async function handler(req, res) {
       const creemResponse = await fetch(`${creemApiUrl}/v1/checkouts`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${creemApiKey}`,
+          'x-api-key': creemApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
