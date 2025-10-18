@@ -52,15 +52,15 @@ const TemplateImage: React.FC<{
                     onError={() => setImageError(true)}
                 />
             )}
-            {/* 图片加载失败时显示占位符 */}
+            {/* 只在图片加载失败时显示占位符 */}
             {imageError && (
-                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
-                    <IconPhoto className="w-12 h-12 text-slate-400" />
+                <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
+                    <IconPhoto className="w-8 h-8 text-slate-300" />
                 </div>
             )}
-            {/* 图片还在加载中时显示空白占位（图片加载成功后此元素会自动隐藏） */}
+            {/* 加载中显示极浅背景，加载成功后完全不显示 */}
             {!imageError && !imageLoaded && (
-                <div className="absolute inset-0 bg-slate-100"></div>
+                <div className="absolute inset-0 bg-slate-50/50"></div>
             )}
             {isSelected && (
                 <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-10">
@@ -99,7 +99,7 @@ const PromptTemplates: React.FC<{
                                     onClick={() => !isDisabled && onTemplateSelect(template.id)}
                                     className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                                 >
-                                    <div className={`relative aspect-square rounded-2xl overflow-hidden border-2 bg-slate-100 transition-all duration-300 ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-500/20' : 'border-slate-200 group-hover:border-indigo-400'}`}>
+                                    <div className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-500/20' : 'border-slate-200 group-hover:border-indigo-400'}`}>
                                         <TemplateImage 
                                             imageUrl={template.imageUrl} 
                                             templateName={template.name}
