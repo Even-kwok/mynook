@@ -3258,7 +3258,7 @@ const App: React.FC = () => {
         switch (activePage) {
             case 'Explore': return <ExplorePage key="explore-page" onNavigate={setActivePage} />;
             case 'Pricing': return <PricingPage key="pricing-page" />;
-            case 'Subscription Success': return <SubscriptionSuccessPage />;
+            case 'subscription-success': return <SubscriptionSuccessPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
             // Free Canvas 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）
