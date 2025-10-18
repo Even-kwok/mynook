@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconSparkles, IconLogout } from './Icons';
+import { CreditPackModal } from './CreditPackModal';
 
 interface UserMenuProps {
   isOpen: boolean;
@@ -11,6 +12,9 @@ interface UserMenuProps {
     permissionLevel: number;
   };
   onLogout: () => void;
+  onNavigate?: (page: string) => void; // 添加导航回调
+  onPurchaseCredits?: (packId: string) => void; // 购买信用点回调
+  isPurchasing?: boolean; // 购买进行中状态
   anchorRef: React.RefObject<HTMLButtonElement | HTMLDivElement>;
   position?: 'top' | 'bottom'; // 'top' = above button, 'bottom' = below button
 }
@@ -41,10 +45,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   onClose, 
   user, 
   onLogout,
+  onNavigate,
+  onPurchaseCredits,
+  isPurchasing = false,
   anchorRef,
   position = 'top'
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,6 +78,31 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const tierName = TIER_NAMES[user.permissionLevel] || 'FREE';
   const tierColor = TIER_COLORS[user.permissionLevel] || 'text-slate-400';
   const tierEmoji = TIER_EMOJIS[user.permissionLevel] || '🆓';
+  
+  // 判断是否显示升级按钮（BUSINESS用户不显示）
+  const showUpgradeButton = user.permissionLevel < 4;
+  
+  // 处理升级按钮点击
+  const handleUpgradeClick = () => {
+    if (onNavigate) {
+      onNavigate('Pricing');
+      onClose();
+    }
+  };
+
+  // 处理购买信用点
+  const handlePurchaseCredits = (packId: string) => {
+    if (onPurchaseCredits) {
+      onPurchaseCredits(packId);
+    }
+  };
+
+  // 查看完整定价页面
+  const handleViewFullPricing = () => {
+    if (onNavigate) {
+      onNavigate('Pricing');
+    }
+  };
 
   // 根据 position 设置不同的位置类
   const positionClasses = position === 'top' 
@@ -100,9 +133,19 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{user.email}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-base">{tierEmoji}</span>
-                  <span className={`text-xs font-semibold ${tierColor}`}>{tierName}</span>
+                <div className="flex items-center justify-between gap-2 mt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">{tierEmoji}</span>
+                    <span className={`text-xs font-semibold ${tierColor}`}>{tierName}</span>
+                  </div>
+                  {showUpgradeButton && (
+                    <button
+                      onClick={handleUpgradeClick}
+                      className="px-2 py-1 text-[10px] font-semibold rounded-md bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+                    >
+                      升级
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -113,7 +156,20 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                 <IconSparkles className="w-4 h-4 text-yellow-400" />
                 <span className="text-xs text-[#a0a0a0] font-medium">Credits</span>
               </div>
-              <span className="text-sm font-bold text-yellow-400">{user.credits}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-yellow-400">{user.credits}</span>
+                {/* 购买信用点按钮 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCreditModalOpen(true);
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center bg-[#333333] hover:bg-purple-500/20 hover:text-purple-400 text-[#a0a0a0] transition-all text-xs font-bold"
+                  title="Purchase Credits"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -134,6 +190,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           </div>
         </motion.div>
       )}
+      
+      {/* Credit Pack Purchase Modal */}
+      <CreditPackModal
+        isOpen={isCreditModalOpen}
+        onClose={() => setIsCreditModalOpen(false)}
+        onPurchase={handlePurchaseCredits}
+        onViewFullPricing={handleViewFullPricing}
+        userPermissionLevel={user.permissionLevel}
+        isPurchasing={isPurchasing}
+      />
     </AnimatePresence>
   );
 };

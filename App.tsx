@@ -28,6 +28,7 @@ import { BannerHero } from './components/BannerHero';
 import { LeftToolbar } from './components/LeftToolbar';
 import { SlidingPanel } from './components/SlidingPanel';
 import { UserMenu as DarkUserMenu } from './components/UserMenu';
+import { supabase } from './config/supabase';
 
 // --- Re-styled Helper Components ---
 
@@ -670,6 +671,9 @@ const Header: React.FC<{
                                 onClose={() => setUserMenuOpen(false)}
                                 user={user}
                                 onLogout={onLogout}
+                                onNavigate={onNavigate}
+                                onPurchaseCredits={handlePurchaseCredits}
+                                isPurchasing={isPurchasingCredits}
                                 anchorRef={userMenuRef}
                                 position="bottom"
                             />
@@ -2047,6 +2051,83 @@ const App: React.FC = () => {
         }
     };
     
+    // 购买信用点处理
+    const [isPurchasingCredits, setIsPurchasingCredits] = useState(false);
+    
+    const handlePurchaseCredits = async (packId: string) => {
+        // 检查用户是否登录
+        if (!currentUser) {
+            auth.setShowLoginModal(true);
+            return;
+        }
+
+        // 检查用户是否有付费会员资格（Pro、Premium 或 Business）
+        if (currentUser.membershipTier === 'free') {
+            setError('Credit packs are only available for Pro, Premium, and Business members. Please upgrade your plan first.');
+            setTimeout(() => setError(null), 5000);
+            return;
+        }
+
+        setIsPurchasingCredits(true);
+        setError(null);
+
+        try {
+            // 获取用户会话令牌
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !session || !session.access_token) {
+                console.error('Session error:', sessionError);
+                auth.setShowLoginModal(true);
+                setIsPurchasingCredits(false);
+                return;
+            }
+
+            console.log('✅ Session obtained, calling purchase credits API...');
+
+            // 调用 API 创建信用点购买的支付会话
+            const response = await fetch('/api/purchase-credits', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    packType: packId,
+                }),
+            });
+
+            // 处理非正常响应
+            if (!response.ok) {
+                let errorMessage = 'Failed to create checkout session';
+                
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (parseError) {
+                    errorMessage = `Server error: ${response.status}`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            // 解析成功响应
+            const data = await response.json();
+            const checkoutUrl = data.checkoutUrl;
+
+            if (!checkoutUrl) {
+                throw new Error('No checkout URL received from server');
+            }
+
+            // 跳转到 CREEM 支付页面
+            window.location.href = checkoutUrl;
+
+        } catch (err: any) {
+            console.error('Error creating checkout session:', err);
+            setError(err.message || 'Something went wrong. Please try again.');
+            setIsPurchasingCredits(false);
+            setTimeout(() => setError(null), 5000);
+        }
+    };
+    
     // 保留用于Admin页面的用户更新函数（如果需要的话）
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
         // 如果是更新信用点，刷新当前用户信息以同步显示
@@ -3360,6 +3441,9 @@ const App: React.FC = () => {
                             }
                         }}
                         onLogout={handleLogout}
+                        onNavigate={(page) => setActivePage(page)}
+                        onPurchaseCredits={handlePurchaseCredits}
+                        isPurchasing={isPurchasingCredits}
                     />
                     
                     {/* Free Canvas Page with its own sliding panel */}
@@ -3426,6 +3510,9 @@ const App: React.FC = () => {
                             }
                         }}
                         onLogout={handleLogout}
+                        onNavigate={(page) => setActivePage(page)}
+                        onPurchaseCredits={handlePurchaseCredits}
+                        isPurchasing={isPurchasingCredits}
                     />
                     
                     {/* Sliding Panel */}

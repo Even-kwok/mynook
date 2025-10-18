@@ -35,6 +35,9 @@ export interface LeftToolbarProps {
   user: any;
   onOpenUserMenu?: () => void;
   onLogout: () => void;
+  onNavigate?: (page: string) => void;
+  onPurchaseCredits?: (packId: string) => void;
+  isPurchasing?: boolean;
 }
 
 export const LeftToolbar: React.FC<LeftToolbarProps> = ({
@@ -43,6 +46,9 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   user,
   onOpenUserMenu,
   onLogout,
+  onNavigate,
+  onPurchaseCredits,
+  isPurchasing = false,
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
@@ -206,6 +212,9 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 onClose={() => setIsUserMenuOpen(false)}
                 user={user}
                 onLogout={onLogout}
+                onNavigate={onNavigate}
+                onPurchaseCredits={onPurchaseCredits}
+                isPurchasing={isPurchasing}
                 anchorRef={avatarButtonRef}
               />
             </div>
