@@ -52,10 +52,15 @@ const TemplateImage: React.FC<{
                     onError={() => setImageError(true)}
                 />
             )}
-            {(imageError || !imageLoaded) && (
-                <div className={`absolute inset-0 bg-slate-100 flex items-center justify-center ${imageLoaded ? 'hidden' : ''}`}>
+            {/* 图片加载失败时显示占位符 */}
+            {imageError && (
+                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
                     <IconPhoto className="w-12 h-12 text-slate-400" />
                 </div>
+            )}
+            {/* 图片还在加载中时显示空白占位（图片加载成功后此元素会自动隐藏） */}
+            {!imageError && !imageLoaded && (
+                <div className="absolute inset-0 bg-slate-100"></div>
             )}
             {isSelected && (
                 <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-10">
@@ -100,8 +105,11 @@ const PromptTemplates: React.FC<{
                                             templateName={template.name}
                                             isSelected={isSelected}
                                         />
+                                        {/* 模板名字 - 白色文字 + 黑色毛玻璃背景 */}
+                                        <div className="absolute bottom-0 left-0 right-0 p-2 backdrop-blur-sm bg-black/30">
+                                            <p className="text-center text-xs font-medium text-white">{template.name}</p>
+                                        </div>
                                     </div>
-                                    <p className={`text-center text-xs mt-2 font-medium transition-colors ${isSelected ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-800'}`}>{template.name}</p>
                                 </div>
                             );
                         })}
