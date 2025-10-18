@@ -2826,7 +2826,16 @@ const App: React.FC = () => {
         const itemImageForApi = itemReplaceImage.split(',')[1];
         const itemTypeName = ITEM_TYPES.find(i => i.id === selectedItemType)?.name || selectedItemType;
     
+        // 调试日志
+        console.log('🔍 Item Replace Debug:');
+        console.log('- Item Type:', itemTypeName);
+        console.log('- Room Image Length:', roomImageForApi?.length || 0);
+        console.log('- Item Image Length:', itemImageForApi?.length || 0);
+        console.log('- Images Array:', [roomImageForApi, itemImageForApi].length);
+    
         const instruction = `This is an interior design task. The first image is a photo of a room. The second image is a ${itemTypeName}. Your task is to seamlessly integrate the object from the second image into the first image. The object should replace a suitable existing object in the room if one exists, otherwise, place it in a natural and logical position. Ensure the lighting, shadows, and perspective of the added object match the room perfectly. The final output must be a single, photorealistic image of the modified room. Do not change anything else in the room.`;
+        
+        console.log('- Instruction:', instruction);
     
         const placeholder: GeneratedImage = {
             id: `item-replace-${Date.now()}`,

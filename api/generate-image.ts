@@ -212,18 +212,51 @@ export default async function handler(
       });
     }
 
+    // 调试日志
+    console.log('🔍 API Debug:');
+    console.log('- Instruction length:', instruction.length);
+    console.log('- Instruction preview:', instruction.substring(0, 100) + '...');
+    console.log('- Number of images received:', normalizedImages.length);
+    console.log('- Image parts created:', imageParts.length);
+    console.log('- Image 1 size:', normalizedImages[0]?.length || 0);
+    console.log('- Image 2 size:', normalizedImages[1]?.length || 0);
+
     // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
     const modelName = 'gemini-2.5-flash-image';
 
     // 调用 Google AI Studio API（使用原型的简洁配置）
     // 注意：使用简单对象格式而不是数组格式，以确保调用正确的API端点
+    
+    // 为多图片任务构建更明确的parts数组
+    const contentParts: Part[] = [];
+    
+    // 对于图像编辑任务，明确标记每张图片
+    if (imageParts.length === 2) {
+      console.log('📸 Multi-image task detected - using explicit labeling');
+      contentParts.push(
+        { text: 'Image 1 (Base/Room):' },
+        imageParts[0],
+        { text: 'Image 2 (Object/Item):' },
+        imageParts[1],
+        { text: instruction }
+      );
+    } else if (imageParts.length === 1) {
+      contentParts.push(
+        { text: instruction },
+        imageParts[0]
+      );
+    } else {
+      // 多于2张图片的情况
+      contentParts.push(
+        { text: instruction },
+        ...imageParts
+      );
+    }
+    
     const response = await aiClient.models.generateContent({
       model: modelName,
       contents: {
-        parts: [
-          { text: instruction },
-          ...imageParts
-        ]
+        parts: contentParts
       },
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
