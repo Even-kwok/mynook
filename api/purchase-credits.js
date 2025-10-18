@@ -127,39 +127,73 @@ export default async function handler(req, res) {
 
     console.log('✅ Calling CREEM API for credit pack...');
 
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
+    // 构建正确的 base URL
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL 
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      || (req.headers.origin)
+      || (req.headers.host ? `https://${req.headers.host}` : null)
+      || 'https://mynook-ai.vercel.app';
+    
+    console.log('🌐 Base URL:', baseUrl);
 
     try {
+      const successUrl = `${baseUrl}/?message=credits-purchased&credits=${pack.credits}`;
+      const cancelUrl = `${baseUrl}/?message=purchase-cancelled`;
+      
+      console.log('📦 CREEM Request Details:');
+      console.log('  - Product ID:', pack.productId);
+      console.log('  - Success URL:', successUrl);
+      console.log('  - Cancel URL:', cancelUrl);
+      console.log('  - Customer:', userData.email);
+
+      const creemPayload = {
+        product_id: pack.productId,
+        request_id: `credits_${userData.id}_${Date.now()}`,
+        units: 1,
+        customer: {
+          email: userData.email,
+        },
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        custom_field: {
+          type: 'credits',
+          pack_type: packType,
+          credits_amount: pack.credits,
+          user_id: userData.id,
+        },
+      };
+
+      console.log('📤 Sending to CREEM:', JSON.stringify(creemPayload, null, 2));
+
       const creemResponse = await fetch(`${creemApiUrl}/v1/checkouts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${creemApiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          product_id: pack.productId,
-          request_id: `credits_${userData.id}_${Date.now()}`,
-          units: 1,
-          customer: {
-            email: userData.email,
-          },
-          success_url: `${baseUrl}/?message=credits-purchased&credits=${pack.credits}`,
-          cancel_url: `${baseUrl}/pricing?message=purchase-cancelled`,
-          custom_field: {
-            type: 'credits',
-            pack_type: packType,
-            credits_amount: pack.credits,
-            user_id: userData.id,
-          },
-        }),
+        body: JSON.stringify(creemPayload),
       });
 
       if (!creemResponse.ok) {
         const errorData = await creemResponse.json().catch(() => ({}));
-        console.error('❌ CREEM API error:', errorData);
-        throw new Error(errorData.message || `CREEM API returned ${creemResponse.status}`);
+        console.error('❌ CREEM API error:', {
+          status: creemResponse.status,
+          statusText: creemResponse.statusText,
+          error: errorData
+        });
+        
+        // 返回更详细的错误信息
+        return res.status(500).json({
+          error: 'Payment system error',
+          message: errorData.message || `CREEM API returned ${creemResponse.status}`,
+          details: errorData,
+          debug: {
+            baseUrl,
+            successUrl,
+            cancelUrl,
+            productId: pack.productId
+          }
+        });
       }
 
       const session = await creemResponse.json();
