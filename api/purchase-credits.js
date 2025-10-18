@@ -138,12 +138,10 @@ export default async function handler(req, res) {
 
     try {
       const successUrl = `${baseUrl}/?message=credits-purchased&credits=${pack.credits}`;
-      const cancelUrl = `${baseUrl}/?message=purchase-cancelled`;
       
       console.log('📦 CREEM Request Details:');
       console.log('  - Product ID:', pack.productId);
       console.log('  - Success URL:', successUrl);
-      console.log('  - Cancel URL:', cancelUrl);
       console.log('  - Customer:', userData.email);
 
       const creemPayload = {
@@ -154,8 +152,7 @@ export default async function handler(req, res) {
           email: userData.email,
         },
         success_url: successUrl,
-        cancel_url: cancelUrl,
-        custom_field: {
+        metadata: {
           type: 'credits',
           pack_type: packType,
           credits_amount: pack.credits,
@@ -168,7 +165,7 @@ export default async function handler(req, res) {
       const creemResponse = await fetch(`${creemApiUrl}/v1/checkouts`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${creemApiKey}`,
+          'x-api-key': creemApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(creemPayload),
@@ -190,18 +187,34 @@ export default async function handler(req, res) {
           debug: {
             baseUrl,
             successUrl,
-            cancelUrl,
             productId: pack.productId
           }
         });
       }
 
       const session = await creemResponse.json();
+      
+      // 🔍 Enhanced debugging for CREEM response
+      console.log('========== CREEM API Response ==========');
+      console.log('🔍 Full Response:', JSON.stringify(session, null, 2));
+      console.log('🔍 Response Keys:', Object.keys(session));
+      console.log('🔍 session.url:', session.url);
+      console.log('🔍 session.checkout_url:', session.checkout_url);
+      console.log('🔍 session.payment_url:', session.payment_url);
+      console.log('========================================');
+      
+      const checkoutUrl = session.url || session.checkout_url || session.payment_url || session.link;
+      
+      if (!checkoutUrl) {
+        console.error('❌ No checkout URL found in response');
+        throw new Error('No checkout URL in CREEM response');
+      }
+      
       console.log('✅ CREEM checkout session created:', session.id);
 
       return res.status(200).json({
         success: true,
-        checkoutUrl: session.url,
+        checkoutUrl: checkoutUrl,
         sessionId: session.id,
         message: 'Checkout session created successfully',
         pack: {
