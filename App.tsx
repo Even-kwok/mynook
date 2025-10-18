@@ -2063,7 +2063,7 @@ const App: React.FC = () => {
         if (!currentUser) {
             console.log('❌ User not logged in');
             auth.setShowLoginModal(true);
-            return;
+            throw new Error('User not logged in'); // 抛出错误让 UI 重置
         }
 
         console.log('👤 User info:', { 
@@ -2076,7 +2076,7 @@ const App: React.FC = () => {
             console.log('⚠️ User is FREE tier - need to upgrade');
             setError('Credit packs are only available for Pro, Premium, and Business members. Please upgrade your plan first.');
             setTimeout(() => setError(null), 5000);
-            return;
+            throw new Error('Free tier user'); // 抛出错误让 UI 重置
         }
 
         console.log('✅ User has paid tier - proceeding with purchase');
@@ -2090,8 +2090,7 @@ const App: React.FC = () => {
             if (sessionError || !session || !session.access_token) {
                 console.error('Session error:', sessionError);
                 auth.setShowLoginModal(true);
-                setIsPurchasingCredits(false);
-                return;
+                throw new Error('Session expired');
             }
 
             console.log('✅ Session obtained, calling purchase credits API...');
@@ -2114,7 +2113,8 @@ const App: React.FC = () => {
                 
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.error || errorData.message || errorMessage;
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    console.error('❌ API Error:', errorData);
                 } catch (parseError) {
                     errorMessage = `Server error: ${response.status}`;
                 }
@@ -2123,20 +2123,26 @@ const App: React.FC = () => {
 
             // 解析成功响应
             const data = await response.json();
+            console.log('✅ API Response:', data);
+            
             const checkoutUrl = data.checkoutUrl;
 
             if (!checkoutUrl) {
+                console.error('❌ No checkout URL in response:', data);
                 throw new Error('No checkout URL received from server');
             }
 
+            console.log('🔄 Redirecting to payment page:', checkoutUrl);
+            
             // 跳转到 CREEM 支付页面
             window.location.href = checkoutUrl;
 
         } catch (err: any) {
-            console.error('Error creating checkout session:', err);
+            console.error('💥 Error creating checkout session:', err);
             setError(err.message || 'Something went wrong. Please try again.');
             setIsPurchasingCredits(false);
             setTimeout(() => setError(null), 5000);
+            throw err; // 重新抛出让按钮状态重置
         }
     };
     

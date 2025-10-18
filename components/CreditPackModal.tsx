@@ -99,7 +99,21 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
             </div>
 
             {/* 内容 */}
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 relative">
+              {/* 全局加载遮罩 */}
+              {purchasingPackId !== null && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+                  <div className="bg-[#1a1a1a] border border-purple-500 rounded-xl p-6 flex flex-col items-center gap-3 shadow-2xl">
+                    <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <div className="text-white font-semibold text-sm">Processing payment...</div>
+                    <div className="text-xs text-gray-400">Please wait while we redirect you</div>
+                  </div>
+                </div>
+              )}
+              
               {!canPurchase && (
                 <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm text-blue-300">
                   ⭐ Upgrade to Pro, Premium or Business to purchase credits
@@ -141,9 +155,15 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
                         if (canPurchase) {
                           console.log('📞 Calling onPurchase with:', pack.id);
                           setPurchasingPackId(pack.id);
+                          
+                          // 添加小延迟确保 UI 更新
+                          await new Promise(resolve => setTimeout(resolve, 100));
+                          
                           try {
                             await onPurchase(pack.id);
-                          } finally {
+                            // 注意：如果跳转到支付页面，这里不会执行
+                          } catch (error) {
+                            console.error('💥 Purchase error:', error);
                             setPurchasingPackId(null);
                           }
                         } else {
@@ -153,17 +173,20 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
                         }
                       }}
                       disabled={purchasingPackId !== null}
-                      className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all min-w-[80px] ${
+                      className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all min-w-[80px] flex items-center justify-center ${
                         canPurchase
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-wait disabled:hover:scale-100'
                           : 'bg-[#333333] text-[#666666] hover:bg-[#3a3a3a] hover:text-[#888888]'
                       }`}
                     >
                       {purchasingPackId === pack.id ? (
-                        <svg className="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <div className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span className="text-xs">Loading...</span>
+                        </div>
                       ) : canPurchase ? (
                         `$${pack.price}`
                       ) : (
