@@ -3629,7 +3629,13 @@ const App: React.FC = () => {
                         onTemplateSelect={handleTemplateSelect}
                         maxTemplates={currentUser ? MEMBERSHIP_CONFIG[currentUser.membershipTier].maxTemplates : 1}
                         // Generate
-                        onGenerate={handleGenerateClick}
+                        onGenerate={
+                            activePage === 'Item Replace' ? handleItemReplaceClick :
+                            activePage === 'Reference Style Match' ? handleStyleMatchClick :
+                            activePage === 'Multi-Item Preview' ? handleMultiItemClick :
+                            activePage === 'AI Design Advisor' ? handleAskAdvisor :
+                            handleGenerateClick
+                        }
                         isGenerating={isLoading}
                         generateDisabled={isGenerateDisabled}
                     />
