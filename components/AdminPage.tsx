@@ -311,25 +311,32 @@ const TemplateManagement: React.FC<{
                 : String(updatedTemplate.id);
             const isNewTemplate = templateId.startsWith('template_');
             
+            // 对于 Interior Design，targetCategory.sub 实际上是 room_type
+            // 需要正确映射到数据库字段
+            const isInteriorDesign = targetCategory.main === 'Interior Design';
+            const templateData = {
+                name: updatedTemplate.name,
+                image_url: updatedTemplate.imageUrl,
+                prompt: updatedTemplate.prompt,
+                main_category: targetCategory.main,
+                sub_category: isInteriorDesign ? 'Modern Minimalist' : targetCategory.sub, // Interior Design 使用默认风格
+                room_type: isInteriorDesign ? targetCategory.sub : null, // Interior Design 设置 room_type
+                enabled: true,
+                sort_order: 0
+            };
+            
             if (isNewTemplate) {
                 // Create new template in database
-                await createTemplate({
-                    name: updatedTemplate.name,
-                    image_url: updatedTemplate.imageUrl,
-                    prompt: updatedTemplate.prompt,
-                    main_category: targetCategory.main,
-                    sub_category: targetCategory.sub,
-                    enabled: true,
-                    sort_order: 0
-                });
+                await createTemplate(templateData);
             } else {
                 // Update existing template in database
                 await updateTemplate(templateId, {
-                    name: updatedTemplate.name,
-                    image_url: updatedTemplate.imageUrl,
-                    prompt: updatedTemplate.prompt,
-                    main_category: targetCategory.main,
-                    sub_category: targetCategory.sub
+                    name: templateData.name,
+                    image_url: templateData.image_url,
+                    prompt: templateData.prompt,
+                    main_category: templateData.main_category,
+                    sub_category: templateData.sub_category,
+                    room_type: templateData.room_type
                 });
             }
             
