@@ -532,8 +532,10 @@ const Header: React.FC<{
     user: User | null;
     onLoginClick: () => void;
     onLogout: () => void;
+    onPurchaseCredits?: (packId: string) => void;
+    isPurchasing?: boolean;
     designTools: { key: string; label: string; }[];
-}> = ({ activeItem, onNavigate, user, onLoginClick, onLogout, designTools }) => {
+}> = ({ activeItem, onNavigate, user, onLoginClick, onLogout, onPurchaseCredits, isPurchasing = false, designTools }) => {
     
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [designToolsOpen, setDesignToolsOpen] = useState(false);
@@ -672,8 +674,8 @@ const Header: React.FC<{
                                 user={user}
                                 onLogout={onLogout}
                                 onNavigate={onNavigate}
-                                onPurchaseCredits={handlePurchaseCredits}
-                                isPurchasing={isPurchasingCredits}
+                                onPurchaseCredits={onPurchaseCredits}
+                                isPurchasing={isPurchasing}
                                 anchorRef={userMenuRef}
                                 position="bottom"
                             />
@@ -3951,6 +3953,8 @@ const App: React.FC = () => {
                 user={currentUser} 
                 onLoginClick={() => auth.setShowLoginModal(true)}
                 onLogout={handleLogout}
+                onPurchaseCredits={handlePurchaseCredits}
+                isPurchasing={isPurchasingCredits}
                 designTools={designTools}
             />
             )}
