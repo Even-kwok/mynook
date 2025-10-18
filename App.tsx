@@ -866,7 +866,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                         )}
                     </div>
                     
-                    <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                    <button 
+                        onClick={() => onNavigate(section.button_link)}
+                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                        style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                    >
                         Generate AI Design
                     </button>
                 </div>
@@ -1062,7 +1066,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                 </div>
                                 
                                 {/* Generate Button */}
-                                <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                                <button 
+                                    onClick={() => onNavigate(heroSection.button_link)}
+                                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                                >
                                     Generate AI Design
                                 </button>
                             </motion.div>
@@ -1243,7 +1251,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                            <button 
+                                onClick={() => onNavigate('Wall Design')}
+                                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                            >
                                 Generate AI Design
                             </button>
                         </div>
@@ -1272,7 +1284,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                            <button 
+                                onClick={() => onNavigate('Floor Style')}
+                                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                            >
                                 Generate AI Design
                             </button>
                         </div>
@@ -1391,7 +1407,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                            <button 
+                                onClick={() => onNavigate('Garden & Backyard Design')}
+                                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                            >
                                 Generate AI Design
                             </button>
                         </div>
@@ -1420,7 +1440,11 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <button className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}>
+                            <button 
+                                onClick={() => onNavigate('Festive Decor')}
+                                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:from-purple-700 hover:to-blue-600 transition-all shadow-lg" 
+                                style={{ fontFamily: 'Arial, sans-serif', fontWeight: 400, fontSize: 14, lineHeight: '20px', letterSpacing: '0px' }}
+                            >
                                 Generate AI Design
                             </button>
                         </div>
