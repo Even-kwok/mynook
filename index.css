@@ -27,6 +27,33 @@
   animation: gradientShift 6s ease-in-out infinite;
 }
 
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes shimmer-delayed {
+  0%, 30% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-shimmer-delayed {
+  animation: shimmer-delayed 2.5s infinite;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;

@@ -178,10 +178,29 @@ const SkeletonLoader: React.FC<{className?: string}> = ({ className = '' }) => (
 );
 
 const LoadingCard: React.FC = () => (
-    <div className="relative bg-slate-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
-        <div className="aspect-square bg-slate-200"></div>
-        <div className="absolute inset-0 flex items-center justify-center bg-white/20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+    <div className="relative bg-[#0a0a0a] rounded-2xl shadow-2xl overflow-hidden border border-[#333333]">
+        <div className="aspect-square bg-[#1a1a1a] relative overflow-hidden">
+            {/* 光束扫描效果 - 主扫描 */}
+            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"></div>
+            
+            {/* 副光束（延迟） */}
+            <div className="absolute inset-0 -translate-x-full animate-shimmer-delayed bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"></div>
+            
+            {/* 中心内容 */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                {/* 脉冲光环 */}
+                <div className="relative">
+                    <div className="absolute inset-0 animate-ping opacity-20">
+                        <div className="w-16 h-16 rounded-2xl bg-indigo-500"></div>
+                    </div>
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl flex items-center justify-center border border-[#333333]">
+                        <IconSparkles className="w-8 h-8 text-indigo-400" />
+                    </div>
+                </div>
+                <p className="text-xs text-[#a0a0a0] mt-4 animate-pulse" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Generating your design...
+                </p>
+            </div>
         </div>
     </div>
 );
