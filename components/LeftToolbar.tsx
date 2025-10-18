@@ -134,7 +134,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 </span>
                 
                 {/* Premium VIP 标记 */}
-                {tool.isPremium && !isActive && (
+                {tool.isPremium && (
                   <div className="absolute top-1 right-1">
                     <span className="text-sm">👑</span>
                   </div>
