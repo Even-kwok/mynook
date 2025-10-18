@@ -190,7 +190,7 @@ const EditHeroModal: React.FC<EditHeroModalProps> = ({ heroSection, onClose, onS
 
   const availablePages = [
     'Interior Design',
-    'Wall Paint',
+    'Wall Design',
     'Floor Style',
     'Garden & Backyard Design',
     'Exterior Design',

@@ -399,7 +399,7 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
 
   const availablePages = [
     'Interior Design',
-    'Wall Paint',
+    'Wall Design',
     'Floor Style',
     'Garden & Backyard Design',
     'Exterior Design',
@@ -860,7 +860,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
 
   const availablePages = [
     'Interior Design',
-    'Wall Paint',
+    'Wall Design',
     'Floor Style',
     'Garden & Backyard Design',
     'Exterior Design',
