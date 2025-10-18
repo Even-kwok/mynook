@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
 
@@ -50,15 +49,20 @@ const PLAN_BENEFITS = {
 };
 
 export const SubscriptionSuccessPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, profile, refreshProfile } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
 
+  // 使用原生 URLSearchParams 获取 URL 参数
+  const searchParams = new URLSearchParams(window.location.search);
   const plan = searchParams.get('plan') || 'premium';
   const cycle = searchParams.get('cycle') || 'yearly';
   const planBenefits = PLAN_BENEFITS[plan as keyof typeof PLAN_BENEFITS] || PLAN_BENEFITS.premium;
+
+  // 导航函数
+  const navigateTo = (path: string) => {
+    window.location.href = path;
+  };
 
   useEffect(() => {
     // 刷新用户信息以获取最新的会员状态
@@ -242,21 +246,21 @@ export const SubscriptionSuccessPage: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-3 gap-4"
           >
             <button
-              onClick={() => navigate('/?page=interior-design')}
+              onClick={() => navigateTo('/?page=interior-design')}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
             >
               🎨 Start Designing
             </button>
             
             <button
-              onClick={() => navigate('/?page=free-canvas')}
+              onClick={() => navigateTo('/?page=free-canvas')}
               className="bg-white border-2 border-purple-600 text-purple-600 py-4 px-6 rounded-xl font-semibold hover:bg-purple-50 transition-all duration-200 transform hover:scale-[1.02]"
             >
               🖼️ Free Canvas
             </button>
             
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigateTo('/')}
               className="bg-white border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02]"
             >
               🏠 Back to Home
