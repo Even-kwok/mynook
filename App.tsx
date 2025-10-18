@@ -2051,7 +2051,7 @@ const App: React.FC = () => {
         }
     };
     
-    // 购买信用点处理
+    // 购买信用点处理逻辑
     const [isPurchasingCredits, setIsPurchasingCredits] = useState(false);
     
     const handlePurchaseCredits = async (packId: string) => {
