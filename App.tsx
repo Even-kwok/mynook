@@ -3547,6 +3547,13 @@ const App: React.FC = () => {
                         isOpen={isPanelOpen}
                         onClose={() => setIsPanelOpen(false)}
                         toolName={activePage}
+                        hintMessage={
+                            activePage === 'Item Replace' 
+                                ? '💡 仅限应用于室内设计中的常见家具和物品的替换'
+                                : activePage === 'Reference Style Match'
+                                ? '💡 仅限应用于室内设计的风格参考'
+                                : undefined
+                        }
                         // Upload Module
                         imageUrl={module1Images[0]}
                         isUploading={!!uploadingSlots['m1-0']}

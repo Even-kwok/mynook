@@ -9,6 +9,9 @@ interface SlidingPanelProps {
   onClose: () => void;
   toolName: string;
   
+  // 提示信息（可选）
+  hintMessage?: string;
+  
   // 第一个上传模块
   imageUrl: string | null;
   isUploading: boolean;
@@ -48,6 +51,7 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
   isOpen,
   onClose,
   toolName,
+  hintMessage,
   imageUrl,
   isUploading,
   onFileSelect,
@@ -107,6 +111,20 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                 <IconX className="w-4 h-4" />
               </button>
             </div>
+            
+            {/* 提示信息 */}
+            {hintMessage && (
+              <div className="px-4 pb-3">
+                <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base flex-shrink-0 mt-0.5">💡</span>
+                    <p className="text-xs text-[#a0a0a0] leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>
+                      {hintMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* 上传区域 */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
