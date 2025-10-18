@@ -3549,9 +3549,9 @@ const App: React.FC = () => {
                         toolName={activePage}
                         hintMessage={
                             activePage === 'Item Replace' 
-                                ? '💡 仅限应用于室内设计中的常见家具和物品的替换'
+                                ? '💡 For indoor furniture and common items replacement only'
                                 : activePage === 'Reference Style Match'
-                                ? '💡 仅限应用于室内设计的风格参考'
+                                ? '💡 For indoor design style reference only'
                                 : undefined
                         }
                         // Upload Module
