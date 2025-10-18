@@ -110,6 +110,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     : 'top-full right-0 mt-2';
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -190,17 +191,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           </div>
         </motion.div>
       )}
-      
-      {/* Credit Pack Purchase Modal */}
-      <CreditPackModal
-        isOpen={isCreditModalOpen}
-        onClose={() => setIsCreditModalOpen(false)}
-        onPurchase={handlePurchaseCredits}
-        onViewFullPricing={handleViewFullPricing}
-        userPermissionLevel={user.permissionLevel}
-        isPurchasing={isPurchasing}
-      />
     </AnimatePresence>
+    
+    {/* Credit Pack Purchase Modal - 独立于 AnimatePresence 之外 */}
+    <CreditPackModal
+      isOpen={isCreditModalOpen}
+      onClose={() => setIsCreditModalOpen(false)}
+      onPurchase={handlePurchaseCredits}
+      onViewFullPricing={handleViewFullPricing}
+      userPermissionLevel={user.permissionLevel}
+      isPurchasing={isPurchasing}
+    />
+  </>
   );
 };
 
