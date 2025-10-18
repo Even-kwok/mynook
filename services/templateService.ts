@@ -329,6 +329,50 @@ export async function getCategories(): Promise<TemplateCategory[]> {
 }
 
 /**
+ * 获取所有实际存在的房间类型（用于 Interior Design）
+ */
+export async function getInteriorRoomTypes(): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('design_templates')
+      .select('room_type')
+      .eq('main_category', 'Interior Design')
+      .not('room_type', 'is', null);
+
+    if (error) throw error;
+
+    // 去重并排序
+    const uniqueRoomTypes = [...new Set(data.map(item => item.room_type))].filter(Boolean) as string[];
+    return uniqueRoomTypes.sort();
+  } catch (error) {
+    console.error('Error fetching interior room types:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取指定主分类的所有子分类
+ */
+export async function getSubCategories(mainCategory: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('design_templates')
+      .select('sub_category')
+      .eq('main_category', mainCategory)
+      .not('sub_category', 'is', null);
+
+    if (error) throw error;
+
+    // 去重并排序
+    const uniqueSubCategories = [...new Set(data.map(item => item.sub_category))].filter(Boolean) as string[];
+    return uniqueSubCategories.sort();
+  } catch (error) {
+    console.error(`Error fetching sub categories for ${mainCategory}:`, error);
+    return [];
+  }
+}
+
+/**
  * 获取所有模板（普通用户版本 - 不包含 prompt）
  * 使用公共视图，只返回图片、名字和分类信息
  * 对于Interior Design，按room_type分组
