@@ -153,9 +153,8 @@ export default async function handler(req, res) {
           customer: {
             email: userData.email,
           },
-          success_url: `${baseUrl}/?message=subscription-success&plan=${planType}&cycle=${billingCycle}`,
-          cancel_url: `${baseUrl}/pricing?message=subscription-cancelled`,
-          custom_field: {
+          success_url: `${baseUrl}/?message=subscription-success&plan=${planType}&cycle=${billingCycle}&user=${userData.id}`,
+          metadata: {
             plan_type: planType,
             billing_cycle: billingCycle,
             user_id: userData.id,
