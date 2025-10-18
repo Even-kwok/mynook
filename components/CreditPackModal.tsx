@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconXMark } from './Icons';
 
@@ -47,8 +47,17 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
   userPermissionLevel,
   isPurchasing = false,
 }) => {
+  // 本地状态：追踪哪个信用包按钮正在加载
+  const [purchasingPackId, setPurchasingPackId] = useState<string | null>(null);
+  
   // 只有Pro (2)及以上用户才能购买信用包
   const canPurchase = userPermissionLevel >= 2;
+  
+  // 关闭弹窗的处理函数，重置状态
+  const handleClose = () => {
+    setPurchasingPackId(null);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -59,24 +68,21 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000]"
             style={{ fontFamily: 'Arial, sans-serif' }}
           />
           
-          {/* 模态框 */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed w-[90%] max-w-md bg-[#1a1a1a] border border-[#333333] rounded-2xl shadow-2xl z-[10001] overflow-hidden"
-            style={{ 
-              fontFamily: 'Arial, sans-serif',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-            }}
-          >
+          {/* 模态框 - 使用 flex 居中而不是 transform */}
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md bg-[#1a1a1a] border border-[#333333] rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+              style={{ fontFamily: 'Arial, sans-serif' }}
+            >
             {/* 标题栏 */}
             <div className="flex items-center justify-between p-4 border-b border-[#333333] bg-gradient-to-br from-[#252525] to-[#1a1a1a]">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -84,9 +90,9 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
                 <span>Purchase Credits</span>
               </h3>
               <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors flex items-center justify-center"
-                disabled={isPurchasing}
+                onClick={handleClose}
+                className="w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors flex items-center justify-center disabled:opacity-50"
+                disabled={purchasingPackId !== null}
               >
                 <IconXMark className="w-5 h-5 text-[#a0a0a0]" />
               </button>
@@ -130,25 +136,30 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
                     </div>
                     
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         console.log('💎 Credit pack button clicked:', pack.id, 'canPurchase:', canPurchase);
                         if (canPurchase) {
                           console.log('📞 Calling onPurchase with:', pack.id);
-                          onPurchase(pack.id);
+                          setPurchasingPackId(pack.id);
+                          try {
+                            await onPurchase(pack.id);
+                          } finally {
+                            setPurchasingPackId(null);
+                          }
                         } else {
                           console.log('👉 Redirecting to pricing page');
                           onViewFullPricing();
-                          onClose();
+                          handleClose();
                         }
                       }}
-                      disabled={isPurchasing}
+                      disabled={purchasingPackId !== null}
                       className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all min-w-[80px] ${
                         canPurchase
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white hover:scale-105 active:scale-95'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
                           : 'bg-[#333333] text-[#666666] hover:bg-[#3a3a3a] hover:text-[#888888]'
                       }`}
                     >
-                      {isPurchasing ? (
+                      {purchasingPackId === pack.id ? (
                         <svg className="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -169,15 +180,16 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
               <button
                 onClick={() => {
                   onViewFullPricing();
-                  onClose();
+                  handleClose();
                 }}
-                disabled={isPurchasing}
+                disabled={purchasingPackId !== null}
                 className="w-full py-2.5 text-sm text-[#a0a0a0] hover:text-white transition-colors disabled:opacity-50"
               >
                 View Full Pricing & Plans →
               </button>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
