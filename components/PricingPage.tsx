@@ -190,6 +190,20 @@ export const PricingPage: React.FC = () => {
             return;
         }
 
+        // Check if user already has this plan or a higher tier
+        const tierHierarchy = ['free', 'pro', 'premium', 'business'];
+        const currentTierIndex = tierHierarchy.indexOf(membershipTier);
+        const targetTierIndex = tierHierarchy.indexOf(planId);
+
+        if (currentTierIndex >= targetTierIndex) {
+            if (currentTierIndex === targetTierIndex) {
+                setError(`You already have the ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan.`);
+            } else {
+                setError(`You already have a higher tier plan (${membershipTier.charAt(0).toUpperCase() + membershipTier.slice(1)}).`);
+            }
+            return;
+        }
+
         setLoadingPlanId(planId);
         setError(null);
 
@@ -320,86 +334,126 @@ export const PricingPage: React.FC = () => {
                 </div>
 
                 <div className="mt-16 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    {plans.map((plan, index) => (
-                        <motion.div
-                            key={plan.name}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className={`relative border rounded-3xl p-8 flex flex-col h-full ${
-                                plan.isPopular ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] border-purple-500/50 shadow-lg shadow-purple-500/20' : 'bg-[#1a1a1a] border-[#333333] shadow-sm'
-                            }`}
-                        >
-                            {plan.isPopular && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
-                                        Most Popular
+                    {plans.map((plan, index) => {
+                        // 判断用户权限等级
+                        const tierHierarchy = ['free', 'pro', 'premium', 'business'];
+                        const currentTierIndex = tierHierarchy.indexOf(membershipTier);
+                        const planTierIndex = tierHierarchy.indexOf(plan.id);
+                        
+                        // 判断按钮是否应该被禁用
+                        const isCurrentPlan = currentTierIndex === planTierIndex;
+                        const isLowerTier = currentTierIndex > planTierIndex;
+                        const isPlanDisabled = isCurrentPlan || isLowerTier || loadingPlanId !== null;
+                        
+                        // 确定按钮文本
+                        let buttonText = 'Subscribe';
+                        if (isCurrentPlan) {
+                            buttonText = '✓ Current Plan';
+                        } else if (isLowerTier) {
+                            buttonText = 'Lower Tier';
+                        } else if (loadingPlanId === plan.id) {
+                            buttonText = 'Processing...';
+                        }
+                        
+                        return (
+                            <motion.div
+                                key={plan.name}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: index * 0.1 }}
+                                className={`relative border rounded-3xl p-8 flex flex-col h-full ${
+                                    plan.isPopular ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] border-purple-500/50 shadow-lg shadow-purple-500/20' : 'bg-[#1a1a1a] border-[#333333] shadow-sm'
+                                } ${isCurrentPlan ? 'ring-2 ring-green-500/50' : ''}`}
+                            >
+                                {plan.isPopular && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+                                            Most Popular
+                                        </span>
+                                    </div>
+                                )}
+
+                                {isCurrentPlan && (
+                                    <div className="absolute -top-4 right-4">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
+                                            ✓ Active
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-3">
+                                    <span className="text-4xl">{plan.icon}</span>
+                                    <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                                </div>
+                                
+                                <div className="mt-2 inline-block px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-semibold rounded-full">
+                                    {plan.credits.toLocaleString()} Credits
+                                </div>
+                                
+                                <div className="mt-6 flex items-baseline gap-x-2">
+                                    <span className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                                        ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                                    </span>
+                                    <span className="text-base font-medium text-slate-400">
+                                        / month
                                     </span>
                                 </div>
-                            )}
+                                
+                                <p className="mt-2 text-sm text-slate-500">
+                                    {billingCycle === 'yearly' && `billed yearly $${plan.yearlyBilled}`}
+                                </p>
 
-                            <div className="flex items-center gap-3">
-                                <span className="text-4xl">{plan.icon}</span>
-                                <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                            </div>
-                            
-                            <div className="mt-2 inline-block px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-semibold rounded-full">
-                                {plan.credits.toLocaleString()} Credits
-                            </div>
-                            
-                            <div className="mt-6 flex items-baseline gap-x-2">
-                                <span className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                                    ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
-                                </span>
-                                <span className="text-base font-medium text-slate-400">
-                                    / month
-                                </span>
-                            </div>
-                            
-                            <p className="mt-2 text-sm text-slate-500">
-                                {billingCycle === 'yearly' && `billed yearly $${plan.yearlyBilled}`}
-                            </p>
+                                <button
+                                    onClick={() => handleSubscribe(plan.id)}
+                                    disabled={isPlanDisabled}
+                                    className={`mt-8 w-full py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg ${
+                                        isPlanDisabled 
+                                            ? 'bg-slate-700 text-slate-400' 
+                                            : plan.isPopular 
+                                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:scale-[1.02]' 
+                                                : 'bg-[#2a2a2a] text-white hover:bg-[#333333] hover:scale-[1.02]'
+                                    }`}
+                                >
+                                    {loadingPlanId === plan.id ? (
+                                        <span className="flex items-center justify-center">
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </span>
+                                    ) : buttonText}
+                                </button>
 
-                            <button
-                                onClick={() => handleSubscribe(plan.id)}
-                                disabled={loadingPlanId !== null}
-                                className={`mt-8 w-full py-3 px-6 rounded-xl font-semibold text-center transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${
-                                    plan.isPopular ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700' : 'bg-[#2a2a2a] text-white hover:bg-[#333333]'
-                                }`}
-                            >
-                                {loadingPlanId === plan.id ? (
-                                    <span className="flex items-center justify-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Processing...
-                                    </span>
-                                ) : 'Subscribe'}
-                            </button>
+                                {isLowerTier && (
+                                    <p className="mt-2 text-xs text-center text-slate-500">
+                                        You have a higher tier plan
+                                    </p>
+                                )}
 
-                            <div className="mt-10 flex-1 space-y-4">
-                                {plan.description && <p className="text-sm font-semibold text-slate-400">{plan.description}</p>}
-                                <ul role="list" className="space-y-4 text-sm leading-6">
-                                    {plan.features.map((feature) => {
-                                        const isAvailable = feature.startsWith('✓');
-                                        const featureText = feature.replace(/^[✓✗]\s*/, '');
-                                        
-                                        return (
-                                            <li key={feature} className="flex gap-x-3">
-                                                {isAvailable ? (
-                                                    <IconCheck className="h-6 w-5 flex-none text-green-400" aria-hidden="true" />
-                                                ) : (
-                                                    <IconXMark className="h-6 w-5 flex-none text-red-400/60" aria-hidden="true" />
-                                                )}
-                                                <span className="text-slate-300">{featureText}</span>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        </motion.div>
-                    ))}
+                                <div className="mt-10 flex-1 space-y-4">
+                                    {plan.description && <p className="text-sm font-semibold text-slate-400">{plan.description}</p>}
+                                    <ul role="list" className="space-y-4 text-sm leading-6">
+                                        {plan.features.map((feature) => {
+                                            const isAvailable = feature.startsWith('✓');
+                                            const featureText = feature.replace(/^[✓✗]\s*/, '');
+                                            
+                                            return (
+                                                <li key={feature} className="flex gap-x-3">
+                                                    {isAvailable ? (
+                                                        <IconCheck className="h-6 w-5 flex-none text-green-400" aria-hidden="true" />
+                                                    ) : (
+                                                        <IconXMark className="h-6 w-5 flex-none text-red-400/60" aria-hidden="true" />
+                                                    )}
+                                                    <span className="text-slate-300">{featureText}</span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </div>
 
                 {/* Credit Packs Section */}
