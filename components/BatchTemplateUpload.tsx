@@ -244,22 +244,6 @@ const MAIN_CATEGORIES = [
   { id: 'festive', label: '节日装饰 (Festive Decor)', value: 'Festive Decor' },
 ];
 
-// 室内设计子分类
-const INTERIOR_SUB_CATEGORIES = [
-  { id: 'design-aesthetics', label: '设计美学 (Design Aesthetics)', value: 'Design Aesthetics' },
-  { id: 'architectural-styles', label: '建筑风格 (Architectural Styles)', value: 'Architectural Styles' },
-  { id: 'color-schemes', label: '配色方案 (Color Schemes)', value: 'Color Schemes' },
-  { id: 'furniture-layouts', label: '家具布局 (Furniture Layouts)', value: 'Furniture Layouts' },
-];
-
-// 建筑设计子分类
-const EXTERIOR_SUB_CATEGORIES = [
-  { id: 'house-exterior', label: '房屋外观 (House Exterior)', value: 'House Exterior' },
-  { id: 'architectural-styles', label: '建筑风格 (Architectural Styles)', value: 'Architectural Styles' },
-  { id: 'landscape-styles', label: '景观风格 (Landscape Styles)', value: 'Landscape Styles' },
-  { id: 'facade-design', label: '立面设计 (Facade Design)', value: 'Facade Design' },
-];
-
 // 节日装饰子分类
 const FESTIVE_SUB_CATEGORIES = [
   { id: 'halloween', label: '万圣节 (Halloween)', value: 'Halloween' },
@@ -336,8 +320,6 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(MAIN_CATEGORIES[0]);
-  const [selectedInteriorSub, setSelectedInteriorSub] = useState(INTERIOR_SUB_CATEGORIES[0]);
-  const [selectedExteriorSub, setSelectedExteriorSub] = useState(EXTERIOR_SUB_CATEGORIES[0]);
   const [selectedFestiveSub, setSelectedFestiveSub] = useState(FESTIVE_SUB_CATEGORIES[0]);
   const [selectedWallPaintSub, setSelectedWallPaintSub] = useState(WALL_PAINT_SUB_CATEGORIES[0]);
   const [selectedFloorSub, setSelectedFloorSub] = useState(FLOOR_STYLE_SUB_CATEGORIES[0]);
@@ -418,13 +400,13 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
       let parsed: Omit<ParsedTemplate, 'file' | 'preview' | 'status' | 'prompt'>;
       
       if (selectedCategory.value === 'Interior Design') {
-        // 室内设计：使用选择的子分类 + 自动识别房间类型
+        // 室内设计：自动识别房间类型
         const roomMatch = ROOM_TYPE_PATTERNS.find(room => room.pattern.test(nameWithoutExt));
         if (roomMatch) {
           parsed = {
             name: nameWithoutExt,
             mainCategory: 'Interior Design',
-            subCategory: selectedInteriorSub.value,
+            subCategory: 'Design Aesthetics',
             roomType: roomMatch.displayName,
             roomTypeId: roomMatch.roomTypeId,
           };
@@ -433,19 +415,19 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
           parsed = {
             name: nameWithoutExt,
             mainCategory: 'Interior Design',
-            subCategory: selectedInteriorSub.value,
+            subCategory: 'Design Aesthetics',
             roomType: 'Living Room',
             roomTypeId: 'living-room',
           };
         }
       } else if (selectedCategory.value === 'Exterior Design') {
-        // 建筑设计：使用选择的子分类 + 自动识别建筑类型
+        // 建筑设计：自动识别建筑类型
         const buildingMatch = BUILDING_TYPE_PATTERNS.find(building => building.pattern.test(nameWithoutExt));
         if (buildingMatch) {
           parsed = {
             name: nameWithoutExt,
             mainCategory: 'Exterior Design',
-            subCategory: selectedExteriorSub.value,
+            subCategory: 'House Exterior',
             roomType: buildingMatch.displayName,
             roomTypeId: buildingMatch.buildingTypeId,
           };
@@ -454,7 +436,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
           parsed = {
             name: nameWithoutExt,
             mainCategory: 'Exterior Design',
-            subCategory: selectedExteriorSub.value,
+            subCategory: 'House Exterior',
             roomType: 'Modern House',
             roomTypeId: 'modern-house',
           };
@@ -513,7 +495,7 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
     }
     
     setTemplates(prev => [...prev, ...newTemplates]);
-  }, [selectedCategory, selectedInteriorSub, selectedExteriorSub, selectedFestiveSub, selectedWallPaintSub, selectedFloorSub, selectedGardenSub]);
+  }, [selectedCategory, selectedFestiveSub, selectedWallPaintSub, selectedFloorSub, selectedGardenSub]);
 
   // 拖放处理
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -726,60 +708,6 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
                 </select>
               </div>
               
-              {/* Interior Design Sub-category */}
-              {selectedCategory.value === 'Interior Design' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    选择风格类型
-                  </label>
-                  <select
-                    value={selectedInteriorSub.id}
-                    onChange={(e) => {
-                      const sub = INTERIOR_SUB_CATEGORIES.find(s => s.id === e.target.value);
-                      if (sub) {
-                        setSelectedInteriorSub(sub);
-                        setTemplates([]); // 清空已选文件
-                      }
-                    }}
-                    disabled={isUploading}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {INTERIOR_SUB_CATEGORIES.map(sub => (
-                      <option key={sub.id} value={sub.id}>
-                        {sub.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              
-              {/* Exterior Design Sub-category */}
-              {selectedCategory.value === 'Exterior Design' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    选择建筑风格类型
-                  </label>
-                  <select
-                    value={selectedExteriorSub.id}
-                    onChange={(e) => {
-                      const sub = EXTERIOR_SUB_CATEGORIES.find(s => s.id === e.target.value);
-                      if (sub) {
-                        setSelectedExteriorSub(sub);
-                        setTemplates([]); // 清空已选文件
-                      }
-                    }}
-                    disabled={isUploading}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {EXTERIOR_SUB_CATEGORIES.map(sub => (
-                      <option key={sub.id} value={sub.id}>
-                        {sub.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              
               {/* Wall Paint Sub-category */}
               {selectedCategory.value === 'Wall Paint' && (
                 <div>
@@ -891,16 +819,10 @@ export const BatchTemplateUpload: React.FC<BatchTemplateUploadProps> = ({ isOpen
               {/* Category Tips */}
               <div className="text-xs text-slate-600 bg-white rounded-lg p-3 border border-slate-200">
                 {selectedCategory.id === 'interior' && (
-                  <div className="space-y-1">
-                    <p>💡 <strong>风格类型：</strong>{selectedInteriorSub.label}</p>
-                    <p>💡 文件名中包含房间类型会自动识别，如 "Modern Living Room.png"</p>
-                  </div>
+                  <p>💡 文件名中包含房间类型会自动识别，如 "Modern Living Room.png"</p>
                 )}
                 {selectedCategory.id === 'exterior' && (
-                  <div className="space-y-1">
-                    <p>💡 <strong>建筑风格：</strong>{selectedExteriorSub.label}</p>
-                    <p>💡 文件名中包含建筑类型会自动识别，如 "Modern House.png"</p>
-                  </div>
+                  <p>💡 文件名中包含建筑类型会自动识别，如 "Modern House.png"</p>
                 )}
                 {selectedCategory.id === 'wall-paint' && (
                   <p>💡 所有模板将归类到 {selectedWallPaintSub.label}，可根据需要更换色调</p>
