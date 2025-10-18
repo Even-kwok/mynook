@@ -10,6 +10,7 @@ import { IconUpload, IconSparkles, IconOptions, IconDownload, IconCamera, IconX,
 import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE, ITEM_TYPES, BUILDING_TYPES, PERMISSION_MAP, EXPLORE_GALLERY_ITEMS } from './constants';
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
+import { SubscriptionSuccessPage } from './components/SubscriptionSuccessPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { ImageComparison } from './components/ImageComparison';
@@ -3138,6 +3139,7 @@ const App: React.FC = () => {
         switch (activePage) {
             case 'Explore': return <ExplorePage key="explore-page" onNavigate={setActivePage} />;
             case 'Pricing': return <PricingPage key="pricing-page" />;
+            case 'Subscription Success': return <SubscriptionSuccessPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
             // Free Canvas 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）

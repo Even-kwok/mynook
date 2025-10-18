@@ -153,7 +153,7 @@ export default async function handler(req, res) {
           customer: {
             email: userData.email,
           },
-          success_url: `${baseUrl}/?message=subscription-success&plan=${planType}&cycle=${billingCycle}&user=${userData.id}`,
+          success_url: `${baseUrl}/?page=Subscription Success&plan=${planType}&cycle=${billingCycle}`,
           metadata: {
             plan_type: planType,
             billing_cycle: billingCycle,
