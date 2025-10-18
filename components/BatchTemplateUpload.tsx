@@ -255,6 +255,7 @@ const INTERIOR_ROOM_TYPES = [
   { id: 'home-office', label: '家庭办公室 (Home Office)', value: 'home-office', displayName: 'Home Office' },
   { id: 'kids-room', label: '儿童房 (Kids Room)', value: 'kids-room', displayName: 'Kids Room' },
   { id: 'kitchen', label: '厨房 (Kitchen)', value: 'kitchen', displayName: 'Kitchen' },
+  { id: 'living-room', label: '客厅 (Living Room)', value: 'living-room', displayName: 'Living Room' },
 ];
 
 // 节日装饰子分类 - 严格按照数据库实际存在的分类
