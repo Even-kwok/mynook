@@ -3549,9 +3549,9 @@ const App: React.FC = () => {
                         toolName={activePage}
                         hintMessage={
                             activePage === 'Item Replace' 
-                                ? '💡 For indoor furniture and common items replacement only'
+                                ? 'For indoor furniture and common items replacement only'
                                 : activePage === 'Reference Style Match'
-                                ? '💡 For indoor design style reference only'
+                                ? 'For indoor design style reference only'
                                 : undefined
                         }
                         // Upload Module
