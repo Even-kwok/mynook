@@ -2057,19 +2057,29 @@ const App: React.FC = () => {
     const [isPurchasingCredits, setIsPurchasingCredits] = useState(false);
     
     const handlePurchaseCredits = async (packId: string) => {
+        console.log('🛒 Purchase Credits clicked:', packId);
+        
         // 检查用户是否登录
         if (!currentUser) {
+            console.log('❌ User not logged in');
             auth.setShowLoginModal(true);
             return;
         }
 
+        console.log('👤 User info:', { 
+            tier: currentUser.membershipTier, 
+            permissionLevel: currentUser.permissionLevel 
+        });
+
         // 检查用户是否有付费会员资格（Pro、Premium 或 Business）
         if (currentUser.membershipTier === 'free') {
+            console.log('⚠️ User is FREE tier - need to upgrade');
             setError('Credit packs are only available for Pro, Premium, and Business members. Please upgrade your plan first.');
             setTimeout(() => setError(null), 5000);
             return;
         }
 
+        console.log('✅ User has paid tier - proceeding with purchase');
         setIsPurchasingCredits(true);
         setError(null);
 

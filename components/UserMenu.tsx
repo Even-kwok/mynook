@@ -92,8 +92,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
   // 处理购买信用点
   const handlePurchaseCredits = (packId: string) => {
+    console.log('🔄 UserMenu handlePurchaseCredits called with:', packId);
     if (onPurchaseCredits) {
+      console.log('✅ onPurchaseCredits callback exists, calling it...');
       onPurchaseCredits(packId);
+    } else {
+      console.error('❌ onPurchaseCredits callback is undefined!');
     }
   };
 
@@ -144,7 +148,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                       onClick={handleUpgradeClick}
                       className="px-2 py-1 text-[10px] font-semibold rounded-md bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
                     >
-                      升级
+                      Upgrade
                     </button>
                   )}
                 </div>

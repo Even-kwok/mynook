@@ -69,8 +69,13 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-[#1a1a1a] border border-[#333333] rounded-2xl shadow-2xl z-[10001] overflow-hidden"
-            style={{ fontFamily: 'Arial, sans-serif' }}
+            className="fixed w-[90%] max-w-md bg-[#1a1a1a] border border-[#333333] rounded-2xl shadow-2xl z-[10001] overflow-hidden"
+            style={{ 
+              fontFamily: 'Arial, sans-serif',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}
           >
             {/* 标题栏 */}
             <div className="flex items-center justify-between p-4 border-b border-[#333333] bg-gradient-to-br from-[#252525] to-[#1a1a1a]">
@@ -126,9 +131,12 @@ export const CreditPackModal: React.FC<CreditPackModalProps> = ({
                     
                     <button
                       onClick={() => {
+                        console.log('💎 Credit pack button clicked:', pack.id, 'canPurchase:', canPurchase);
                         if (canPurchase) {
+                          console.log('📞 Calling onPurchase with:', pack.id);
                           onPurchase(pack.id);
                         } else {
+                          console.log('👉 Redirecting to pricing page');
                           onViewFullPricing();
                           onClose();
                         }
