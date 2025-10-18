@@ -3591,6 +3591,7 @@ const App: React.FC = () => {
                             activePage === 'Floor Style' ? 'Choose a Floor Type' :
                             activePage === 'Garden & Backyard Design' ? 'Choose a Garden Type' :
                             activePage === 'Festive Decor' ? 'Choose a Festive Type' :
+                            activePage === 'Item Replace' ? '🛋️ Choose an Item Type' :
                             undefined
                         }
                         selectorOptions={
@@ -3600,6 +3601,7 @@ const App: React.FC = () => {
                             activePage === 'Floor Style' ? availableFloorTypes :
                             activePage === 'Garden & Backyard Design' ? availableGardenTypes :
                             activePage === 'Festive Decor' ? availableFestiveTypes :
+                            activePage === 'Item Replace' ? ITEM_TYPES :
                             undefined
                         }
                         selectorValue={
@@ -3609,6 +3611,7 @@ const App: React.FC = () => {
                             activePage === 'Floor Style' ? selectedFloorType :
                             activePage === 'Garden & Backyard Design' ? selectedGardenType :
                             activePage === 'Festive Decor' ? selectedFestiveType :
+                            activePage === 'Item Replace' ? selectedItemType :
                             ''
                         }
                         onSelectorChange={(value) => {
@@ -3618,6 +3621,7 @@ const App: React.FC = () => {
                             else if (activePage === 'Floor Style') setSelectedFloorType(value);
                             else if (activePage === 'Garden & Backyard Design') setSelectedGardenType(value);
                             else if (activePage === 'Festive Decor') setSelectedFestiveType(value);
+                            else if (activePage === 'Item Replace') setSelectedItemType(value);
                         }}
                         // Templates
                         templates={categories.flatMap(cat => cat.templates)}
