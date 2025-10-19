@@ -17,26 +17,33 @@ interface ProcessResult {
   error?: string;
 }
 
-interface AICategory {
-  id: string;
-  category_name: string;
-  category_slug: string;
-  description: string | null;
-  ai_recognition_hint: string | null;
-  example_keywords: string | null;
-  enabled: boolean;
-  sort_order: number;
+interface CategoryInfo {
+  name: string;
+  description: string;
 }
+
+// 分类描述映射
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'Interior Design': '室内设计和装修',
+  'Exterior Design': '建筑外观设计',
+  'Wall Paint': '墙面颜色和涂料',
+  'Floor Style': '地板材质和风格',
+  'Garden & Backyard Design': '花园和户外景观',
+  'Festive Decor': '节日装饰和主题',
+  'Item Replace': '物品替换和更新',
+  'Reference Style Match': '参考风格匹配',
+  'Free Canvas': '自由创作画布',
+};
 
 export const AITemplateCreator: React.FC = () => {
   const [results, setResults] = useState<ProcessResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [availableCategories, setAvailableCategories] = useState<AICategory[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<CategoryInfo[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 加载分类列表
+  // 从 design_templates 表加载所有大分类
   useEffect(() => {
     loadCategories();
   }, []);
@@ -44,20 +51,29 @@ export const AITemplateCreator: React.FC = () => {
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
+      // 读取所有启用的模板的 main_category
       const { data, error } = await supabase
-        .from('ai_template_categories')
-        .select('*')
-        .eq('enabled', true)
-        .order('sort_order', { ascending: true });
+        .from('design_templates')
+        .select('main_category')
+        .eq('enabled', true);
 
       if (error) throw error;
       
-      setAvailableCategories(data || []);
+      // 去重并排序
+      const uniqueCategories = [...new Set(data?.map(t => t.main_category) || [])];
+      uniqueCategories.sort();
+      
+      // 转换为选择器格式
+      const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
+        name: cat,
+        description: CATEGORY_DESCRIPTIONS[cat] || '',
+      }));
+      
+      setAvailableCategories(categoryList);
       // 默认全选
-      setSelectedCategories(data?.map(c => c.category_name) || []);
+      setSelectedCategories(uniqueCategories);
     } catch (error) {
       console.error('Failed to load categories:', error);
-      // 如果加载失败，使用默认分类
       setAvailableCategories([]);
       setSelectedCategories([]);
     } finally {
@@ -261,21 +277,21 @@ export const AITemplateCreator: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {availableCategories.map(category => (
               <label 
-                key={category.id} 
+                key={category.name} 
                 className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  selectedCategories.includes(category.category_name)
+                  selectedCategories.includes(category.name)
                     ? 'border-indigo-400 bg-indigo-50'
                     : 'border-slate-200 hover:border-slate-300 bg-white'
                 }`}
               >
                 <input
                   type="checkbox"
-                  checked={selectedCategories.includes(category.category_name)}
+                  checked={selectedCategories.includes(category.name)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedCategories([...selectedCategories, category.category_name]);
+                      setSelectedCategories([...selectedCategories, category.name]);
                     } else {
-                      setSelectedCategories(selectedCategories.filter(c => c !== category.category_name));
+                      setSelectedCategories(selectedCategories.filter(c => c !== category.name));
                     }
                   }}
                   disabled={isProcessing}
@@ -283,18 +299,13 @@ export const AITemplateCreator: React.FC = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-slate-900 flex items-center gap-2">
-                    {category.category_name}
-                    {selectedCategories.includes(category.category_name) && (
+                    {category.name}
+                    {selectedCategories.includes(category.name) && (
                       <IconCheck className="w-4 h-4 text-indigo-600 flex-shrink-0" />
                     )}
                   </div>
                   {category.description && (
                     <p className="text-xs text-slate-600 mt-1">{category.description}</p>
-                  )}
-                  {category.example_keywords && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      <span className="font-medium">示例：</span>{category.example_keywords}
-                    </p>
                   )}
                 </div>
               </label>

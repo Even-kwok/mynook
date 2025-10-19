@@ -11,7 +11,6 @@ import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
 import { AITemplateCreator } from './AITemplateCreator';
-import { AICategoryManager } from './AICategoryManager';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
 import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
@@ -1672,7 +1671,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
         { id: 'ai-creator', name: 'AI Template Creator', icon: IconSparkles },
-        { id: 'ai-categories', name: 'AI Categories', icon: IconTag },
         { id: 'tools-order', name: 'Tools Order', icon: IconArrowUp },
         { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
@@ -1695,8 +1693,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
             case 'ai-creator':
                 return <AITemplateCreator />;
-            case 'ai-categories':
-                return <AICategoryManager />;
             case 'tools-order':
                 return <ToolsOrderManagement />;
             case 'hero-section':

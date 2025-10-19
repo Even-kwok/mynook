@@ -40,41 +40,36 @@ The final image must be of Hasselblad quality, photorealistic, with extreme deta
 // Project: MyNook  // 项目：MyNook
 // Recipe Version: MyNook-V1.0-Universal`;
 
-/**
- * 动态生成AI识别提示词
- * @param allowedCategories 允许的分类列表
- * @param categoryHints 分类识别提示的键值对
- */
-const generateExtractorPrompt = (
-  allowedCategories: string[],
-  categoryHints: Record<string, string>
-): string => {
-  // 生成分类列表字符串
-  const categoryList = allowedCategories.map(cat => `'${cat}'`).join(' OR ');
-  
-  // 生成识别规则
-  const recognitionRules = allowedCategories.map((cat, index) => {
-    const hint = categoryHints[cat] || 'general design elements';
-    return `${index + 1}. **${cat}**: Recognize by ${hint}`;
-  }).join('\n');
+  /**
+   * 生成AI识别提示词（基于大分类）
+   * @param allowedCategories 允许的大分类列表
+   */
+  const generateExtractorPrompt = (allowedCategories: string[]): string => {
+    const categoryList = allowedCategories.map(cat => `'${cat}'`).join(' OR ');
 
-  return `Analyze this design image and extract information in JSON format.
+    return `Analyze this design image and extract information in JSON format.
 
 Return ONLY a valid JSON object with these exact fields:
 {
   "templateName": "Short descriptive name (e.g., 'Oak Herringbone Floor' or 'Modern Kitchen Design')",
   "mainCategory": "MUST BE ONE OF: ${categoryList}",
-  "secondaryCategory": "Further classification (e.g., style type, room type, material type, etc.)",
+  "secondaryCategory": "Automatically identify or create appropriate sub-category based on the design",
   "styleDescription": "A single detailed sentence describing key features, materials, colors, patterns, and characteristics",
   "fullPrompt": "Complete MyNook-V1.0-Universal format prompt with [INSERT...] section filled in"
 }
 
-**Recognition Guidelines:**
-${recognitionRules}
+**Category-specific sub-category guidelines:**
+- For "Floor Style": Identify material and pattern (e.g., "Hardwood - Herringbone", "Tile - Subway", "Marble - Polished")
+- For "Interior Design": Identify room type (e.g., "living-room", "bedroom", "kitchen", "bathroom")
+- For "Festive Decor": Identify festival/event (e.g., "Christmas", "Halloween", "Easter", "Birthday")
+- For "Exterior Design": Identify architectural style (e.g., "Modern", "Mediterranean", "Colonial")
+- For "Wall Paint": Identify style/type (e.g., "Solid Color", "Textured", "Accent Wall", "Mural")
+- For "Garden & Backyard Design": Identify garden style (e.g., "Zen Garden", "English Garden", "Modern Minimalist")
+- If the sub-category doesn't exist in the database, create a new meaningful one
 
 **Important Rules:**
-- mainCategory MUST exactly match one of the allowed categories listed above
-- secondaryCategory should provide further classification relevant to the mainCategory
+- mainCategory MUST exactly match one of: ${categoryList}
+- secondaryCategory will be automatically created if it doesn't exist
 - styleDescription should be detailed and specific to what you see in the image
 - fullPrompt must follow MyNook-V1.0-Universal template with the [INSERT...] section replaced by styleDescription
 
@@ -83,7 +78,7 @@ ${MYNOOK_TEMPLATE}
 
 **Output Format:**
 Return ONLY valid JSON, no markdown code blocks, no additional text.`;
-};
+  };
 
 interface ExtractedTemplateData {
   templateName: string;
@@ -149,25 +144,8 @@ export default async function handler(
       throw new Error('GEMINI_API_KEY not configured');
     }
 
-    // Load category recognition hints from database
-    const { data: categories, error: categoryError } = await supabaseAdmin
-      .from('ai_template_categories')
-      .select('category_name, ai_recognition_hint')
-      .in('category_name', allowedCategories);
-
-    if (categoryError) {
-      console.error('Failed to load categories:', categoryError);
-      throw new Error('Failed to load category information');
-    }
-
-    // Build category hints map
-    const categoryHints: Record<string, string> = {};
-    categories?.forEach(cat => {
-      categoryHints[cat.category_name] = cat.ai_recognition_hint || 'general design elements';
-    });
-
-    // Generate dynamic extractor prompt based on selected categories
-    const extractorPrompt = generateExtractorPrompt(allowedCategories, categoryHints);
+      // Generate extractor prompt based on selected main categories
+      const extractorPrompt = generateExtractorPrompt(allowedCategories);
     
     console.log('🤖 Using AI extraction for categories:', allowedCategories.join(', '));
 
