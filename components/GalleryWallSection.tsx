@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { HomeSection, PromptTemplate } from '../types';
 import { getAllTemplatesPublic } from '../services/templateService';
 import { useTemplate } from '../context/TemplateContext';
+import { IconChevronLeft, IconChevronRight } from './Icons';
 
 interface GalleryWallSectionProps {
   section: HomeSection;
@@ -139,6 +140,19 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
     onNavigate(targetPage);
   };
 
+  // 左右滑动按钮处理
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -600, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 600, behavior: 'smooth' });
+    }
+  };
+
   // 加载状态
   if (isLoading) {
     return (
@@ -180,12 +194,30 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   }
 
   return (
-    <div className="relative overflow-hidden py-8">
+    <div className="relative w-full py-8">
+      {/* 左侧滑动按钮 */}
+      <button
+        onClick={scrollLeft}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
+        aria-label="Scroll left"
+      >
+        <IconChevronLeft className="w-6 h-6 text-slate-800" />
+      </button>
+
+      {/* 右侧滑动按钮 */}
+      <button
+        onClick={scrollRight}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
+        aria-label="Scroll right"
+      >
+        <IconChevronRight className="w-6 h-6 text-slate-800" />
+      </button>
+
       {/* 图片墙容器 - 3行横向滚动 */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex flex-col gap-4 overflow-x-auto hide-scrollbar"
+        className="flex flex-col gap-4 overflow-x-auto hide-scrollbar px-16"
         style={{ scrollBehavior: 'smooth' }}
       >
         {/* 3行布局 */}
