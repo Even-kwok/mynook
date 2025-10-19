@@ -27,6 +27,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Interior Design': '室内设计和装修',
   'Exterior Design': '建筑外观设计',
   'Wall Paint': '墙面颜色和涂料',
+  'Wall Design': '墙面设计和装饰',
   'Floor Style': '地板材质和风格',
   'Garden & Backyard Design': '花园和户外景观',
   'Festive Decor': '节日装饰和主题',
@@ -51,16 +52,16 @@ export const AITemplateCreator: React.FC = () => {
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      // 从 main_category_order 表读取所有配置的分类（包括空分类）
+      // 从 design_templates 表读取实际存在的分类
       const { data, error } = await supabase
-        .from('main_category_order')
-        .select('main_category')
-        .order('sort_order');
+        .from('design_templates')
+        .select('category')
+        .not('category', 'is', null);
 
       if (error) throw error;
       
-      // 提取分类名称
-      const uniqueCategories = data?.map(item => item.main_category) || [];
+      // 提取并去重分类名称
+      const uniqueCategories = [...new Set(data?.map(item => item.category).filter(Boolean))] || [];
       
       // 转换为选择器格式
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({

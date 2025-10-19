@@ -150,3 +150,13 @@ html, body, #root {
   .figma-home-proto .hero,
   .figma-home-proto .section-2 { grid-template-columns: 1fr; }
 }
+
+/* Gallery Wall - Hide scrollbar */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
