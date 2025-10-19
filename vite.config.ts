@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
         assetsDir: 'assets',
         sourcemap: false,
         target: 'esnext',
+        chunkSizeWarningLimit: 1000,
       },
       plugins: [react()],
       define: {

@@ -166,10 +166,10 @@ export async function deductCredits(
       total_generations: userData.total_generations + 1,
       updated_at: new Date().toISOString(),
     };
-    const { error: updateError } = await (supabaseAdmin
+    const { error: updateError } = await ((supabaseAdmin as any)
       .from('users')
-      .update(updateData as any)
-      .eq('id', userId) as any);
+      .update(updateData)
+      .eq('id', userId));
 
     if (updateError) {
       console.error('Deduct credits error:', updateError);
