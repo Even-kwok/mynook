@@ -279,17 +279,76 @@ const TemplateManagement: React.FC<{
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
-    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(() => new Set(categoryOrder));
-    const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
+    
+    // 从 localStorage 读取折叠状态（持久化用户的展开/折叠选择）
+    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(() => {
+        try {
+            const saved = localStorage.getItem('admin-collapsed-main-categories');
+            if (saved) {
+                return new Set(JSON.parse(saved));
+            }
+        } catch (error) {
+            console.error('Failed to load collapsed state from localStorage:', error);
+        }
+        // 默认折叠所有主分类
+        return new Set(categoryOrder);
+    });
+    
+    const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(() => {
+        try {
+            const saved = localStorage.getItem('admin-collapsed-sub-categories');
+            if (saved) {
+                return new Set(JSON.parse(saved));
+            }
+        } catch (error) {
+            console.error('Failed to load collapsed state from localStorage:', error);
+        }
+        return new Set();
+    });
+    
     const [isSorting, setIsSorting] = useState(false);
     const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
     const [isBatchImageMatcherOpen, setIsBatchImageMatcherOpen] = useState(false);
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-    // 默认折叠所有主分类
+    // 保存主分类折叠状态到 localStorage
     useEffect(() => {
-        setCollapsedMainCategories(new Set(categoryOrder));
+        try {
+            localStorage.setItem('admin-collapsed-main-categories', 
+                JSON.stringify(Array.from(collapsedMainCategories)));
+        } catch (error) {
+            console.error('Failed to save collapsed state to localStorage:', error);
+        }
+    }, [collapsedMainCategories]);
+    
+    // 保存子分类折叠状态到 localStorage
+    useEffect(() => {
+        try {
+            localStorage.setItem('admin-collapsed-sub-categories', 
+                JSON.stringify(Array.from(collapsedSubCategories)));
+        } catch (error) {
+            console.error('Failed to save collapsed state to localStorage:', error);
+        }
+    }, [collapsedSubCategories]);
+    
+    // 当新增分类时，默认折叠新分类（仅针对新出现的分类）
+    useEffect(() => {
+        const currentCategories = new Set(categoryOrder);
+        const savedCategories = collapsedMainCategories;
+        
+        // 只折叠新出现的分类，不影响已存在的分类状态
+        const newCategories = categoryOrder.filter(cat => 
+            currentCategories.has(cat) && !Array.from(savedCategories).includes(cat)
+        );
+        
+        if (newCategories.length > 0) {
+            setCollapsedMainCategories(prev => {
+                const updated = new Set(prev);
+                newCategories.forEach(cat => updated.add(cat));
+                return updated;
+            });
+        }
     }, [categoryOrder]);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
