@@ -47,6 +47,71 @@ interface SlidingPanelProps {
   generateDisabled: boolean;
 }
 
+// 模板卡片组件 - 带状态管理
+const TemplateCard: React.FC<{
+  template: PromptTemplate;
+  isSelected: boolean;
+  canSelect: boolean;
+  onSelect: () => void;
+}> = ({ template, isSelected, canSelect, onSelect }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <div
+      onClick={() => canSelect && onSelect()}
+      className={`
+        relative rounded-xl overflow-hidden cursor-pointer transition-all
+        ${isSelected 
+          ? 'ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/50 scale-105' 
+          : canSelect
+            ? 'ring-1 ring-[#333333] hover:ring-indigo-500/50 hover:scale-102'
+            : 'ring-1 ring-[#333333] opacity-50 cursor-not-allowed'
+        }
+      `}
+    >
+      {/* 图片容器 */}
+      <div className="aspect-[6/5] relative flex items-center justify-center bg-slate-900">
+        {/* 占位图标 - 只在加载失败时显示 */}
+        {imageError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg className="w-12 h-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+        )}
+        
+        {/* 真实图片 */}
+        {!imageError && (
+          <img 
+            src={template.imageUrl} 
+            alt={template.name}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+        )}
+      </div>
+      
+      {/* 标题 - 叠加在图片底部 */}
+      <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
+        <p className="text-center text-xs font-medium text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
+          {template.name}
+        </p>
+      </div>
+      
+      {/* 选中标记 */}
+      {isSelected && (
+        <div className="absolute top-2 right-2 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center z-20">
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SlidingPanel: React.FC<SlidingPanelProps> = ({
   isOpen,
   onClose,
@@ -345,53 +410,13 @@ export const SlidingPanel: React.FC<SlidingPanelProps> = ({
                   const canSelect = isSelected || selectedTemplateIds.length < maxTemplates;
                   
                   return (
-                    <div
+                    <TemplateCard
                       key={template.id}
-                      onClick={() => canSelect && onTemplateSelect(template.id)}
-                      className={`
-                        relative rounded-xl overflow-hidden cursor-pointer transition-all
-                        ${isSelected 
-                          ? 'ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/50 scale-105' 
-                          : canSelect
-                            ? 'ring-1 ring-[#333333] hover:ring-indigo-500/50 hover:scale-102'
-                            : 'ring-1 ring-[#333333] opacity-50 cursor-not-allowed'
-                        }
-                      `}
-                    >
-                      {/* 图片 */}
-                      <div className="aspect-[6/5] relative flex items-center justify-center bg-slate-900">
-                        <img 
-                          src={template.imageUrl} 
-                          alt={template.name}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        {/* 占位图标 - 只在图片加载失败时显示 */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <svg className="w-12 h-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                          </svg>
-                        </div>
-                      </div>
-                      
-                      {/* 标题 - 叠加在图片底部，无背景 */}
-                      <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
-                        <p className="text-center text-xs font-medium text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
-                          {template.name}
-                        </p>
-                      </div>
-                      
-                      {/* 选中标记 */}
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
+                      template={template}
+                      isSelected={isSelected}
+                      canSelect={canSelect}
+                      onSelect={() => onTemplateSelect(template.id)}
+                    />
                   );
                 })}
               </div>
