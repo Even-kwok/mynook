@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconPencil, IconX, IconUpload, IconPhoto, IconVideo, IconPlus, IconTrash, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom } from './Icons';
-import { HomeSection, HomeSectionMediaType, HomeSectionLayout } from '../types';
+import { HomeSection, HomeSectionMediaType, HomeSectionLayout, HomeSectionDisplayMode, GalleryFilterType } from '../types';
 import {
   getAllHomeSectionsForAdmin,
   createHomeSection,
@@ -391,7 +391,11 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
     button_link: 'Interior Design',
     layout_direction: 'left-image',
     is_active: true,
-    sort_order: existingSections.length
+    sort_order: existingSections.length,
+    display_mode: 'media_showcase',
+    gallery_filter_type: null,
+    gallery_main_category: null,
+    gallery_sub_category: null
   });
 
   const [uploading, setUploading] = useState(false);
@@ -633,11 +637,112 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
             </div>
           </div>
 
-          {/* 媒体类型选择 */}
+          {/* 显示模式选择 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Media Type
+              Display Mode
             </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'media_showcase' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'media_showcase'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-sm font-medium">📺 Media Showcase</div>
+                <div className="text-xs text-slate-500 mt-1">Image/Video/Comparison</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'gallery_wall' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'gallery_wall'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-sm font-medium">🖼️ Gallery Wall</div>
+                <div className="text-xs text-slate-500 mt-1">Template Showcase</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Gallery Wall配置（仅当选择gallery_wall时显示）*/}
+          {formData.display_mode === 'gallery_wall' && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
+              <h4 className="font-medium text-slate-800 flex items-center gap-2">
+                <span>🎨</span> Gallery Wall Settings
+              </h4>
+              
+              {/* 筛选类型 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Filter Type
+                </label>
+                <select
+                  value={formData.gallery_filter_type || 'all_random'}
+                  onChange={(e) => setFormData({ ...formData, gallery_filter_type: e.target.value as GalleryFilterType })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all_random">Random from All Categories</option>
+                  <option value="main_category">Specific Main Category</option>
+                  <option value="main_random">Random from Specific Category</option>
+                  <option value="sub_category">Specific Sub Category</option>
+                </select>
+              </div>
+              
+              {/* 主分类选择（当需要时显示）*/}
+              {formData.gallery_filter_type && ['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Main Category
+                  </label>
+                  <select
+                    value={formData.gallery_main_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_main_category: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Select Category...</option>
+                    <option value="Interior Design">Interior Design</option>
+                    <option value="Exterior Design">Exterior Design</option>
+                    <option value="Garden & Backyard Design">Garden & Backyard Design</option>
+                    <option value="Festive Decor">Festive Decor</option>
+                    <option value="Wall Paint">Wall Paint</option>
+                    <option value="Floor Style">Floor Style</option>
+                  </select>
+                </div>
+              )}
+              
+              {/* 二级分类（仅sub_category模式显示）*/}
+              {formData.gallery_filter_type === 'sub_category' && formData.gallery_main_category && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Sub Category
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallery_sub_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_sub_category: e.target.value })}
+                    placeholder="e.g., Modern, Victorian, Minimalist"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enter the exact sub-category name from your template database
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 媒体类型选择（仅当选择media_showcase时显示）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Media Type
+              </label>
             <div className="flex gap-3">
               <button
                 onClick={() => setFormData({ ...formData, media_type: 'image' })}
@@ -777,36 +882,42 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
                 )}
               </div>
             </div>
+              </div>
+            </div>
           )}
 
-          {/* 布局方向 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Layout Direction
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'left-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                ← Image on Left
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'right-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                Image on Right →
-              </button>
+          {/* 布局方向（仅media_showcase模式）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Layout Direction
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'left-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  ← Image on Left
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'right-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Image on Right →
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Active Status */}
           <div className="flex items-center gap-3">
@@ -1032,11 +1143,112 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Media Type Selection */}
+          {/* 显示模式选择 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Media Type
+              Display Mode
             </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'media_showcase' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'media_showcase'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-sm font-medium">📺 Media Showcase</div>
+                <div className="text-xs text-slate-500 mt-1">Image/Video/Comparison</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'gallery_wall' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'gallery_wall'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-sm font-medium">🖼️ Gallery Wall</div>
+                <div className="text-xs text-slate-500 mt-1">Template Showcase</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Gallery Wall配置（仅当选择gallery_wall时显示）*/}
+          {formData.display_mode === 'gallery_wall' && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
+              <h4 className="font-medium text-slate-800 flex items-center gap-2">
+                <span>🎨</span> Gallery Wall Settings
+              </h4>
+              
+              {/* 筛选类型 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Filter Type
+                </label>
+                <select
+                  value={formData.gallery_filter_type || 'all_random'}
+                  onChange={(e) => setFormData({ ...formData, gallery_filter_type: e.target.value as GalleryFilterType })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all_random">Random from All Categories</option>
+                  <option value="main_category">Specific Main Category</option>
+                  <option value="main_random">Random from Specific Category</option>
+                  <option value="sub_category">Specific Sub Category</option>
+                </select>
+              </div>
+              
+              {/* 主分类选择（当需要时显示）*/}
+              {formData.gallery_filter_type && ['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Main Category
+                  </label>
+                  <select
+                    value={formData.gallery_main_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_main_category: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Select Category...</option>
+                    <option value="Interior Design">Interior Design</option>
+                    <option value="Exterior Design">Exterior Design</option>
+                    <option value="Garden & Backyard Design">Garden & Backyard Design</option>
+                    <option value="Festive Decor">Festive Decor</option>
+                    <option value="Wall Paint">Wall Paint</option>
+                    <option value="Floor Style">Floor Style</option>
+                  </select>
+                </div>
+              )}
+              
+              {/* 二级分类（仅sub_category模式显示）*/}
+              {formData.gallery_filter_type === 'sub_category' && formData.gallery_main_category && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Sub Category
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallery_sub_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_sub_category: e.target.value })}
+                    placeholder="e.g., Modern, Victorian, Minimalist"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enter the exact sub-category name from your template database
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Media Type Selection（仅当选择media_showcase时显示）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Media Type
+              </label>
             <div className="flex gap-3">
               <button
                 onClick={() => setFormData({ ...formData, media_type: 'image' })}
@@ -1106,6 +1318,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
                 hint="800 x 600 px"
               />
             </div>
+          )}
           )}
 
           {/* Title */}
@@ -1196,34 +1409,38 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
             </select>
           </div>
 
-          {/* Layout Direction */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Layout Direction
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'left-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-sm font-medium">← Image on Left</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'right-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-sm font-medium">Image on Right →</div>
-              </button>
+          {/* Layout Direction（仅media_showcase模式）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Layout Direction
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'left-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-sm font-medium">← Image on Left</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'right-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-sm font-medium">Image on Right →</div>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Active Status */}
           <div className="flex items-center gap-3">

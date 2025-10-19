@@ -20,6 +20,7 @@ import { getHeroSection } from './services/heroSectionService';
 import { TermsPage } from './components/TermsPage';
 import { PrivacyPage } from './components/PrivacyPage';
 import { useAuth } from './context/AuthContext';
+import { TemplateProvider } from './context/TemplateContext';
 import { LoginModal } from './components/LoginModal';
 import { UpgradeModal } from './components/UpgradeModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
@@ -27,6 +28,7 @@ import { MEMBERSHIP_CONFIG } from './types/database';
 import { BannerHero } from './components/BannerHero';
 import { LeftToolbar } from './components/LeftToolbar';
 import { SlidingPanel } from './components/SlidingPanel';
+import { GalleryWallSection } from './components/GalleryWallSection';
 import { UserMenu as DarkUserMenu } from './components/UserMenu';
 import { supabase } from './config/supabase';
 
@@ -834,6 +836,18 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
 
     // 渲染单个 Section（支持图片/视频/对比图）
     const renderSection = useCallback((section: HomeSection, index: number) => {
+        // 如果是 Gallery Wall 模式，渲染 GalleryWallSection
+        if (section.display_mode === 'gallery_wall') {
+            return (
+                <GalleryWallSection 
+                    key={section.id}
+                    section={section}
+                    onNavigate={setActivePage}
+                />
+            );
+        }
+        
+        // 否则渲染标准的 Media Showcase
         const isLeftImage = section.layout_direction === 'left-image';
         
         // 媒体卡片
@@ -4071,8 +4085,9 @@ const App: React.FC = () => {
     };
     
     return (
-        <div className="h-screen w-screen bg-slate-50 flex flex-col font-sans">
-            <ErrorNotification message={error} onDismiss={() => setError(null)} />
+        <TemplateProvider>
+            <div className="h-screen w-screen bg-slate-50 flex flex-col font-sans">
+                <ErrorNotification message={error} onDismiss={() => setError(null)} />
             <AnimatePresence>
                 <ImageViewerModal imageUrl={fullScreenImage} onClose={() => setFullScreenImage(null)} />
             </AnimatePresence>
@@ -4112,9 +4127,10 @@ const App: React.FC = () => {
                 {renderPage()}
             </div>
 
-            {/* Hidden file input for uploads */}
-            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
-        </div>
+                {/* Hidden file input for uploads */}
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg" className="hidden" />
+            </div>
+        </TemplateProvider>
     );
 };
 

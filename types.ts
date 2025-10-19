@@ -208,6 +208,12 @@ export type HomeSectionMediaType = 'image' | 'video' | 'comparison';
 // Home Section 布局方向
 export type HomeSectionLayout = 'left-image' | 'right-image';
 
+// Home Section 显示模式
+export type HomeSectionDisplayMode = 'media_showcase' | 'gallery_wall';
+
+// Gallery Wall 筛选类型
+export type GalleryFilterType = 'main_category' | 'sub_category' | 'main_random' | 'all_random';
+
 // Home Section 接口（首页 Section 2-6）
 export interface HomeSection {
   id: string;
@@ -227,6 +233,11 @@ export interface HomeSection {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  // Gallery Wall 模式新增字段
+  display_mode: HomeSectionDisplayMode;
+  gallery_filter_type?: GalleryFilterType | null;
+  gallery_main_category?: string | null;
+  gallery_sub_category?: string | null;
 }
 
 // Hero Section 接口（首页 Section 1）
