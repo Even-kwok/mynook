@@ -480,37 +480,74 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
     try {
       setSaving(true);
 
-      // Validation
-      if (!formData.title.trim()) {
-        alert('Title is required');
-        return;
+      // Validation - 根据 display_mode 验证不同的字段
+      if (formData.display_mode === 'media_showcase') {
+        // Media Showcase 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required');
+          return;
+        }
+        if (!formData.card_title.trim()) {
+          alert('Card title is required');
+          return;
+        }
+        if (!formData.card_subtitle.trim()) {
+          alert('Card subtitle is required');
+          return;
+        }
+        if (!formData.media_url && formData.media_type !== 'comparison') {
+          alert('Please upload a media file');
+          return;
+        }
+        if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
+          alert('Please upload both before and after images for comparison');
+          return;
+        }
+      } else if (formData.display_mode === 'gallery_wall') {
+        // Gallery Wall 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required for Gallery Wall');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required for Gallery Wall');
+          return;
+        }
+        if (!formData.gallery_filter_type) {
+          alert('Please select a filter type for Gallery Wall');
+          return;
+        }
+        // 如果选择了特定分类，验证是否选择了分类
+        if (['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && !formData.gallery_main_category) {
+          alert('Please select a main category');
+          return;
+        }
+        if (formData.gallery_filter_type === 'sub_category' && !formData.gallery_sub_category) {
+          alert('Please enter a sub category name');
+          return;
+        }
       }
-      if (!formData.subtitle.trim()) {
-        alert('Subtitle is required');
-        return;
-      }
-      if (!formData.card_title.trim()) {
-        alert('Card title is required');
-        return;
-      }
-      if (!formData.card_subtitle.trim()) {
-        alert('Card subtitle is required');
-        return;
-      }
+
+      // 通用验证
       if (!formData.button_text.trim()) {
         alert('Button text is required');
         return;
       }
-      if (!formData.media_url && formData.media_type !== 'comparison') {
-        alert('Please upload a media file');
-        return;
-      }
-      if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
-        alert('Please upload both before and after images for comparison');
-        return;
-      }
 
-      await createHomeSection(formData);
+      // 为 Gallery Wall 模式设置默认值
+      const dataToSave = formData.display_mode === 'gallery_wall' ? {
+        ...formData,
+        media_url: formData.media_url || '',
+        card_title: formData.card_title || 'Gallery',
+        card_subtitle: formData.card_subtitle || '',
+        layout_direction: 'left-image' as const,
+      } : formData;
+
+      await createHomeSection(dataToSave);
 
       onSave();
       alert('Section created successfully!');
@@ -550,60 +587,62 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
         </div>
 
         <div className="p-6 space-y-6">
-          {/* 标题和副标题 - 使用与 EditSectionModal 相同的字段 */}
+          {/* Title and Subtitle - 所有模式都需要 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Title
+              Section Title
             </label>
             <textarea
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={3}
-              placeholder="Enter section title"
+              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Explore Our Template Gallery" : "Enter section title"}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Subtitle
+              Section Subtitle
             </label>
             <textarea
               value={formData.subtitle}
               onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={3}
-              placeholder="Enter section subtitle"
+              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Browse through our collection of design templates" : "Enter section subtitle"}
             />
           </div>
 
-          {/* 卡片标题 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Title (Left)
-              </label>
-              <input
-                type="text"
-                value={formData.card_title}
-                onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., AI DESIGN PREVIEW"
-              />
+          {/* 卡片标题 - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Title (Left)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_title}
+                  onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., AI DESIGN PREVIEW"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Subtitle (Right)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_subtitle}
+                  onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Interior Design"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Subtitle (Right)
-              </label>
-              <input
-                type="text"
-                value={formData.card_subtitle}
-                onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Interior Design"
-              />
-            </div>
-          </div>
+          )}
 
           {/* 按钮配置 */}
           <div className="grid grid-cols-2 gap-4">
@@ -1060,50 +1099,74 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
     try {
       setSaving(true);
 
-      // Validation
-      if (!formData.title.trim()) {
-        alert('Title is required');
-        return;
+      // Validation - 根据 display_mode 验证不同的字段
+      if (formData.display_mode === 'media_showcase') {
+        // Media Showcase 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required');
+          return;
+        }
+        if (!formData.card_title.trim()) {
+          alert('Card title is required');
+          return;
+        }
+        if (!formData.card_subtitle.trim()) {
+          alert('Card subtitle is required');
+          return;
+        }
+        if (!formData.media_url && formData.media_type !== 'comparison') {
+          alert('Please upload a media file');
+          return;
+        }
+        if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
+          alert('Please upload both before and after images for comparison');
+          return;
+        }
+      } else if (formData.display_mode === 'gallery_wall') {
+        // Gallery Wall 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required for Gallery Wall');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required for Gallery Wall');
+          return;
+        }
+        if (!formData.gallery_filter_type) {
+          alert('Please select a filter type for Gallery Wall');
+          return;
+        }
+        // 如果选择了特定分类，验证是否选择了分类
+        if (['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && !formData.gallery_main_category) {
+          alert('Please select a main category');
+          return;
+        }
+        if (formData.gallery_filter_type === 'sub_category' && !formData.gallery_sub_category) {
+          alert('Please enter a sub category name');
+          return;
+        }
       }
-      if (!formData.subtitle.trim()) {
-        alert('Subtitle is required');
-        return;
-      }
-      if (!formData.card_title.trim()) {
-        alert('Card title is required');
-        return;
-      }
-      if (!formData.card_subtitle.trim()) {
-        alert('Card subtitle is required');
-        return;
-      }
+
+      // 通用验证
       if (!formData.button_text.trim()) {
         alert('Button text is required');
         return;
       }
-      if (!formData.media_url && formData.media_type !== 'comparison') {
-        alert('Please upload a media file');
-        return;
-      }
-      if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
-        alert('Please upload both before and after images for comparison');
-        return;
-      }
 
-      await updateHomeSection(section.id, {
-        title: formData.title,
-        subtitle: formData.subtitle,
-        media_url: formData.media_url,
-        media_type: formData.media_type,
-        comparison_before_url: formData.comparison_before_url,
-        comparison_after_url: formData.comparison_after_url,
-        card_title: formData.card_title,
-        card_subtitle: formData.card_subtitle,
-        button_text: formData.button_text,
-        button_link: formData.button_link,
-        layout_direction: formData.layout_direction,
-        is_active: formData.is_active
-      });
+      // 为 Gallery Wall 模式设置默认值
+      const dataToSave = formData.display_mode === 'gallery_wall' ? {
+        ...formData,
+        media_url: formData.media_url || '',
+        card_title: formData.card_title || 'Gallery',
+        card_subtitle: formData.card_subtitle || '',
+        layout_direction: 'left-image' as const,
+      } : formData;
+
+      await updateHomeSection(section.id, dataToSave);
 
       onSave();
     } catch (error) {
@@ -1320,61 +1383,63 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
             </div>
           )}
 
-          {/* Title */}
+          {/* Title - 所有模式都需要 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Title
+              Section Title
             </label>
             <textarea
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={3}
-              placeholder="Enter section title (use line breaks for multiline)"
+              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Explore Our Template Gallery" : "Enter section title (use line breaks for multiline)"}
             />
           </div>
 
-          {/* Subtitle */}
+          {/* Subtitle - 所有模式都需要 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Subtitle
+              Section Subtitle
             </label>
             <textarea
               value={formData.subtitle}
               onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={3}
-              placeholder="Enter section subtitle"
+              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Browse through our collection of design templates" : "Enter section subtitle"}
             />
           </div>
 
-          {/* Card Titles */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Title (Left)
-              </label>
-              <input
-                type="text"
-                value={formData.card_title}
-                onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., AI DESIGN PREVIEW"
-              />
+          {/* Card Titles - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Title (Left)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_title}
+                  onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., AI DESIGN PREVIEW"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Subtitle (Right)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_subtitle}
+                  onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Interior Design"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Subtitle (Right)
-              </label>
-              <input
-                type="text"
-                value={formData.card_subtitle}
-                onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Interior Design"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Button Text */}
           <div>
