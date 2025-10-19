@@ -10,6 +10,7 @@ import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
+import { AITemplateCreator } from './AITemplateCreator';
 import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
 import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
@@ -1669,6 +1670,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
+        { id: 'ai-creator', name: 'AI Template Creator', icon: IconSparkles },
         { id: 'tools-order', name: 'Tools Order', icon: IconArrowUp },
         { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
@@ -1689,6 +1691,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
+            case 'ai-creator':
+                return <AITemplateCreator />;
             case 'tools-order':
                 return <ToolsOrderManagement />;
             case 'hero-section':
