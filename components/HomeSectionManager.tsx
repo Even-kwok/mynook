@@ -743,45 +743,46 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Media Type
               </label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'image' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <IconPhoto className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Image</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'video' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'video'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <IconVideo className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Video</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'comparison'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-lg mb-1">⇄</div>
-                <div className="text-sm font-medium">Before/After</div>
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'image' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconPhoto className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Image</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'video' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'video'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconVideo className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Video</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'comparison'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">⇄</div>
+                  <div className="text-sm font-medium">Before/After</div>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 媒体上传 - 简化版，复用 MediaUploadField */}
-          {formData.media_type !== 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type !== 'comparison' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Media File
@@ -821,7 +822,7 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
           )}
 
           {/* Comparison Images Upload */}
-          {formData.media_type === 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type === 'comparison' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1249,45 +1250,46 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Media Type
               </label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'image' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <IconPhoto className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Image</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'video' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'video'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <IconVideo className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Video</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'comparison'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-lg mb-1">⇄</div>
-                <div className="text-sm font-medium">Before/After</div>
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'image' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconPhoto className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Image</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'video' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'video'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconVideo className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Video</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'comparison'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">⇄</div>
+                  <div className="text-sm font-medium">Before/After</div>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Media Upload */}
-          {formData.media_type !== 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type !== 'comparison' && (
             <MediaUploadField
               label="Media File"
               currentUrl={formData.media_url}
@@ -1299,7 +1301,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
           )}
 
           {/* Comparison Images Upload */}
-          {formData.media_type === 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type === 'comparison' && (
             <div className="grid grid-cols-2 gap-4">
               <MediaUploadField
                 label="Before Image"
@@ -1318,7 +1320,6 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
                 hint="800 x 600 px"
               />
             </div>
-          )}
           )}
 
           {/* Title */}
