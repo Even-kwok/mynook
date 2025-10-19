@@ -883,8 +883,6 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
                 )}
               </div>
             </div>
-              </div>
-            </div>
           )}
 
           {/* 布局方向（仅media_showcase模式）*/}
