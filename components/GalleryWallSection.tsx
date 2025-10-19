@@ -194,11 +194,11 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   }
 
   return (
-    <div className="relative w-full py-8">
+    <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] py-8">
       {/* 左侧滑动按钮 */}
       <button
         onClick={scrollLeft}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-3 rounded-full shadow-xl transition-all hover:scale-110 pointer-events-auto"
         aria-label="Scroll left"
       >
         <IconChevronLeft className="w-6 h-6 text-slate-800" />
@@ -207,7 +207,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
       {/* 右侧滑动按钮 */}
       <button
         onClick={scrollRight}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-3 rounded-full shadow-xl transition-all hover:scale-110 pointer-events-auto"
         aria-label="Scroll right"
       >
         <IconChevronRight className="w-6 h-6 text-slate-800" />
@@ -231,9 +231,9 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
               .map(template => (
                 <motion.div
                   key={template.id}
-                  whileHover={{ scale: 1.05, zIndex: 10 }}
+                  whileHover={{ scale: 1.05 }}
                   onClick={() => handleTemplateClick(template)}
-                  className="relative w-[280px] h-[280px] rounded-xl overflow-hidden shadow-lg cursor-pointer group flex-shrink-0"
+                  className="relative w-[280px] h-[280px] rounded-xl overflow-hidden shadow-lg cursor-pointer group flex-shrink-0 z-0"
                 >
                   <img
                     src={template.imageUrl}

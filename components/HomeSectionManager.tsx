@@ -640,37 +640,39 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
             </div>
           )}
 
-          {/* 按钮配置 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Button Text
-              </label>
-              <input
-                type="text"
-                value={formData.button_text}
-                onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Get Started"
-              />
+          {/* 按钮配置 - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.button_text}
+                  onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Get Started"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Link (Page)
+                </label>
+                <select
+                  value={formData.button_link}
+                  onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {availablePages.map((page) => (
+                    <option key={page} value={page}>
+                      {page}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Button Link (Page)
-              </label>
-              <select
-                value={formData.button_link}
-                onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {availablePages.map((page) => (
-                  <option key={page} value={page}>
-                    {page}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           {/* 显示模式选择 */}
           <div>
@@ -1444,37 +1446,40 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
             </div>
           )}
 
-          {/* Button Text */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Button Text
-            </label>
-            <input
-              type="text"
-              value={formData.button_text}
-              onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="e.g., Get Started"
-            />
-          </div>
+          {/* Button Text & Button Link - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.button_text}
+                  onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Get Started"
+                />
+              </div>
 
-          {/* Button Link */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Button Link (Page)
-            </label>
-            <select
-              value={formData.button_link}
-              onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {availablePages.map((page) => (
-                <option key={page} value={page}>
-                  {page}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Link (Page)
+                </label>
+                <select
+                  value={formData.button_link}
+                  onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {availablePages.map((page) => (
+                    <option key={page} value={page}>
+                      {page}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
           {/* Layout Direction（仅media_showcase模式）*/}
           {formData.display_mode === 'media_showcase' && (
