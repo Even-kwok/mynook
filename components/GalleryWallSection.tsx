@@ -160,7 +160,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   }
 
   return (
-    <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] py-8">
+    <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] mt-32">
       {/* 左侧滑动按钮 */}
       <button
         onClick={scrollLeft}
