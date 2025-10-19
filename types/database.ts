@@ -54,7 +54,30 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      refund_credits: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+        };
+        Returns: {
+          success: boolean;
+          refunded_credits?: number;
+          error?: string;
+        };
+      };
+      check_and_deduct_credits: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+        };
+        Returns: {
+          success: boolean;
+          remaining_credits?: number;
+          membership_tier?: string;
+          error?: string;
+          required?: number;
+        };
+      };
     };
     Enums: {
       [_ in never]: never;
