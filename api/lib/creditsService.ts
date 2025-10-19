@@ -112,7 +112,7 @@ export async function checkAndDeductCredits(
   amount: number
 ): Promise<{ success: boolean; remainingCredits: number; membershipTier?: string; error: string | null }> {
   try {
-    const { data, error } = await supabaseAdmin.rpc('check_and_deduct_credits', {
+    const { data, error } = await (supabaseAdmin.rpc as any)('check_and_deduct_credits', {
       p_user_id: userId,
       p_amount: amount
     });
@@ -166,10 +166,10 @@ export async function deductCredits(
       total_generations: userData.total_generations + 1,
       updated_at: new Date().toISOString(),
     };
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (supabaseAdmin
       .from('users')
-      .update(updateData)
-      .eq('id', userId);
+      .update(updateData as any)
+      .eq('id', userId) as any);
 
     if (updateError) {
       console.error('Deduct credits error:', updateError);
@@ -191,7 +191,7 @@ export async function refundCredits(
   amount: number
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { data, error } = await supabaseAdmin.rpc('refund_credits', {
+    const { data, error } = await (supabaseAdmin.rpc as any)('refund_credits', {
       p_user_id: userId,
       p_amount: amount
     });

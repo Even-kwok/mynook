@@ -61,9 +61,9 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
     }));
 
     // Perform batch upsert
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('tools_order')
-      .upsert(updates);
+      .upsert(updates as any) as any);
 
     if (error) {
       console.error('Error updating tools order:', error);
