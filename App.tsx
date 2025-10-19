@@ -842,7 +842,7 @@ const ExplorePage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavig
                 <GalleryWallSection 
                     key={section.id}
                     section={section}
-                    onNavigate={setActivePage}
+                    onNavigate={onNavigate}
                 />
             );
         }
