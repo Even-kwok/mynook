@@ -838,8 +838,8 @@ const TemplateManagement: React.FC<{
                 {categoryOrder.map(mainCategory => {
                     const subCategories = templateData[mainCategory] || [];
                     
-                    // Admin Panel 显示所有子分类（包括被禁用的），不过滤
-                    if (subCategories.length === 0) return null;
+                    // Admin Panel 显示所有分类（包括空分类），除非管理员手动删除
+                    // ✅ 允许显示空分类，方便管理员添加模板
                     
                     const hasAnyEnabled = subCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
                     
