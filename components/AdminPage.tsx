@@ -637,9 +637,9 @@ const TemplateManagement: React.FC<{
             setCategoryOrder(newOrder);
             await reorderMainCategories(newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            // 只在前端静默更新公开模板的顺序即可
+            console.log('✅ Main category sorted successfully');
         } catch (error) {
             console.error('Failed to sort main category:', error);
             alert('排序失败，请重试');
@@ -691,9 +691,8 @@ const TemplateManagement: React.FC<{
             
             await reorderSubCategories(mainCategory, newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            console.log('✅ Sub category sorted successfully');
         } catch (error) {
             console.error('Failed to sort sub category:', error);
             alert('排序失败，请重试');
@@ -751,9 +750,8 @@ const TemplateManagement: React.FC<{
             
             await reorderTemplates(newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            console.log('✅ Template sorted successfully');
         } catch (error) {
             console.error('Failed to sort template:', error);
             alert('排序失败，请重试');
