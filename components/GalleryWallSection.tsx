@@ -190,9 +190,6 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
           <div 
             key={rowIndex}
             className="flex gap-4"
-            style={{
-              transform: `translateY(${rowIndex === 1 ? '20px' : '0'})`
-            }}
           >
             {displayedTemplates
               .filter((_, idx) => idx % 3 === rowIndex)
