@@ -43,27 +43,27 @@ const TemplateImage: React.FC<{
 
     return (
         <>
-            {/* 只在图片加载失败时显示占位符 */}
+            {/* 只在图片加载失败时显示占位符 - 最底层 */}
             {imageError && (
-                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
+                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center z-0">
                     <IconPhoto className="w-12 h-12 text-slate-300" />
                 </div>
             )}
             
-            {/* 真实图片 */}
+            {/* 真实图片 - 最上层 */}
             {!imageError && (
                 <img 
                     src={imageUrl} 
                     alt={templateName} 
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setImageLoaded(true)}
                     onError={() => setImageError(true)}
                 />
             )}
             
-            {/* 选中状态覆盖层 */}
+            {/* 选中状态覆盖层 - 在图片之上 */}
             {isSelected && (
-                <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-20">
+                <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-30">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                         <IconCheck className="w-5 h-5 text-indigo-600" />
                     </div>
@@ -105,8 +105,8 @@ const PromptTemplates: React.FC<{
                                             templateName={template.name}
                                             isSelected={isSelected}
                                         />
-                                        {/* 模板名字 - 只有白色文字，无背景 */}
-                                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                                        {/* 模板名字 - 只有白色文字，无背景，在图片之上 */}
+                                        <div className="absolute bottom-0 left-0 right-0 p-2 z-20">
                                             <p className="text-center text-xs font-medium text-white">{template.name}</p>
                                         </div>
                                     </div>
