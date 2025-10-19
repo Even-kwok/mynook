@@ -508,15 +508,7 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
           return;
         }
       } else if (formData.display_mode === 'gallery_wall') {
-        // Gallery Wall 模式验证
-        if (!formData.title.trim()) {
-          alert('Title is required for Gallery Wall');
-          return;
-        }
-        if (!formData.subtitle.trim()) {
-          alert('Subtitle is required for Gallery Wall');
-          return;
-        }
+        // Gallery Wall 模式验证 - 不验证title/subtitle（会使用默认值）
         if (!formData.gallery_filter_type) {
           alert('Please select a filter type for Gallery Wall');
           return;
@@ -587,32 +579,36 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Title and Subtitle - 所有模式都需要 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Section Title
-            </label>
-            <textarea
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Explore Our Template Gallery" : "Enter section title"}
-            />
-          </div>
+          {/* Title and Subtitle - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Title
+                </label>
+                <textarea
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section title"
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Section Subtitle
-            </label>
-            <textarea
-              value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Browse through our collection of design templates" : "Enter section subtitle"}
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Subtitle
+                </label>
+                <textarea
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section subtitle"
+                />
+              </div>
+            </>
+          )}
 
           {/* 卡片标题 - 只在 Media Showcase 模式显示 */}
           {formData.display_mode === 'media_showcase' && (
@@ -696,7 +692,13 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, display_mode: 'gallery_wall' })}
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  display_mode: 'gallery_wall',
+                  gallery_filter_type: 'all_random',
+                  title: 'Explore Our Templates',
+                  subtitle: 'Browse through our collection'
+                })}
                 className={`py-3 px-4 rounded-xl border-2 transition-all ${
                   formData.display_mode === 'gallery_wall'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
@@ -1127,15 +1129,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
           return;
         }
       } else if (formData.display_mode === 'gallery_wall') {
-        // Gallery Wall 模式验证
-        if (!formData.title.trim()) {
-          alert('Title is required for Gallery Wall');
-          return;
-        }
-        if (!formData.subtitle.trim()) {
-          alert('Subtitle is required for Gallery Wall');
-          return;
-        }
+        // Gallery Wall 模式验证 - 不验证title/subtitle（会使用默认值）
         if (!formData.gallery_filter_type) {
           alert('Please select a filter type for Gallery Wall');
           return;
@@ -1225,7 +1219,13 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, display_mode: 'gallery_wall' })}
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  display_mode: 'gallery_wall',
+                  gallery_filter_type: formData.gallery_filter_type || 'all_random',
+                  title: formData.title || 'Explore Our Templates',
+                  subtitle: formData.subtitle || 'Browse through our collection'
+                })}
                 className={`py-3 px-4 rounded-xl border-2 transition-all ${
                   formData.display_mode === 'gallery_wall'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
@@ -1383,33 +1383,36 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
             </div>
           )}
 
-          {/* Title - 所有模式都需要 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Section Title
-            </label>
-            <textarea
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Explore Our Template Gallery" : "Enter section title (use line breaks for multiline)"}
-            />
-          </div>
+          {/* Title and Subtitle - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Title
+                </label>
+                <textarea
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section title (use line breaks for multiline)"
+                />
+              </div>
 
-          {/* Subtitle - 所有模式都需要 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Section Subtitle
-            </label>
-            <textarea
-              value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder={formData.display_mode === 'gallery_wall' ? "e.g., Browse through our collection of design templates" : "Enter section subtitle"}
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Subtitle
+                </label>
+                <textarea
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section subtitle"
+                />
+              </div>
+            </>
+          )}
 
           {/* Card Titles - 只在 Media Showcase 模式显示 */}
           {formData.display_mode === 'media_showcase' && (
