@@ -185,12 +185,12 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
         className="overflow-x-auto hide-scrollbar px-16"
         style={{ scrollBehavior: 'smooth' }}
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 min-w-max">
           {/* 3行布局 */}
           {[0, 1, 2].map(rowIndex => (
             <div 
               key={rowIndex}
-              className="flex gap-4"
+              className="flex gap-4 flex-nowrap"
             >
             {displayedTemplates
               .filter((_, idx) => idx % 3 === rowIndex)
