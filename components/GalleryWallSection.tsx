@@ -18,7 +18,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   const scrollRef = useRef<HTMLDivElement>(null);
   const { setPreselectedTemplate } = useTemplate();
   
-  const BATCH_SIZE = 30; // 一次加载30张
+  const BATCH_SIZE = 90; // 一次加载90张（3行x30列）
 
   useEffect(() => {
     loadTemplates();
@@ -108,22 +108,14 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
 
   // 左右滑动按钮处理
   const scrollLeft = () => {
-    console.log('Scroll Left clicked', scrollRef.current);
     if (scrollRef.current) {
-      console.log('Current scrollLeft:', scrollRef.current.scrollLeft);
-      console.log('ScrollWidth:', scrollRef.current.scrollWidth);
-      console.log('ClientWidth:', scrollRef.current.clientWidth);
-      scrollRef.current.scrollBy({ left: -800, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: -1500, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
-    console.log('Scroll Right clicked', scrollRef.current);
     if (scrollRef.current) {
-      console.log('Current scrollLeft:', scrollRef.current.scrollLeft);
-      console.log('ScrollWidth:', scrollRef.current.scrollWidth);
-      console.log('ClientWidth:', scrollRef.current.clientWidth);
-      scrollRef.current.scrollBy({ left: 800, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: 1500, behavior: 'smooth' });
     }
   };
 
