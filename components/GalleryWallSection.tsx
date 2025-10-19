@@ -12,7 +12,8 @@ interface GalleryWallSectionProps {
 export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section, onNavigate }) => {
   const [allTemplates, setAllTemplates] = useState<PromptTemplate[]>([]);
   const [displayedTemplates, setDisplayedTemplates] = useState<PromptTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { setPreselectedTemplate } = useTemplate();
   
@@ -27,6 +28,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   const loadTemplates = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const data = await getAllTemplatesPublic();
       
       // 根据section配置过滤模板
@@ -41,6 +43,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
       setDisplayedTemplates(filtered.slice(0, BATCH_SIZE));
     } catch (error) {
       console.error('Failed to load templates:', error);
+      setError('Failed to load templates. Please try refreshing the page.');
     } finally {
       setIsLoading(false);
     }
@@ -49,32 +52,37 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   const filterTemplates = (data: any): PromptTemplate[] => {
     const templates: PromptTemplate[] = [];
     
-    Object.entries(data).forEach(([mainCat, subCats]: [string, any]) => {
-      if (section.gallery_filter_type === 'all_random') {
-        // 全部分类随机
-        subCats.forEach((sub: any) => {
-          templates.push(...sub.templates);
-        });
-      } else if (section.gallery_filter_type === 'main_category' && section.gallery_main_category === mainCat) {
-        // 特定主分类
-        subCats.forEach((sub: any) => {
-          templates.push(...sub.templates);
-        });
-      } else if (section.gallery_filter_type === 'sub_category' && section.gallery_main_category === mainCat) {
-        // 特定二级分类
-        const targetSub = subCats.find((sub: any) => sub.name === section.gallery_sub_category);
-        if (targetSub) {
-          templates.push(...targetSub.templates);
+    try {
+      Object.entries(data).forEach(([mainCat, subCats]: [string, any]) => {
+        if (section.gallery_filter_type === 'all_random') {
+          // 全部分类随机
+          subCats.forEach((sub: any) => {
+            templates.push(...sub.templates);
+          });
+        } else if (section.gallery_filter_type === 'main_category' && section.gallery_main_category === mainCat) {
+          // 特定主分类
+          subCats.forEach((sub: any) => {
+            templates.push(...sub.templates);
+          });
+        } else if (section.gallery_filter_type === 'sub_category' && section.gallery_main_category === mainCat) {
+          // 特定二级分类
+          const targetSub = subCats.find((sub: any) => sub.name === section.gallery_sub_category);
+          if (targetSub) {
+            templates.push(...targetSub.templates);
+          }
+        } else if (section.gallery_filter_type === 'main_random' && section.gallery_main_category === mainCat) {
+          // 该类目随机
+          subCats.forEach((sub: any) => {
+            templates.push(...sub.templates);
+          });
         }
-      } else if (section.gallery_filter_type === 'main_random' && section.gallery_main_category === mainCat) {
-        // 该类目随机
-        subCats.forEach((sub: any) => {
-          templates.push(...sub.templates);
-        });
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error filtering templates:', error);
+    }
     
-    return templates;
+    // 只返回有图片的模板
+    return templates.filter(t => t.imageUrl && t.imageUrl.trim() !== '');
   };
 
   const shuffleArray = (array: PromptTemplate[]) => {
@@ -131,7 +139,37 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
     onNavigate(targetPage);
   };
 
-  if (displayedTemplates.length === 0 && !isLoading) {
+  // 加载状态
+  if (isLoading) {
+    return (
+      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+        <div className="text-center text-slate-400">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p>Loading templates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+        <div className="text-center text-red-400">
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={loadTemplates}
+            className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 无数据状态
+  if (displayedTemplates.length === 0) {
     return (
       <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
         <div className="text-center text-slate-400">
