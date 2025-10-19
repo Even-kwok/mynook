@@ -51,17 +51,16 @@ export const AITemplateCreator: React.FC = () => {
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      // 读取所有启用的模板的 main_category
+      // 从 main_category_order 表读取所有配置的分类（包括空分类）
       const { data, error } = await supabase
-        .from('design_templates')
+        .from('main_category_order')
         .select('main_category')
-        .eq('enabled', true);
+        .order('sort_order');
 
       if (error) throw error;
       
-      // 去重并排序
-      const uniqueCategories = [...new Set(data?.map(t => t.main_category) || [])];
-      uniqueCategories.sort();
+      // 提取分类名称
+      const uniqueCategories = data?.map(item => item.main_category) || [];
       
       // 转换为选择器格式
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
