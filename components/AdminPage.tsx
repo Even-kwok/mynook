@@ -10,7 +10,7 @@ import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
 import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
 // --- Component Props ---
@@ -278,11 +278,18 @@ const TemplateManagement: React.FC<{
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
-    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(new Set());
+    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(() => new Set(categoryOrder));
     const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
     const [isSorting, setIsSorting] = useState(false);
     const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
     const [isBatchImageMatcherOpen, setIsBatchImageMatcherOpen] = useState(false);
+    const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+    // 默认折叠所有主分类
+    useEffect(() => {
+        setCollapsedMainCategories(new Set(categoryOrder));
+    }, [categoryOrder]);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
         setEditingTemplate(template);
@@ -695,6 +702,100 @@ const TemplateManagement: React.FC<{
         }
     };
 
+    // 模板多选功能
+    const toggleTemplateSelection = (templateId: string) => {
+        setSelectedTemplateIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(templateId)) {
+                newSet.delete(templateId);
+            } else {
+                newSet.add(templateId);
+            }
+            return newSet;
+        });
+    };
+
+    const selectAllInSubCategory = (mainCategory: string, subCategoryName: string) => {
+        const subCategories = templateData[mainCategory] || [];
+        const subCategory = subCategories.find((sc: ManagedPromptTemplateCategory) => sc.name === subCategoryName);
+        if (!subCategory) return;
+
+        const templateIds = subCategory.templates.map(t => t.id);
+        setSelectedTemplateIds(prev => {
+            const newSet = new Set(prev);
+            const allSelected = templateIds.every(id => newSet.has(id));
+            
+            if (allSelected) {
+                // 取消全选
+                templateIds.forEach(id => newSet.delete(id));
+            } else {
+                // 全选
+                templateIds.forEach(id => newSet.add(id));
+            }
+            return newSet;
+        });
+    };
+
+    const handleBatchDelete = () => {
+        if (selectedTemplateIds.size === 0) return;
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const confirmBatchDelete = async () => {
+        if (selectedTemplateIds.size === 0) return;
+
+        try {
+            const templateIdsArray = Array.from(selectedTemplateIds);
+            
+            // 调用批量删除API
+            await batchDeleteTemplates(templateIdsArray);
+            
+            // 清空选中状态
+            setSelectedTemplateIds(new Set());
+            
+            // 关闭确认对话框
+            setIsDeleteConfirmOpen(false);
+            
+            // 重新从数据库加载（Admin Panel用）
+            const freshTemplates = await getAllTemplates();
+            setTemplateData(freshTemplates);
+            setCategoryOrder(Object.keys(freshTemplates));
+            
+            // 通知父组件刷新前端模板数据
+            if (onTemplatesUpdated) {
+                await onTemplatesUpdated();
+            }
+            
+            alert(`Successfully deleted ${templateIdsArray.length} template(s)!`);
+        } catch (error) {
+            console.error('Failed to batch delete templates:', error);
+            alert('Failed to delete templates. Please try again.');
+        }
+    };
+
+    // 获取选中模板的详细信息（用于确认对话框）
+    const getSelectedTemplatesInfo = () => {
+        const selectedInfo: Array<{ id: string; name: string; imageUrl: string; category: string }> = [];
+        
+        Object.keys(templateData).forEach(mainCategory => {
+            const subCategories = templateData[mainCategory] || [];
+            subCategories.forEach((subCategory: ManagedPromptTemplateCategory) => {
+                subCategory.templates.forEach(template => {
+                    if (selectedTemplateIds.has(template.id)) {
+                        selectedInfo.push({
+                            id: template.id,
+                            name: template.name,
+                            imageUrl: template.imageUrl,
+                            category: `${mainCategory} > ${subCategory.name}`
+                        });
+                    }
+                });
+            });
+        });
+        
+        return selectedInfo;
+    };
+
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -721,6 +822,15 @@ const TemplateManagement: React.FC<{
                         <IconPhoto className="w-4 h-4 mr-1" />
                         Match Images
                     </Button>
+                    {selectedTemplateIds.size > 0 && (
+                        <Button 
+                            onClick={handleBatchDelete}
+                            className="!bg-red-50 hover:!bg-red-100 !text-red-600 !border-red-200"
+                        >
+                            <IconTrash className="w-4 h-4 mr-1" />
+                            Delete ({selectedTemplateIds.size})
+                        </Button>
+                    )}
                 </div>
             </div>
             <div className="mt-4 space-y-4">
@@ -817,6 +927,20 @@ const TemplateManagement: React.FC<{
                                     <div className="grid grid-cols-8 gap-2 mt-2">
                                         {subCategory.templates.map((template, templateIndex) => (
                                             <div key={template.id} className="group relative">
+                                                {/* 复选框 - 左上角 */}
+                                                <div className="absolute top-1 left-1 z-20">
+                                                    <label 
+                                                        className="flex items-center cursor-pointer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <input 
+                                                            type="checkbox"
+                                                            checked={selectedTemplateIds.has(template.id)}
+                                                            onChange={() => toggleTemplateSelection(template.id)}
+                                                            className="w-4 h-4 rounded border-2 border-white shadow-lg cursor-pointer accent-indigo-600 bg-white/90"
+                                                        />
+                                                    </label>
+                                                </div>
                                                 <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
                                                     <img src={template.imageUrl} alt={template.name} className="w-full h-full object-cover" />
                                                 </div>
@@ -960,6 +1084,93 @@ const TemplateManagement: React.FC<{
                     }
                 }}
             />
+            
+            {/* 批量删除确认对话框 */}
+            <AnimatePresence>
+                {isDeleteConfirmOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                        onClick={() => setIsDeleteConfirmOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="p-6 border-b border-slate-200">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-bold text-slate-900">
+                                        Delete {selectedTemplateIds.size} Template{selectedTemplateIds.size > 1 ? 's' : ''}?
+                                    </h3>
+                                    <button
+                                        onClick={() => setIsDeleteConfirmOpen(false)}
+                                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                    >
+                                        <IconX className="w-5 h-5 text-slate-500" />
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-sm text-red-600 font-medium">
+                                    ⚠️ This action cannot be undone.
+                                </p>
+                            </div>
+                            
+                            <div className="p-6 overflow-y-auto max-h-96">
+                                <p className="text-sm text-slate-600 mb-4">
+                                    The following templates will be permanently deleted:
+                                </p>
+                                <div className="space-y-2">
+                                    {getSelectedTemplatesInfo().slice(0, 10).map((template) => (
+                                        <div 
+                                            key={template.id} 
+                                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
+                                        >
+                                            <img 
+                                                src={template.imageUrl} 
+                                                alt={template.name}
+                                                className="w-12 h-12 rounded object-cover"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-slate-900 truncate">
+                                                    {template.name}
+                                                </p>
+                                                <p className="text-xs text-slate-500 truncate">
+                                                    {template.category}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {selectedTemplateIds.size > 10 && (
+                                        <p className="text-sm text-slate-500 text-center py-2">
+                                            ...and {selectedTemplateIds.size - 10} more
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
+                                <Button
+                                    onClick={() => setIsDeleteConfirmOpen(false)}
+                                    className="!bg-slate-100 hover:!bg-slate-200 !text-slate-700 !border-slate-300"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={confirmBatchDelete}
+                                    className="!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                                >
+                                    <IconTrash className="w-4 h-4 mr-2" />
+                                    Delete {selectedTemplateIds.size} Template{selectedTemplateIds.size > 1 ? 's' : ''}
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

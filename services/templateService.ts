@@ -204,6 +204,33 @@ export async function deleteTemplate(id: string): Promise<void> {
 }
 
 /**
+ * 批量删除模板
+ * @param templateIds - 要删除的模板ID数组
+ */
+export async function batchDeleteTemplates(templateIds: string[]): Promise<void> {
+  try {
+    if (templateIds.length === 0) return;
+    
+    // 限制单次删除数量
+    if (templateIds.length > 100) {
+      throw new Error('Cannot delete more than 100 templates at once');
+    }
+    
+    const { error } = await supabase
+      .from('design_templates')
+      .delete()
+      .in('id', templateIds);
+
+    if (error) throw error;
+    
+    console.log(`✅ Batch deleted ${templateIds.length} templates`);
+  } catch (error) {
+    console.error('Error batch deleting templates:', error);
+    throw error;
+  }
+}
+
+/**
  * 批量导入模板
  */
 export async function batchImportTemplates(
