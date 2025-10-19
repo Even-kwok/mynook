@@ -182,15 +182,16 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
       {/* 图片墙容器 - 3行横向滚动 */}
       <div 
         ref={scrollRef}
-        className="flex flex-col gap-4 overflow-x-auto hide-scrollbar px-16"
+        className="overflow-x-auto hide-scrollbar px-16"
         style={{ scrollBehavior: 'smooth' }}
       >
-        {/* 3行布局，带上下错位效果 */}
-        {[0, 1, 2].map(rowIndex => (
-          <div 
-            key={rowIndex}
-            className="flex gap-4"
-          >
+        <div className="flex flex-col gap-4">
+          {/* 3行布局 */}
+          {[0, 1, 2].map(rowIndex => (
+            <div 
+              key={rowIndex}
+              className="flex gap-4"
+            >
             {displayedTemplates
               .filter((_, idx) => idx % 3 === rowIndex)
               .map(template => (
@@ -213,8 +214,9 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
                   </div>
                 </motion.div>
               ))}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
