@@ -43,27 +43,27 @@ const TemplateImage: React.FC<{
 
     return (
         <>
+            {/* 只在图片加载失败时显示占位符 */}
+            {imageError && (
+                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
+                    <IconPhoto className="w-12 h-12 text-slate-300" />
+                </div>
+            )}
+            
+            {/* 真实图片 */}
             {!imageError && (
                 <img 
                     src={imageUrl} 
                     alt={templateName} 
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setImageLoaded(true)}
                     onError={() => setImageError(true)}
                 />
             )}
-            {/* 只在图片加载失败时显示占位符 */}
-            {imageError && (
-                <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                    <IconPhoto className="w-8 h-8 text-slate-300" />
-                </div>
-            )}
-            {/* 加载中显示极浅背景，加载成功后完全不显示 */}
-            {!imageError && !imageLoaded && (
-                <div className="absolute inset-0 bg-slate-50/50"></div>
-            )}
+            
+            {/* 选中状态覆盖层 */}
             {isSelected && (
-                <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-indigo-700/60 flex items-center justify-center z-20">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                         <IconCheck className="w-5 h-5 text-indigo-600" />
                     </div>
@@ -105,8 +105,8 @@ const PromptTemplates: React.FC<{
                                             templateName={template.name}
                                             isSelected={isSelected}
                                         />
-                                        {/* 模板名字 - 白色文字 + 黑色毛玻璃背景 */}
-                                        <div className="absolute bottom-0 left-0 right-0 p-2 backdrop-blur-sm bg-black/30">
+                                        {/* 模板名字 - 只有白色文字，无背景 */}
+                                        <div className="absolute bottom-0 left-0 right-0 p-2">
                                             <p className="text-center text-xs font-medium text-white">{template.name}</p>
                                         </div>
                                     </div>
