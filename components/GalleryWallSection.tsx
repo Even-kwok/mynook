@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { HomeSection, PromptTemplate } from '../types';
 import { getAllTemplatesPublic } from '../services/templateService';
 import { useTemplate } from '../context/TemplateContext';
+import { IconChevronLeft, IconChevronRight } from './Icons';
 
 interface GalleryWallSectionProps {
   section: HomeSection;
@@ -14,9 +15,10 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   const [displayedTemplates, setDisplayedTemplates] = useState<PromptTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { setPreselectedTemplate } = useTemplate();
   
-  const BATCH_SIZE = 50; // 一次加载50张
+  const BATCH_SIZE = 30; // 一次加载30张
 
   useEffect(() => {
     loadTemplates();
@@ -104,6 +106,19 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
     onNavigate(targetPage);
   };
 
+  // 左右滑动按钮处理
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -800, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 800, behavior: 'smooth' });
+    }
+  };
+
   // 加载状态
   if (isLoading) {
     return (
@@ -145,32 +160,63 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   }
 
   return (
-    <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] py-8 px-4">
-      {/* 瀑布流布局容器 */}
-      <div 
-        className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4"
+    <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] py-8">
+      {/* 左侧滑动按钮 */}
+      <button
+        onClick={scrollLeft}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-3 rounded-full shadow-xl transition-all hover:scale-110 pointer-events-auto"
+        aria-label="Scroll left"
       >
-        {displayedTemplates.map(template => (
-          <motion.div
-            key={template.id}
-            whileHover={{ scale: 1.02 }}
-            onClick={() => handleTemplateClick(template)}
-            className="relative mb-4 break-inside-avoid cursor-pointer group"
+        <IconChevronLeft className="w-6 h-6 text-slate-800" />
+      </button>
+
+      {/* 右侧滑动按钮 */}
+      <button
+        onClick={scrollRight}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-3 rounded-full shadow-xl transition-all hover:scale-110 pointer-events-auto"
+        aria-label="Scroll right"
+      >
+        <IconChevronRight className="w-6 h-6 text-slate-800" />
+      </button>
+
+      {/* 图片墙容器 - 3行横向滚动 */}
+      <div 
+        ref={scrollRef}
+        className="flex flex-col gap-4 overflow-x-auto hide-scrollbar px-16"
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {/* 3行布局，带上下错位效果 */}
+        {[0, 1, 2].map(rowIndex => (
+          <div 
+            key={rowIndex}
+            className="flex gap-4"
+            style={{
+              transform: `translateY(${rowIndex === 1 ? '20px' : '0'})`
+            }}
           >
-            <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <img
-                src={template.imageUrl}
-                alt={template.name}
-                className="w-full h-auto object-cover"
-                loading="lazy"
-              />
-              {/* 悬停遮罩 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                <p className="text-white text-base font-semibold mb-1">{template.name}</p>
-                <p className="text-slate-300 text-xs">{template.category}</p>
-              </div>
-            </div>
-          </motion.div>
+            {displayedTemplates
+              .filter((_, idx) => idx % 3 === rowIndex)
+              .map(template => (
+                <motion.div
+                  key={template.id}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => handleTemplateClick(template)}
+                  className="relative w-[280px] h-[280px] rounded-xl overflow-hidden shadow-lg cursor-pointer group flex-shrink-0"
+                >
+                  <img
+                    src={template.imageUrl}
+                    alt={template.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  {/* 悬停遮罩 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <p className="text-white text-base font-semibold mb-1">{template.name}</p>
+                    <p className="text-slate-300 text-xs">{template.category}</p>
+                  </div>
+                </motion.div>
+              ))}
+          </div>
         ))}
       </div>
     </div>
