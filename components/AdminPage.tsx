@@ -11,7 +11,7 @@ import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
 import { AITemplateCreator } from './AITemplateCreator';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, addMainCategory as addMainCategoryToDB, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
 import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
 // --- Component Props ---
@@ -1023,38 +1023,49 @@ const TemplateManagement: React.FC<{
                 type={categoryModalType}
                 context={categoryModalContext}
                 onClose={() => setIsCategoryModalOpen(false)}
-                onSave={(categoryName) => {
-                    // 添加分类到本地状态（空的分类，等待用户添加模板）
-                    if (categoryModalType === 'main') {
-                        // 添加新的主分类
-                        setTemplateData(prev => ({
-                            ...prev,
-                            [categoryName]: []
-                        }));
-                        setCategoryOrder(prev => [...prev, categoryName]);
-                    } else {
-                        // 添加子分类到现有主分类
-                        const mainCategory = categoryModalContext?.mainCategory;
-                        if (mainCategory) {
-                            setTemplateData(prev => {
-                                const newData = JSON.parse(JSON.stringify(prev));
-                                if (!newData[mainCategory]) {
-                                    newData[mainCategory] = [];
-                                }
-                                // 检查是否已存在
-                                if (!newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === categoryName)) {
-                                    newData[mainCategory].push({
-                                        name: categoryName,
-                                        templates: [],
-                                        enabled: false
-                                    });
-                                }
-                                return newData;
-                            });
+                onSave={async (categoryName) => {
+                    try {
+                        if (categoryModalType === 'main') {
+                            // 添加新的主分类到数据库
+                            await addMainCategoryToDB(categoryName);
+                            
+                            // 重新加载模板数据以包含新分类
+                            const freshTemplates = await getAllTemplates();
+                            setTemplateData(freshTemplates);
+                            setCategoryOrder(Object.keys(freshTemplates));
+                            
+                            // 通知父组件刷新前端模板数据
+                            if (onTemplatesUpdated) {
+                                await onTemplatesUpdated();
+                            }
+                        } else {
+                            // 添加子分类到现有主分类（仅本地状态，等待添加模板时自动创建）
+                            const mainCategory = categoryModalContext?.mainCategory;
+                            if (mainCategory) {
+                                setTemplateData(prev => {
+                                    const newData = JSON.parse(JSON.stringify(prev));
+                                    if (!newData[mainCategory]) {
+                                        newData[mainCategory] = [];
+                                    }
+                                    // 检查是否已存在
+                                    if (!newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === categoryName)) {
+                                        newData[mainCategory].push({
+                                            name: categoryName,
+                                            templates: [],
+                                            enabled: false
+                                        });
+                                    }
+                                    return newData;
+                                });
+                            }
                         }
+                        
+                        setIsCategoryModalOpen(false);
+                        alert(`"${categoryName}" added! Now you can add templates to it.`);
+                    } catch (error) {
+                        console.error('Failed to add category:', error);
+                        alert('Failed to add category. Please try again.');
                     }
-                    setIsCategoryModalOpen(false);
-                    alert(`"${categoryName}" added! Now you can add templates to it.`);
                 }}
             />
             <BatchTemplateUpload
