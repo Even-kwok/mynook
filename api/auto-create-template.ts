@@ -23,26 +23,8 @@ const supabaseAdmin = createClient(
   }
 );
 
-const EXTRACTOR_PROMPT = `Analyze this interior/exterior design image and return information in JSON format.
-
-Return ONLY a valid JSON object with these fields:
-{
-  "templateName": "Short descriptive name (e.g., 'Modern Scandinavian Living Room')",
-  "mainCategory": "ONE OF: 'Interior Design' OR 'Exterior Design' OR 'Garden & Backyard Design'",
-  "secondaryCategory": "For Interior: living-room/bedroom/kitchen/bathroom/dining-room/office/kids-room/entryway/closet. For Exterior: Modern/Traditional/Mediterranean/Contemporary/Rustic. For Garden: Landscaping/Patio/Pool-Area/Garden-Design",
-  "styleDescription": "A single detailed sentence describing the style, materials, furniture, decor, and atmosphere",
-  "fullPrompt": "Complete MyNook-V1.0-Universal format prompt"
-}
-
-**Rules:**
-1. mainCategory MUST match one of the three exact options
-2. For Interior Design, secondaryCategory should be the room type
-3. For other categories, secondaryCategory should be the design style
-4. styleDescription is inserted into the [INSERT...] placeholder
-5. fullPrompt must follow MyNook-V1.0-Universal template format
-
-**MyNook Template:**
----[ 提示词开始 / PROMPT START ]---
+// MyNook Universal Template (used in fullPrompt generation)
+const MYNOOK_TEMPLATE = `---[ 提示词开始 / PROMPT START ]---
 Crucial Command: This is a TOTAL space transformation project. The user's input image is for layout, structural, and perspective reference ONLY. ALL visible surfaces (walls, floors, ceilings, exterior facades, landscapes) and existing elements (windows, doors, furniture, decor, vegetation) within the input image MUST BE COMPLETELY REPLACED or newly generated according to the specified style. No original textures, dirt, or unfinished elements from the input image should remain in the final output. The output must represent a fully finished, high-end, and professionally designed space.
 
 Strictly retain the spatial structure, camera perspective, lighting direction, and main elements' positions (e.g., windows, doors, key architectural features) from the user's input image. If it's an interior, ensure realistic room proportions. If it's an exterior, maintain the architectural footprint and landscape contours.
@@ -57,6 +39,51 @@ The final image must be of Hasselblad quality, photorealistic, with extreme deta
 ---[ 提示词结束 / PROMPT END ]---
 // Project: MyNook  // 项目：MyNook
 // Recipe Version: MyNook-V1.0-Universal`;
+
+/**
+ * 动态生成AI识别提示词
+ * @param allowedCategories 允许的分类列表
+ * @param categoryHints 分类识别提示的键值对
+ */
+const generateExtractorPrompt = (
+  allowedCategories: string[],
+  categoryHints: Record<string, string>
+): string => {
+  // 生成分类列表字符串
+  const categoryList = allowedCategories.map(cat => `'${cat}'`).join(' OR ');
+  
+  // 生成识别规则
+  const recognitionRules = allowedCategories.map((cat, index) => {
+    const hint = categoryHints[cat] || 'general design elements';
+    return `${index + 1}. **${cat}**: Recognize by ${hint}`;
+  }).join('\n');
+
+  return `Analyze this design image and extract information in JSON format.
+
+Return ONLY a valid JSON object with these exact fields:
+{
+  "templateName": "Short descriptive name (e.g., 'Oak Herringbone Floor' or 'Modern Kitchen Design')",
+  "mainCategory": "MUST BE ONE OF: ${categoryList}",
+  "secondaryCategory": "Further classification (e.g., style type, room type, material type, etc.)",
+  "styleDescription": "A single detailed sentence describing key features, materials, colors, patterns, and characteristics",
+  "fullPrompt": "Complete MyNook-V1.0-Universal format prompt with [INSERT...] section filled in"
+}
+
+**Recognition Guidelines:**
+${recognitionRules}
+
+**Important Rules:**
+- mainCategory MUST exactly match one of the allowed categories listed above
+- secondaryCategory should provide further classification relevant to the mainCategory
+- styleDescription should be detailed and specific to what you see in the image
+- fullPrompt must follow MyNook-V1.0-Universal template with the [INSERT...] section replaced by styleDescription
+
+**MyNook Template Reference:**
+${MYNOOK_TEMPLATE}
+
+**Output Format:**
+Return ONLY valid JSON, no markdown code blocks, no additional text.`;
+};
 
 interface ExtractedTemplateData {
   templateName: string;
@@ -122,6 +149,28 @@ export default async function handler(
       throw new Error('GEMINI_API_KEY not configured');
     }
 
+    // Load category recognition hints from database
+    const { data: categories, error: categoryError } = await supabaseAdmin
+      .from('ai_template_categories')
+      .select('category_name, ai_recognition_hint')
+      .in('category_name', allowedCategories);
+
+    if (categoryError) {
+      console.error('Failed to load categories:', categoryError);
+      throw new Error('Failed to load category information');
+    }
+
+    // Build category hints map
+    const categoryHints: Record<string, string> = {};
+    categories?.forEach(cat => {
+      categoryHints[cat.category_name] = cat.ai_recognition_hint || 'general design elements';
+    });
+
+    // Generate dynamic extractor prompt based on selected categories
+    const extractorPrompt = generateExtractorPrompt(allowedCategories, categoryHints);
+    
+    console.log('🤖 Using AI extraction for categories:', allowedCategories.join(', '));
+
     // Call Gemini to extract information
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     
@@ -134,7 +183,7 @@ export default async function handler(
       model: 'gemini-2.5-flash',
       contents: {
         parts: [
-          { text: EXTRACTOR_PROMPT },
+          { text: extractorPrompt },
           { inlineData: { data: imageData, mimeType: 'image/png' } }
         ],
       },

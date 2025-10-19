@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { IconUpload, IconSparkles, IconX, IconRefresh } from './Icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { IconUpload, IconSparkles, IconX, IconRefresh, IconCheck } from './Icons';
 import { toBase64, cropToSquareThumbnail } from '../utils/imageUtils';
 import { Button } from './Button';
 import { supabase } from '../config/supabase';
@@ -17,17 +17,53 @@ interface ProcessResult {
   error?: string;
 }
 
-const ALLOWED_CATEGORIES = [
-  'Interior Design',
-  'Exterior Design', 
-  'Garden & Backyard Design'
-];
+interface AICategory {
+  id: string;
+  category_name: string;
+  category_slug: string;
+  description: string | null;
+  ai_recognition_hint: string | null;
+  example_keywords: string | null;
+  enabled: boolean;
+  sort_order: number;
+}
 
 export const AITemplateCreator: React.FC = () => {
   const [results, setResults] = useState<ProcessResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [allowedCategories, setAllowedCategories] = useState<string[]>(ALLOWED_CATEGORIES);
+  const [availableCategories, setAvailableCategories] = useState<AICategory[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 加载分类列表
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const { data, error } = await supabase
+        .from('ai_template_categories')
+        .select('*')
+        .eq('enabled', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      
+      setAvailableCategories(data || []);
+      // 默认全选
+      setSelectedCategories(data?.map(c => c.category_name) || []);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      // 如果加载失败，使用默认分类
+      setAvailableCategories([]);
+      setSelectedCategories([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   const getAuthToken = async (): Promise<string | null> => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -38,7 +74,7 @@ export const AITemplateCreator: React.FC = () => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     
-    if (allowedCategories.length === 0) {
+    if (selectedCategories.length === 0) {
       alert('请至少选择一个允许的分类范围！');
       return;
     }
@@ -106,7 +142,7 @@ export const AITemplateCreator: React.FC = () => {
         body: JSON.stringify({
           originalImage,
           thumbnailImage,
-          allowedCategories,
+          allowedCategories: selectedCategories,
         }),
       });
 
@@ -183,31 +219,99 @@ export const AITemplateCreator: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 分类范围限制设置 */}
+      {/* 分类范围选择器 */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 className="font-semibold mb-4 text-slate-900">允许的分类范围</h3>
-        <p className="text-sm text-slate-600 mb-4">
-          AI提取的分类必须在选中的范围内，否则将被拒绝创建
-        </p>
-        <div className="space-y-2">
-          {ALLOWED_CATEGORIES.map(cat => (
-            <label key={cat} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={allowedCategories.includes(cat)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setAllowedCategories([...allowedCategories, cat]);
-                  } else {
-                    setAllowedCategories(allowedCategories.filter(c => c !== cat));
-                  }
-                }}
-                disabled={isProcessing}
-                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <span className="text-slate-700">{cat}</span>
-            </label>
-          ))}
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-semibold text-slate-900">选择AI识别范围</h3>
+            <p className="text-sm text-slate-600 mt-1">
+              AI将在选中的分类范围内识别图片。例如：只勾选 "Floor Style"，上传木地板图片，AI会自动识别木纹、材质、颜色等。
+            </p>
+          </div>
+          <div className="flex gap-2 text-sm">
+            <button
+              onClick={() => setSelectedCategories(availableCategories.map(c => c.category_name))}
+              className="px-3 py-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+              disabled={isProcessing || isLoadingCategories}
+            >
+              全选
+            </button>
+            <button
+              onClick={() => setSelectedCategories([])}
+              className="px-3 py-1 text-slate-600 hover:bg-slate-50 rounded transition-colors"
+              disabled={isProcessing || isLoadingCategories}
+            >
+              清空
+            </button>
+          </div>
+        </div>
+        
+        {isLoadingCategories ? (
+          <div className="animate-pulse space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 bg-slate-100 rounded-lg"></div>
+            ))}
+          </div>
+        ) : availableCategories.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            <p>暂无可用分类</p>
+            <p className="text-sm mt-2">请联系管理员添加分类或检查数据库连接</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {availableCategories.map(category => (
+              <label 
+                key={category.id} 
+                className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedCategories.includes(category.category_name)
+                    ? 'border-indigo-400 bg-indigo-50'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category.category_name)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCategories([...selectedCategories, category.category_name]);
+                    } else {
+                      setSelectedCategories(selectedCategories.filter(c => c !== category.category_name));
+                    }
+                  }}
+                  disabled={isProcessing}
+                  className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-slate-900 flex items-center gap-2">
+                    {category.category_name}
+                    {selectedCategories.includes(category.category_name) && (
+                      <IconCheck className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                    )}
+                  </div>
+                  {category.description && (
+                    <p className="text-xs text-slate-600 mt-1">{category.description}</p>
+                  )}
+                  {category.example_keywords && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      <span className="font-medium">示例：</span>{category.example_keywords}
+                    </p>
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
+        )}
+        
+        <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <IconSparkles className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <span>
+            已选择 <strong className="text-blue-700">{selectedCategories.length}</strong> 个分类
+            {selectedCategories.length > 0 && (
+              <span className="ml-2 text-slate-500">
+                （{selectedCategories.join('、')}）
+              </span>
+            )}
+          </span>
         </div>
       </div>
 
@@ -232,15 +336,15 @@ export const AITemplateCreator: React.FC = () => {
           </p>
           <Button
             onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing || allowedCategories.length === 0}
+            disabled={isProcessing || selectedCategories.length === 0 || isLoadingCategories}
             primary
             className="inline-flex items-center"
           >
             <IconSparkles className="w-5 h-5 mr-2" />
             选择图片 (最多70张)
           </Button>
-          {allowedCategories.length === 0 && (
-            <p className="text-red-600 text-sm mt-2">请先选择至少一个允许的分类范围</p>
+          {selectedCategories.length === 0 && !isLoadingCategories && (
+            <p className="text-red-600 text-sm mt-2">请先选择至少一个分类范围</p>
           )}
         </div>
       </div>
