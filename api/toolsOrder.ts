@@ -63,9 +63,7 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
     // Perform batch upsert
     const { error } = await supabase
       .from('tools_order')
-      .upsert(updates, { 
-        onConflict: 'tool_id'
-      });
+      .upsert(updates);
 
     if (error) {
       console.error('Error updating tools order:', error);
