@@ -4,9 +4,17 @@ import { verifyUserToken } from './lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase admin client for server-side operations
+// Use multiple environment variable names for compatibility
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('❌ Missing Supabase configuration for auto-create-template API');
+}
+
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  supabaseUrl,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,
@@ -84,14 +92,14 @@ export default async function handler(
     }
     userId = verifiedUserId;
 
-    // Verify admin permission (permission >= 3)
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('permission')
-      .eq('id', userId)
+    // Verify admin permission using admin_users table
+    const { data: adminData, error: adminError } = await supabaseAdmin
+      .from('admin_users')
+      .select('is_active')
+      .eq('user_id', userId)
       .single();
 
-    if (userError || !userData || userData.permission < 3) {
+    if (adminError || !adminData || !adminData.is_active) {
       return res.status(403).json({ error: 'Admin permission required', code: 'INSUFFICIENT_PERMISSION' });
     }
     isAdmin = true;
