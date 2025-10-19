@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload } from './Icons';
+import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload, IconTag } from './Icons';
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
 import { Button } from './Button';
@@ -10,7 +10,8 @@ import { BatchTemplateUpload } from './BatchTemplateUpload';
 import { BatchImageMatcher } from './BatchImageMatcher';
 import { HomeSectionManager } from './HomeSectionManager';
 import { HeroSectionManager } from './HeroSectionManager';
-import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
+import { AITemplateCreator } from './AITemplateCreator';
+import { createTemplate, updateTemplate, deleteTemplate as deleteTemplateFromDB, getAllTemplates, toggleCategoryEnabled, toggleMainCategoryEnabled, addMainCategory as addMainCategoryToDB, deleteMainCategory as deleteMainCategoryFromDB, deleteSubCategory as deleteSubCategoryFromDB, reorderMainCategories, reorderSubCategories, reorderTemplates, batchDeleteTemplates } from '../services/templateService';
 import { getToolsOrder, saveToolsOrder, resetToolsOrder, moveToolUp, moveToolDown, moveToolToTop, moveToolToBottom, ToolItemConfig } from '../services/toolsOrderService';
 
 // --- Component Props ---
@@ -278,17 +279,76 @@ const TemplateManagement: React.FC<{
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryModalType, setCategoryModalType] = useState<'main' | 'sub' | 'room'>('main');
     const [categoryModalContext, setCategoryModalContext] = useState<{ mainCategory?: string } | null>(null);
-    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(() => new Set(categoryOrder));
-    const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(new Set());
+    
+    // 从 localStorage 读取折叠状态（持久化用户的展开/折叠选择）
+    const [collapsedMainCategories, setCollapsedMainCategories] = useState<Set<string>>(() => {
+        try {
+            const saved = localStorage.getItem('admin-collapsed-main-categories');
+            if (saved) {
+                return new Set(JSON.parse(saved));
+            }
+        } catch (error) {
+            console.error('Failed to load collapsed state from localStorage:', error);
+        }
+        // 默认折叠所有主分类
+        return new Set(categoryOrder);
+    });
+    
+    const [collapsedSubCategories, setCollapsedSubCategories] = useState<Set<string>>(() => {
+        try {
+            const saved = localStorage.getItem('admin-collapsed-sub-categories');
+            if (saved) {
+                return new Set(JSON.parse(saved));
+            }
+        } catch (error) {
+            console.error('Failed to load collapsed state from localStorage:', error);
+        }
+        return new Set();
+    });
+    
     const [isSorting, setIsSorting] = useState(false);
     const [isBatchUploadOpen, setIsBatchUploadOpen] = useState(false);
     const [isBatchImageMatcherOpen, setIsBatchImageMatcherOpen] = useState(false);
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-    // 默认折叠所有主分类
+    // 保存主分类折叠状态到 localStorage
     useEffect(() => {
-        setCollapsedMainCategories(new Set(categoryOrder));
+        try {
+            localStorage.setItem('admin-collapsed-main-categories', 
+                JSON.stringify(Array.from(collapsedMainCategories)));
+        } catch (error) {
+            console.error('Failed to save collapsed state to localStorage:', error);
+        }
+    }, [collapsedMainCategories]);
+    
+    // 保存子分类折叠状态到 localStorage
+    useEffect(() => {
+        try {
+            localStorage.setItem('admin-collapsed-sub-categories', 
+                JSON.stringify(Array.from(collapsedSubCategories)));
+        } catch (error) {
+            console.error('Failed to save collapsed state to localStorage:', error);
+        }
+    }, [collapsedSubCategories]);
+    
+    // 当新增分类时，默认折叠新分类（仅针对新出现的分类）
+    useEffect(() => {
+        const currentCategories = new Set(categoryOrder);
+        const savedCategories = collapsedMainCategories;
+        
+        // 只折叠新出现的分类，不影响已存在的分类状态
+        const newCategories = categoryOrder.filter(cat => 
+            currentCategories.has(cat) && !Array.from(savedCategories).includes(cat)
+        );
+        
+        if (newCategories.length > 0) {
+            setCollapsedMainCategories(prev => {
+                const updated = new Set(prev);
+                newCategories.forEach(cat => updated.add(cat));
+                return updated;
+            });
+        }
     }, [categoryOrder]);
 
     const handleEditTemplate = (template: PromptTemplate, mainCategory: string, subCategory: string) => {
@@ -577,9 +637,9 @@ const TemplateManagement: React.FC<{
             setCategoryOrder(newOrder);
             await reorderMainCategories(newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            // 只在前端静默更新公开模板的顺序即可
+            console.log('✅ Main category sorted successfully');
         } catch (error) {
             console.error('Failed to sort main category:', error);
             alert('排序失败，请重试');
@@ -631,9 +691,8 @@ const TemplateManagement: React.FC<{
             
             await reorderSubCategories(mainCategory, newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            console.log('✅ Sub category sorted successfully');
         } catch (error) {
             console.error('Failed to sort sub category:', error);
             alert('排序失败，请重试');
@@ -691,9 +750,8 @@ const TemplateManagement: React.FC<{
             
             await reorderTemplates(newOrder);
             
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
+            // ✅ 排序操作不需要完整刷新 - 本地state已更新，避免触发重新渲染导致折叠
+            console.log('✅ Template sorted successfully');
         } catch (error) {
             console.error('Failed to sort template:', error);
             alert('排序失败，请重试');
@@ -837,8 +895,8 @@ const TemplateManagement: React.FC<{
                 {categoryOrder.map(mainCategory => {
                     const subCategories = templateData[mainCategory] || [];
                     
-                    // Admin Panel 显示所有子分类（包括被禁用的），不过滤
-                    if (subCategories.length === 0) return null;
+                    // Admin Panel 显示所有分类（包括空分类），除非管理员手动删除
+                    // ✅ 允许显示空分类，方便管理员添加模板
                     
                     const hasAnyEnabled = subCategories.some((sc: ManagedPromptTemplateCategory) => sc.enabled);
                     
@@ -1022,38 +1080,49 @@ const TemplateManagement: React.FC<{
                 type={categoryModalType}
                 context={categoryModalContext}
                 onClose={() => setIsCategoryModalOpen(false)}
-                onSave={(categoryName) => {
-                    // 添加分类到本地状态（空的分类，等待用户添加模板）
-                    if (categoryModalType === 'main') {
-                        // 添加新的主分类
-                        setTemplateData(prev => ({
-                            ...prev,
-                            [categoryName]: []
-                        }));
-                        setCategoryOrder(prev => [...prev, categoryName]);
-                    } else {
-                        // 添加子分类到现有主分类
-                        const mainCategory = categoryModalContext?.mainCategory;
-                        if (mainCategory) {
-                            setTemplateData(prev => {
-                                const newData = JSON.parse(JSON.stringify(prev));
-                                if (!newData[mainCategory]) {
-                                    newData[mainCategory] = [];
-                                }
-                                // 检查是否已存在
-                                if (!newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === categoryName)) {
-                                    newData[mainCategory].push({
-                                        name: categoryName,
-                                        templates: [],
-                                        enabled: false
-                                    });
-                                }
-                                return newData;
-                            });
+                onSave={async (categoryName) => {
+                    try {
+                        if (categoryModalType === 'main') {
+                            // 添加新的主分类到数据库
+                            await addMainCategoryToDB(categoryName);
+                            
+                            // 重新加载模板数据以包含新分类
+                            const freshTemplates = await getAllTemplates();
+                            setTemplateData(freshTemplates);
+                            setCategoryOrder(Object.keys(freshTemplates));
+                            
+                            // 通知父组件刷新前端模板数据
+                            if (onTemplatesUpdated) {
+                                await onTemplatesUpdated();
+                            }
+                        } else {
+                            // 添加子分类到现有主分类（仅本地状态，等待添加模板时自动创建）
+                            const mainCategory = categoryModalContext?.mainCategory;
+                            if (mainCategory) {
+                                setTemplateData(prev => {
+                                    const newData = JSON.parse(JSON.stringify(prev));
+                                    if (!newData[mainCategory]) {
+                                        newData[mainCategory] = [];
+                                    }
+                                    // 检查是否已存在
+                                    if (!newData[mainCategory].find((sc: ManagedPromptTemplateCategory) => sc.name === categoryName)) {
+                                        newData[mainCategory].push({
+                                            name: categoryName,
+                                            templates: [],
+                                            enabled: false
+                                        });
+                                    }
+                                    return newData;
+                                });
+                            }
                         }
+                        
+                        setIsCategoryModalOpen(false);
+                        alert(`"${categoryName}" added! Now you can add templates to it.`);
+                    } catch (error) {
+                        console.error('Failed to add category:', error);
+                        alert('Failed to add category. Please try again.');
                     }
-                    setIsCategoryModalOpen(false);
-                    alert(`"${categoryName}" added! Now you can add templates to it.`);
                 }}
             />
             <BatchTemplateUpload
@@ -1669,6 +1738,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         { id: 'users', name: 'Users', icon: IconUsers },
         { id: 'designs', name: 'Designs', icon: IconPhoto },
         { id: 'templates', name: 'Templates', icon: IconSparkles },
+        { id: 'ai-creator', name: 'AI Template Creator', icon: IconSparkles },
         { id: 'tools-order', name: 'Tools Order', icon: IconArrowUp },
         { id: 'hero-section', name: 'Hero Section', icon: IconSparkles },
         { id: 'home-sections', name: 'Home Sections', icon: IconLayoutDashboard },
@@ -1689,6 +1759,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 return <DesignManagement generationHistory={generationHistory} onDeleteBatch={onDeleteBatch} />;
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
+            case 'ai-creator':
+                return <AITemplateCreator />;
             case 'tools-order':
                 return <ToolsOrderManagement />;
             case 'hero-section':

@@ -1,0 +1,7 @@
+{
+  "name": "70x70 9并发 效率工具（反向提取提示词生成提示词+略缩图）",
+  "description": "An AI-powered photo studio that transforms your pictures into various creative themes like different decades, professional headshots, fashion lookbooks, and more, using the power of Gemini.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

@@ -104,3 +104,58 @@ export const createSingleFramedImage = (imageUrl: string, cropRatio: string, lab
         reject(err);
     }
 });
+
+/**
+ * Crop and compress an image to a square thumbnail
+ * Used for AI Auto Template Creator feature
+ * @param file - Original image file
+ * @param size - Target size (width and height), default 360px
+ * @param quality - JPEG compression quality (0-1), default 0.85
+ * @returns Promise<string> - Returns base64 formatted image data
+ */
+export const cropToSquareThumbnail = (
+    file: File, 
+    size: number = 360, 
+    quality: number = 0.85
+): Promise<string> => new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                URL.revokeObjectURL(url);
+                return reject(new Error('Failed to get canvas context'));
+            }
+            
+            // Calculate crop area (center crop to square)
+            const minDim = Math.min(img.width, img.height);
+            const sx = (img.width - minDim) / 2;
+            const sy = (img.height - minDim) / 2;
+            
+            // Crop and scale to target size
+            ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+            
+            // Convert to base64 (JPEG format, specified quality)
+            const base64 = canvas.toDataURL('image/jpeg', quality);
+            
+            URL.revokeObjectURL(url);
+            resolve(base64);
+        } catch (error) {
+            URL.revokeObjectURL(url);
+            reject(error);
+        }
+    };
+    
+    img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+    };
+    
+    img.src = url;
+});
