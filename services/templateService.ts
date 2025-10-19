@@ -31,28 +31,44 @@ export interface TemplateCategory {
 /**
  * 获取所有模板（按分类组织）
  * 对于Interior Design，按room_type分组
+ * 
+ * ⚠️ 重要：即使某个主分类下没有模板，也会在结果中显示该分类（空数组）
+ * 这确保了管理员可以向空分类中添加模板
  */
 export async function getAllTemplates(): Promise<ManagedTemplateData> {
   try {
-    // Admin用：获取所有模板（包括禁用的），这样管理员才能管理它们
+    // 1. 首先从 main_category_order 表获取所有配置的主分类
+    const { data: categoryOrderData, error: categoryError } = await supabase
+      .from('main_category_order')
+      .select('main_category')
+      .order('sort_order');
+
+    if (categoryError) throw categoryError;
+
+    // 初始化所有配置的主分类为空数组
+    const grouped: ManagedTemplateData = {};
+    if (categoryOrderData) {
+      categoryOrderData.forEach(item => {
+        grouped[item.main_category] = [];
+      });
+    }
+
+    // 2. 获取所有模板（包括禁用的），Admin Panel 需要看到所有模板
     const { data, error } = await supabase
       .from('design_templates')
       .select('*')
-      // 不过滤 enabled 状态，Admin Panel 需要看到所有模板
       .order('sort_order')
       .order('name');
 
     if (error) throw error;
 
-    // 将数据库数据转换为前端需要的格式
+    // 3. 将模板数据填充到对应的分类中
     const templates = data as DesignTemplate[];
-    const grouped: ManagedTemplateData = {};
-
     templates.forEach(template => {
       const mainCat = template.main_category;
       const subCat = template.sub_category;
 
-      // 初始化主分类
+      // 初始化主分类（如果不在 main_category_order 中）
       if (!grouped[mainCat]) {
         grouped[mainCat] = [];
       }
@@ -516,16 +532,70 @@ export async function getTemplatePrompts(templateIds: string[]): Promise<Map<str
 }
 
 /**
+ * 添加新的主分类到配置表
+ * @param mainCategory - 主分类名称
+ */
+export async function addMainCategory(mainCategory: string): Promise<void> {
+  try {
+    // 1. 检查是否已存在
+    const { data: existing, error: checkError } = await supabase
+      .from('main_category_order')
+      .select('main_category')
+      .eq('main_category', mainCategory)
+      .single();
+    
+    if (existing) {
+      console.log(`⚠️ Main category "${mainCategory}" already exists`);
+      return;
+    }
+    
+    // 2. 获取当前最大的 sort_order
+    const { data: orderData, error: orderError } = await supabase
+      .from('main_category_order')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1);
+    
+    const maxOrder = orderData && orderData.length > 0 ? orderData[0].sort_order : -1;
+    
+    // 3. 插入新分类
+    const { error: insertError } = await supabase
+      .from('main_category_order')
+      .insert({
+        main_category: mainCategory,
+        sort_order: maxOrder + 1,
+        is_manual_sort: true
+      });
+    
+    if (insertError) throw insertError;
+    
+    console.log(`✅ Added main category: ${mainCategory} (sort_order: ${maxOrder + 1})`);
+  } catch (error) {
+    console.error('Error adding main category:', error);
+    throw error;
+  }
+}
+
+/**
  * 删除整个主分类及其所有模板
  */
 export async function deleteMainCategory(mainCategory: string): Promise<void> {
   try {
-    const { error } = await supabase
+    // 1. 删除所有该分类下的模板
+    const { error: templatesError } = await supabase
       .from('design_templates')
       .delete()
       .eq('main_category', mainCategory);
     
-    if (error) throw error;
+    if (templatesError) throw templatesError;
+    
+    // 2. 从 main_category_order 表中删除配置
+    const { error: orderError } = await supabase
+      .from('main_category_order')
+      .delete()
+      .eq('main_category', mainCategory);
+    
+    if (orderError) throw orderError;
     
     console.log(`✅ Deleted main category: ${mainCategory}`);
   } catch (error) {
