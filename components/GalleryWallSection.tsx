@@ -142,7 +142,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   // 加载状态
   if (isLoading) {
     return (
-      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+      <div className="relative overflow-hidden py-8">
         <div className="text-center text-slate-400">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
           <p>Loading templates...</p>
@@ -154,7 +154,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   // 错误状态
   if (error) {
     return (
-      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+      <div className="relative overflow-hidden py-8">
         <div className="text-center text-red-400">
           <p className="mb-4">{error}</p>
           <button
@@ -171,7 +171,7 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   // 无数据状态
   if (displayedTemplates.length === 0) {
     return (
-      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+      <div className="relative overflow-hidden py-8">
         <div className="text-center text-slate-400">
           <p>No templates found for the selected filter.</p>
         </div>
@@ -180,41 +180,28 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
   }
 
   return (
-    <div className="relative overflow-hidden py-20 bg-gradient-to-b from-slate-900 to-slate-800">
-      {/* 标题区 */}
-      <div className="text-center mb-12 px-4">
-        <h2 className="text-5xl font-bold text-white mb-4">
-          {section.title}
-        </h2>
-        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-          {section.subtitle}
-        </p>
-      </div>
-      
-      {/* 图片墙容器 */}
+    <div className="relative overflow-hidden py-8">
+      {/* 图片墙容器 - 3行横向滚动 */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex gap-6 overflow-x-auto px-8 pb-4 hide-scrollbar"
+        className="flex flex-col gap-4 overflow-x-auto hide-scrollbar"
         style={{ scrollBehavior: 'smooth' }}
       >
-        {/* 3列布局 */}
-        {[0, 1, 2].map(colIndex => (
+        {/* 3行布局 */}
+        {[0, 1, 2].map(rowIndex => (
           <div 
-            key={colIndex}
-            className="flex flex-col gap-6 flex-shrink-0"
-            style={{ 
-              transform: `translateY(${colIndex % 2 === 0 ? '0' : '40px'})` 
-            }}
+            key={rowIndex}
+            className="flex gap-4 flex-shrink-0"
           >
             {displayedTemplates
-              .filter((_, idx) => idx % 3 === colIndex)
+              .filter((_, idx) => idx % 3 === rowIndex)
               .map(template => (
                 <motion.div
                   key={template.id}
                   whileHover={{ scale: 1.05, zIndex: 10 }}
                   onClick={() => handleTemplateClick(template)}
-                  className="relative w-[360px] h-[360px] rounded-2xl overflow-hidden shadow-2xl cursor-pointer group"
+                  className="relative w-[280px] h-[280px] rounded-xl overflow-hidden shadow-lg cursor-pointer group flex-shrink-0"
                 >
                   <img
                     src={template.imageUrl}
@@ -223,24 +210,14 @@ export const GalleryWallSection: React.FC<GalleryWallSectionProps> = ({ section,
                     loading="lazy"
                   />
                   {/* 悬停遮罩 */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                    <p className="text-white text-lg font-semibold mb-2">{template.name}</p>
-                    <p className="text-slate-300 text-sm">{template.category}</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <p className="text-white text-base font-semibold mb-1">{template.name}</p>
+                    <p className="text-slate-300 text-xs">{template.category}</p>
                   </div>
                 </motion.div>
               ))}
           </div>
         ))}
-      </div>
-      
-      {/* 按钮 */}
-      <div className="text-center mt-12">
-        <button
-          onClick={() => onNavigate(section.button_link)}
-          className="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white text-lg font-medium rounded-xl shadow-lg hover:shadow-xl transition-all"
-        >
-          {section.button_text}
-        </button>
       </div>
     </div>
   );
