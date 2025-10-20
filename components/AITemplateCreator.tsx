@@ -55,13 +55,15 @@ export const AITemplateCreator: React.FC = () => {
       // 从 design_templates 表读取实际存在的分类
       const { data, error } = await supabase
         .from('design_templates')
-        .select('category')
-        .not('category', 'is', null);
+        .select('main_category');
 
       if (error) throw error;
       
       // 提取并去重分类名称
-      const uniqueCategories = [...new Set(data?.map(item => item.category).filter(Boolean))] || [];
+      const categories = (data as any[] || [])
+        .map((item: any) => item.main_category)
+        .filter((cat): cat is string => Boolean(cat));
+      const uniqueCategories = [...new Set(categories)] as string[];
       
       // 转换为选择器格式
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
@@ -96,7 +98,7 @@ export const AITemplateCreator: React.FC = () => {
     }
     
     // 最多70张
-    const validFiles = files.slice(0, 70);
+    const validFiles = files.slice(0, 70) as File[];
     
     if (files.length > 70) {
       alert(`最多只能上传70张图片，已自动截取前70张。`);
