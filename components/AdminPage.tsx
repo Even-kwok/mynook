@@ -2087,6 +2087,18 @@ const TemplateManagement: React.FC<{
                     </motion.div>
                 )}
             </AnimatePresence>
+            
+            {/* Smart Merge Modal */}
+            <MergeSuggestionsModal
+                isOpen={isMergeModalOpen}
+                onClose={() => setIsMergeModalOpen(false)}
+                mainCategory={currentMergeCategory}
+                suggestions={mergeSuggestions}
+                selectedMerges={selectedMerges}
+                onToggleSelection={toggleMergeSelection}
+                onConfirm={handleConfirmMerge}
+                isMerging={isMerging}
+            />
         </div>
     );
 };
@@ -2662,18 +2674,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                     {renderContent()}
                 </div>
             </main>
-            
-            {/* Smart Merge Modal */}
-            <MergeSuggestionsModal
-                isOpen={isMergeModalOpen}
-                onClose={() => setIsMergeModalOpen(false)}
-                mainCategory={currentMergeCategory}
-                suggestions={mergeSuggestions}
-                selectedMerges={selectedMerges}
-                onToggleSelection={toggleMergeSelection}
-                onConfirm={handleConfirmMerge}
-                isMerging={isMerging}
-            />
         </div>
     );
 };
