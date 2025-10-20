@@ -1656,7 +1656,7 @@ const TemplateManagement: React.FC<{
                 
                 // 先查询有多少模板会被影响 - 使用正确的字段
                 const { data: existingTemplates, error: countError } = await supabase
-                    .from('templates')
+                    .from('design_templates')
                     .select(`id, name, ${fieldToUpdate}`)
                     .eq('main_category', currentMergeCategory)
                     .in(fieldToUpdate, suggestion.categories);
@@ -1688,7 +1688,7 @@ const TemplateManagement: React.FC<{
                 
                 // 将所有源分类的模板迁移到目标分类
                 const { data: movedTemplates, error: updateError } = await supabase
-                    .from('templates')
+                    .from('design_templates')
                     .update(updateData)
                     .eq('main_category', currentMergeCategory)
                     .in(fieldToUpdate, suggestion.categories)
