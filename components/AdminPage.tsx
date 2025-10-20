@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload, IconTag } from './Icons';
 import { PERMISSION_MAP } from '../constants';
-import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
+import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory, DashboardOverview } from '../types';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
@@ -28,18 +28,28 @@ export interface AdminPageProps {
     categoryOrder: string[];
     setCategoryOrder: React.Dispatch<React.SetStateAction<string[]>>;
     onTemplatesUpdated?: () => void;
+    dashboardData: DashboardOverview | null;
+    isDashboardLoading: boolean;
+    onRefreshDashboard?: () => void | Promise<void>;
 }
 
 // --- Sub-Components ---
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; subtitle?: string; isLoading?: boolean }> = ({ title, value, icon, subtitle, isLoading = false }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
         <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
             {icon}
         </div>
-        <div>
+        <div className="flex-1">
             <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-            <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
+            {isLoading ? (
+                <div className="mt-2 h-7 w-24 rounded-lg bg-slate-200 animate-pulse" />
+            ) : (
+                <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
+            )}
+            {subtitle && !isLoading && (
+                <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+            )}
         </div>
     </div>
 );
@@ -48,74 +58,348 @@ const Dashboard: React.FC<{
     users: User[];
     generationHistory: GenerationBatch[];
     totalDesignsGenerated: number;
-}> = ({ users, generationHistory, totalDesignsGenerated }) => {
-    
-    const activeSubscriptions = useMemo(() => {
-        return users.filter(u => u.permissionLevel > 1).length;
-    }, [users]);
+    data: DashboardOverview | null;
+    isLoading: boolean;
+    onRefresh?: () => void | Promise<void>;
+}> = ({ users, generationHistory, totalDesignsGenerated, data, isLoading, onRefresh }) => {
 
-    const monthlyRevenue = useMemo(() => {
-        const PLAN_PRICES = { 2: 39, 3: 99, 4: 299 }; // Pro, Premium, Business
-        return users.reduce((total, user) => {
-            if (user.permissionLevel > 1) {
-                return total + (PLAN_PRICES[user.permissionLevel as keyof typeof PLAN_PRICES] || 0);
-            }
-            return total;
-        }, 0);
-    }, [users]);
+    const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+    const percentageFormatter = useMemo(() => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }), []);
+    const currencyFormatter = useMemo(() => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }), []);
+
+    const membershipRows = useMemo(() => {
+        if (data?.membershipDistribution && data.membershipDistribution.length > 0) {
+            return data.membershipDistribution;
+        }
+        if (users.length === 0) return [];
+
+        const map = new Map<string, { tier: string; userCount: number; totalCredits: number }>();
+        users.forEach(user => {
+            const tier = user.membershipTier || 'free';
+            const entry = map.get(tier) || { tier, userCount: 0, totalCredits: 0 };
+            entry.userCount += 1;
+            entry.totalCredits += user.credits;
+            map.set(tier, entry);
+        });
+
+        return Array.from(map.values())
+            .map(entry => ({
+                ...entry,
+                percentage: users.length > 0 ? Number(((entry.userCount / users.length) * 100).toFixed(1)) : 0,
+            }))
+            .sort((a, b) => b.userCount - a.userCount);
+    }, [data?.membershipDistribution, users]);
+
+    const metrics = data?.metrics;
+    const totalUsersValue = metrics?.totalUsers ?? users.length;
+    const newUsersValue = metrics?.newUsersThisWeek ?? 0;
+    const totalGenerationsValue = metrics?.totalGenerations ?? totalDesignsGenerated;
+    const averageGenerationsValue = metrics?.averageGenerationsPerUser ?? (users.length > 0 ? Number((totalGenerationsValue / users.length).toFixed(2)) : 0);
+    const activeSubscriptionsValue = metrics?.activeSubscriptions ?? users.filter(u => u.permissionLevel > 1).length;
+    const monthlyRevenueValue = metrics?.monthlyRecurringRevenue ?? (activeSubscriptionsValue * 39);
+
+    const fallbackRemaining = users.reduce((acc, user) => acc + user.credits, 0);
+    const credits = data?.credit ?? {
+        totalPurchased: totalGenerationsValue + fallbackRemaining,
+        totalRemaining: fallbackRemaining,
+        totalConsumed: totalGenerationsValue,
+    };
+
+    const templateDistribution = data?.templateDistribution ?? [];
+    const categoryDistribution = data?.categoryDistribution ?? [];
+    const topTemplates = templateDistribution.slice(0, 10);
+    const topCategories = categoryDistribution.slice(0, 10);
+
+    const lastUpdated = data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : null;
 
     const recentActivities: RecentActivity[] = useMemo(() => {
-        const userActivities: RecentActivity[] = users
+        const userActivities: RecentActivity[] = [...users]
             .sort((a, b) => new Date(b.joined).getTime() - new Date(a.joined).getTime())
             .slice(0, 3)
             .map(user => ({
                 id: `user-${user.id}`,
-                type: 'new_user',
+                type: 'new_user' as const,
                 timestamp: new Date(user.joined),
-                details: `${user.email} joined.`
+                details: `${user.email} joined.`,
             }));
 
         const designActivities: RecentActivity[] = generationHistory
             .slice(0, 3)
             .map(batch => ({
                 id: `design-${batch.id}`,
-                type: 'new_design',
+                type: 'new_design' as const,
                 timestamp: new Date(batch.timestamp),
-                details: `New '${batch.type}' generation created.`
+                details: `New '${batch.type}' generation created.`,
             }));
 
         return [...userActivities, ...designActivities]
             .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-            .slice(0, 5);
+            .slice(0, 6);
     }, [users, generationHistory]);
+
+    const formatDate = (value: string | null) => {
+        if (!value) return '—';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleString();
+    };
+
+    const formatTier = (tier: string) => {
+        return tier
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+
+    const renderSkeletonRows = (columns: number) => (
+        <tbody className="divide-y divide-slate-200">
+            {Array.from({ length: 4 }).map((_, index) => (
+                <tr key={`skeleton-${index}`} className="animate-pulse">
+                    {Array.from({ length: columns }).map((__, colIndex) => (
+                        <td key={colIndex} className="py-3 px-3">
+                            <div className="h-4 w-full rounded bg-slate-200" />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+        </tbody>
+    );
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Users" value={users.length.toString()} icon={<IconUsers className="w-6 h-6" />} />
-                <StatCard title="Designs Generated" value={totalDesignsGenerated.toString()} icon={<IconSparkles className="w-6 h-6" />} />
-                <StatCard title="Active Subscriptions" value={activeSubscriptions.toString()} icon={<IconUserCircle className="w-6 h-6" />} />
-                <StatCard title="Revenue (MTD)" value={`$${monthlyRevenue.toLocaleString()}`} icon={<span className="text-2xl font-bold">$</span>} />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-semibold text-slate-900">Analytics Overview</h2>
+                    <p className="text-sm text-slate-500">Monitor growth, usage, and credit health for Mynook AI.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className="text-xs text-slate-400">Last updated: {lastUpdated || '—'}</span>
+                    {onRefresh && (
+                        <Button primary onClick={() => onRefresh?.()} disabled={isLoading} className="text-sm px-4 py-2">
+                            {isLoading ? '刷新中...' : '刷新数据'}
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
-                <div className="mt-4 space-y-4">
-                    {recentActivities.length > 0 ? (
-                        recentActivities.map(activity => (
-                            <div key={activity.id} className="flex items-start gap-4 p-3 -mx-3 rounded-lg hover:bg-slate-50">
-                                <div className={`p-2 rounded-full ${activity.type === 'new_user' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                                    {activity.type === 'new_user' ? <IconUserCircle className="w-5 h-5" /> : <IconPhoto className="w-5 h-5" />}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <StatCard
+                    title="Total Users"
+                    value={numberFormatter.format(totalUsersValue)}
+                    subtitle={`+${numberFormatter.format(newUsersValue)} new this week`}
+                    icon={<IconUsers className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Total Generations"
+                    value={numberFormatter.format(totalGenerationsValue)}
+                    subtitle={`Avg ${averageGenerationsValue} per user`}
+                    icon={<IconSparkles className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Active Subscriptions"
+                    value={numberFormatter.format(activeSubscriptionsValue)}
+                    subtitle={activeSubscriptionsValue > 0 ? `${percentageFormatter.format((activeSubscriptionsValue / Math.max(totalUsersValue, 1)) * 100)}% of users` : 'No paid members'}
+                    icon={<IconUserCircle className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Monthly Recurring Revenue"
+                    value={currencyFormatter.format(monthlyRevenueValue)}
+                    subtitle="Normalized for yearly plans"
+                    icon={<span className="text-2xl font-bold">$</span>}
+                    isLoading={isLoading && !data}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                    title="Credits Purchased"
+                    value={numberFormatter.format(credits.totalPurchased)}
+                    subtitle="Lifetime (consumed + remaining)"
+                    icon={<IconTag className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Credits Consumed"
+                    value={numberFormatter.format(credits.totalConsumed)}
+                    subtitle="Tied to total generations"
+                    icon={<IconPhoto className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Credits Remaining"
+                    value={numberFormatter.format(credits.totalRemaining)}
+                    subtitle="Current balance across all users"
+                    icon={<IconSparkles className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Membership Breakdown</h3>
+                            <p className="text-sm text-slate-500">Active users by tier and available credits</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tier</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Users</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Share</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Credits</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(4)
+                            ) : membershipRows.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {membershipRows.map(row => (
+                                        <tr key={row.tier}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">{formatTier(row.tier)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(row.userCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{percentageFormatter.format(row.percentage)}%</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(row.totalCredits)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={4} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading membership data...' : 'No membership data available yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
+                        <span className="text-xs text-slate-400">Last 6 events</span>
+                    </div>
+                    <div className="mt-4 space-y-4">
+                        {recentActivities.length > 0 ? (
+                            recentActivities.map(activity => (
+                                <div key={activity.id} className="flex items-start gap-4 p-3 -mx-3 rounded-lg hover:bg-slate-50">
+                                    <div className={`p-2 rounded-full ${activity.type === 'new_user' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                                        {activity.type === 'new_user' ? <IconUserCircle className="w-5 h-5" /> : <IconPhoto className="w-5 h-5" />}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-700">{activity.details}</p>
+                                        <p className="text-xs text-slate-500">{activity.timestamp.toLocaleString()}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-slate-700">{activity.details}</p>
-                                    <p className="text-xs text-slate-500">{activity.timestamp.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-slate-500 text-sm">No recent activity to show.</p>
-                    )}
+                            ))
+                        ) : (
+                            <p className="text-slate-500 text-sm">No recent activity to show.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Top Templates by Usage</h3>
+                            <p className="text-sm text-slate-500">Based on template_usage_stats (top 10)</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Template</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Category</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Usage</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Last Used</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(4)
+                            ) : topTemplates.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {topTemplates.map(template => (
+                                        <tr key={template.templateId}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">{template.templateName}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">
+                                                <div className="flex flex-col">
+                                                    <span>{template.mainCategory}</span>
+                                                    <span className="text-xs text-slate-400">{template.subCategory}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(template.usageCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{formatDate(template.lastUsedAt)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={4} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading template usage...' : 'No template usage data captured yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Category Performance</h3>
+                            <p className="text-sm text-slate-500">Aggregated usage by main & sub category</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Category</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Usage</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Last Used</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(3)
+                            ) : topCategories.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {topCategories.map(category => (
+                                        <tr key={`${category.mainCategory}-${category.subCategory}`}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">
+                                                <div className="flex flex-col">
+                                                    <span>{category.mainCategory}</span>
+                                                    <span className="text-xs text-slate-400">{category.subCategory}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(category.usageCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{formatDate(category.lastUsedAt)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={3} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading category usage...' : 'No category usage data captured yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1731,6 +2015,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     categoryOrder,
     setCategoryOrder,
     onTemplatesUpdated,
+    dashboardData,
+    isDashboardLoading,
+    onRefreshDashboard,
 }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const tabs = [
@@ -1752,7 +2039,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <Dashboard users={users} generationHistory={generationHistory} totalDesignsGenerated={totalDesignsGenerated} />;
+                return (
+                    <Dashboard
+                        users={users}
+                        generationHistory={generationHistory}
+                        totalDesignsGenerated={totalDesignsGenerated}
+                        data={dashboardData}
+                        isLoading={isDashboardLoading}
+                        onRefresh={onRefreshDashboard}
+                    />
+                );
             case 'users':
                 return <UserManagement users={users} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} />;
             case 'designs':

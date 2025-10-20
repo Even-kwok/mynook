@@ -130,6 +130,55 @@ export interface ManagedPromptTemplateCategory {
 
 export type ManagedTemplateData = Record<string, ManagedPromptTemplateCategory[]>;
 
+// --- Admin Dashboard Types ---
+
+export interface DashboardMetrics {
+  totalUsers: number;
+  newUsersThisWeek: number;
+  totalGenerations: number;
+  activeSubscriptions: number;
+  monthlyRecurringRevenue: number;
+  averageGenerationsPerUser: number;
+}
+
+export interface CreditStats {
+  totalPurchased: number;
+  totalRemaining: number;
+  totalConsumed: number;
+}
+
+export interface MembershipDistributionStat {
+  tier: string;
+  userCount: number;
+  percentage: number;
+  totalCredits: number;
+}
+
+export interface TemplateUsageStat {
+  templateId: string;
+  templateName: string;
+  mainCategory: string;
+  subCategory: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+export interface CategoryUsageStat {
+  mainCategory: string;
+  subCategory: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+export interface DashboardOverview {
+  metrics: DashboardMetrics;
+  credit: CreditStats;
+  membershipDistribution: MembershipDistributionStat[];
+  templateDistribution: TemplateUsageStat[];
+  categoryDistribution: CategoryUsageStat[];
+  generatedAt: string;
+}
+
 
 // --- Free Canvas Types ---
 export type CanvasImage = {
