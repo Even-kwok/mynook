@@ -2,43 +2,29 @@
 
 import { PromptTemplate, PromptTemplateCategory, AdvisorPersona, User, ManagedPromptTemplateCategory, GalleryItem } from './types';
 
+// ============================================
+// ROOM_TYPES - Simplified & Optimized List
+// ============================================
+// Updated: 2025-10-20
+// Changed from 32 types to 10 core types
+// All database templates have been migrated
+// ============================================
 export const ROOM_TYPES = [
-  // Basic Living Spaces (12)
+  // Core Living Spaces (6 types, 191 templates)
   { id: 'living-room', name: 'Living Room' },
   { id: 'dining-room', name: 'Dining Room' },
   { id: 'bedroom', name: 'Bedroom' },
-  { id: 'master-bedroom', name: 'Master Bedroom' },
-  { id: 'guest-bedroom', name: 'Guest Bedroom' },
-  { id: 'kids-room', name: 'Kids Room' },
-  { id: 'nursery', name: 'Nursery' },
-  { id: 'teen-room', name: 'Teen Room' },
   { id: 'kitchen', name: 'Kitchen' },
   { id: 'bathroom', name: 'Bathroom' },
-  { id: 'master-bathroom', name: 'Master Bathroom' },
-  { id: 'powder-room', name: 'Powder Room' },
-  // Functional Spaces (8)
   { id: 'home-office', name: 'Home Office' },
-  { id: 'study-library', name: 'Study / Library' },
-  { id: 'laundry-room', name: 'Laundry Room' },
+  
+  // Functional Spaces (2 types, 9 templates)
   { id: 'mudroom-entryway', name: 'Mudroom / Entryway' },
   { id: 'walk-in-closet', name: 'Walk-in Closet' },
-  { id: 'pantry', name: 'Pantry' },
-  { id: 'attic', name: 'Attic' },
-  { id: 'basement', name: 'Basement' },
-  // Entertainment Spaces (7)
-  { id: 'home-theater', name: 'Home Theater' },
-  { id: 'game-room', name: 'Game Room' },
+  
+  // Entertainment & Special Spaces (2 types, 4 templates)
   { id: 'home-gym', name: 'Home Gym' },
-  { id: 'yoga-meditation-room', name: 'Yoga / Meditation Room' },
-  { id: 'home-bar', name: 'Home Bar' },
-  { id: 'music-room', name: 'Music Room' },
-  { id: 'craft-hobby-room', name: 'Craft / Hobby Room' },
-  // Transitional & Special Spaces (5)
-  { id: 'hallway-corridor', name: 'Hallway / Corridor' },
-  { id: 'staircase', name: 'Staircase' },
-  { id: 'sunroom-conservatory', name: 'Sunroom / Conservatory' },
-  { id: 'balcony-terrace', name: 'Balcony / Terrace' },
-  { id: 'garage', name: 'Garage' },
+  { id: 'reading-nook', name: 'Reading Nook' },
 ];
 
 export const BUILDING_TYPES = [
