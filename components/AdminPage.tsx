@@ -1093,15 +1093,11 @@ const TemplateManagement: React.FC<{
         // 使用 toast.promise 显示异步操作状态
         const deletePromise = deleteTemplateFromDB(templateId)
             .then(async () => {
-                // 重新从数据库加载（Admin Panel用）
-                const freshTemplates = await getAllTemplates();
-                setTemplateData(freshTemplates);
-                setCategoryOrder(Object.keys(freshTemplates));
-                
-                // 通知父组件刷新前端模板数据
+                // ✅ 删除成功，只在后台通知前端刷新（不影响 Admin Panel 的折叠状态）
                 if (onTemplatesUpdated) {
                     await onTemplatesUpdated();
                 }
+                // ✅ Admin Panel 已经通过乐观更新完成了 UI 变化，不需要重新加载
             })
             .catch((error) => {
                 // 恢复备份数据
@@ -1171,17 +1167,20 @@ const TemplateManagement: React.FC<{
         setTemplateData(optimisticData);
         setCategoryOrder(Object.keys(optimisticData));
         
+        // 同时从折叠状态中移除该分类
+        setCollapsedMainCategories(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(mainCategory);
+            return newSet;
+        });
+        
         const deletePromise = deleteMainCategoryFromDB(mainCategory)
             .then(async () => {
-                // 重新从数据库加载（Admin Panel用）
-                const freshTemplates = await getAllTemplates();
-                setTemplateData(freshTemplates);
-                setCategoryOrder(Object.keys(freshTemplates));
-                
-                // 通知父组件刷新前端模板数据
+                // ✅ 删除成功，只在后台通知前端刷新
                 if (onTemplatesUpdated) {
                     await onTemplatesUpdated();
                 }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
             })
             .catch((error) => {
                 // 恢复备份数据
@@ -1220,17 +1219,21 @@ const TemplateManagement: React.FC<{
         }
         setTemplateData(optimisticData);
         
+        // 同时从折叠状态中移除该子分类
+        const subKey = `${mainCategory}::${subCategoryName}`;
+        setCollapsedSubCategories(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(subKey);
+            return newSet;
+        });
+        
         const deletePromise = deleteSubCategoryFromDB(mainCategory, subCategoryName)
             .then(async () => {
-                // 重新从数据库加载（Admin Panel用）
-                const freshTemplates = await getAllTemplates();
-                setTemplateData(freshTemplates);
-                setCategoryOrder(Object.keys(freshTemplates));
-                
-                // 通知父组件刷新前端模板数据
+                // ✅ 删除成功，只在后台通知前端刷新
                 if (onTemplatesUpdated) {
                     await onTemplatesUpdated();
                 }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
             })
             .catch((error) => {
                 // 恢复备份数据
@@ -1527,15 +1530,11 @@ const TemplateManagement: React.FC<{
         
         const deletePromise = batchDeleteTemplates(templateIdsArray)
             .then(async () => {
-                // 重新从数据库加载（Admin Panel用）
-                const freshTemplates = await getAllTemplates();
-                setTemplateData(freshTemplates);
-                setCategoryOrder(Object.keys(freshTemplates));
-                
-                // 通知父组件刷新前端模板数据
+                // ✅ 批量删除成功，只在后台通知前端刷新
                 if (onTemplatesUpdated) {
                     await onTemplatesUpdated();
                 }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
             })
             .catch((error) => {
                 // 恢复备份数据和选中状态
