@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload, IconTag } from './Icons';
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory, DashboardOverview } from '../types';
@@ -1060,37 +1061,60 @@ const TemplateManagement: React.FC<{
             }
             
             setIsTemplateModalOpen(false);
-            
-            alert('Template saved successfully!');
+            toast.success('Template saved successfully! ✨');
             
         } catch (error) {
             console.error('Failed to save template:', error);
-            alert('Failed to save template. Please try again.');
+            toast.error('Failed to save template. Please try again.');
         }
     };
 
     const handleDeleteTemplate = async (templateId: string, mainCategory: string, subCategoryName: string) => {
         if (!confirm('Are you sure you want to delete this template?')) return;
         
-        try {
-            // Delete from database
-            await deleteTemplateFromDB(templateId);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
+        // 备份当前数据，用于失败时恢复
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        if (optimisticData[mainCategory]) {
+            const subCategoryIndex = optimisticData[mainCategory].findIndex(
+                (sub: any) => sub.name === subCategoryName
+            );
+            if (subCategoryIndex !== -1) {
+                const updatedTemplates = optimisticData[mainCategory][subCategoryIndex].templates.filter(
+                    (t: any) => t.id !== templateId
+                );
+                optimisticData[mainCategory][subCategoryIndex].templates = updatedTemplates;
             }
-            
-            alert('Template deleted successfully!');
-        } catch (error) {
-            console.error('Failed to delete template:', error);
-            alert('Failed to delete template. Please try again.');
         }
+        setTemplateData(optimisticData);
+        
+        // 使用 toast.promise 显示异步操作状态
+        const deletePromise = deleteTemplateFromDB(templateId)
+            .then(async () => {
+                // 重新从数据库加载（Admin Panel用）
+                const freshTemplates = await getAllTemplates();
+                setTemplateData(freshTemplates);
+                setCategoryOrder(Object.keys(freshTemplates));
+                
+                // 通知父组件刷新前端模板数据
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                console.error('Failed to delete template:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: 'Deleting template...',
+            success: 'Template deleted successfully! ✨',
+            error: 'Failed to delete template. Please try again.',
+        });
     };
 
     const toggleMainCategory = async (mainCategory: string) => {
@@ -1124,7 +1148,7 @@ const TemplateManagement: React.FC<{
             console.log(`✅ Main category ${mainCategory} toggled to ${newEnabledState}`);
         } catch (error) {
             console.error('Failed to toggle main category:', error);
-            alert('Failed to update main category status. Please try again.');
+            toast.error('Failed to update main category status. Please try again.');
         }
     };
 
@@ -1137,24 +1161,41 @@ const TemplateManagement: React.FC<{
     const handleDeleteMainCategory = async (mainCategory: string) => {
         if (!confirm(`Are you sure you want to delete the entire "${mainCategory}" category? This will delete ALL templates under it.`)) return;
         
-        try {
-            await deleteMainCategoryFromDB(mainCategory);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully deleted "${mainCategory}" category!`);
-        } catch (error) {
-            console.error('Failed to delete main category:', error);
-            alert('Failed to delete category. Please try again.');
-        }
+        // 备份当前数据
+        const backupData = { ...templateData };
+        const backupOrder = [...categoryOrder];
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        delete optimisticData[mainCategory];
+        setTemplateData(optimisticData);
+        setCategoryOrder(Object.keys(optimisticData));
+        
+        const deletePromise = deleteMainCategoryFromDB(mainCategory)
+            .then(async () => {
+                // 重新从数据库加载（Admin Panel用）
+                const freshTemplates = await getAllTemplates();
+                setTemplateData(freshTemplates);
+                setCategoryOrder(Object.keys(freshTemplates));
+                
+                // 通知父组件刷新前端模板数据
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                setCategoryOrder(backupOrder);
+                console.error('Failed to delete main category:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting "${mainCategory}"...`,
+            success: `Successfully deleted "${mainCategory}"! ✨`,
+            error: 'Failed to delete category. Please try again.',
+        });
     };
 
     const handleAddSubCategory = (mainCategory: string) => {
@@ -1167,24 +1208,42 @@ const TemplateManagement: React.FC<{
     const handleDeleteSubCategory = async (mainCategory: string, subCategoryName: string) => {
         if (!confirm(`Are you sure you want to delete "${subCategoryName}"? This will delete ALL templates under it.`)) return;
         
-        try {
-            await deleteSubCategoryFromDB(mainCategory, subCategoryName);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully deleted "${subCategoryName}"!`);
-        } catch (error) {
-            console.error('Failed to delete sub category:', error);
-            alert('Failed to delete category. Please try again.');
+        // 备份当前数据
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        if (optimisticData[mainCategory]) {
+            optimisticData[mainCategory] = optimisticData[mainCategory].filter(
+                (sub: any) => sub.name !== subCategoryName
+            );
         }
+        setTemplateData(optimisticData);
+        
+        const deletePromise = deleteSubCategoryFromDB(mainCategory, subCategoryName)
+            .then(async () => {
+                // 重新从数据库加载（Admin Panel用）
+                const freshTemplates = await getAllTemplates();
+                setTemplateData(freshTemplates);
+                setCategoryOrder(Object.keys(freshTemplates));
+                
+                // 通知父组件刷新前端模板数据
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                console.error('Failed to delete sub category:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting "${subCategoryName}"...`,
+            success: `Successfully deleted "${subCategoryName}"! ✨`,
+            error: 'Failed to delete category. Please try again.',
+        });
     };
 
     const toggleSubCategory = async (mainCategory: string, subCategoryName: string) => {
@@ -1217,7 +1276,7 @@ const TemplateManagement: React.FC<{
             console.log(`✅ Category ${mainCategory} > ${subCategoryName} toggled to ${newEnabledState}`);
         } catch (error) {
             console.error('Failed to toggle category:', error);
-            alert('Failed to update category status. Please try again.');
+            toast.error('Failed to update category status. Please try again.');
         }
     };
 
@@ -1284,7 +1343,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Main category sorted successfully');
         } catch (error) {
             console.error('Failed to sort main category:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -1337,7 +1396,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Sub category sorted successfully');
         } catch (error) {
             console.error('Failed to sort sub category:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -1396,7 +1455,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Template sorted successfully');
         } catch (error) {
             console.error('Failed to sort template:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -1444,33 +1503,53 @@ const TemplateManagement: React.FC<{
     const confirmBatchDelete = async () => {
         if (selectedTemplateIds.size === 0) return;
 
-        try {
-            const templateIdsArray = Array.from(selectedTemplateIds);
-            
-            // 调用批量删除API
-            await batchDeleteTemplates(templateIdsArray);
-            
-            // 清空选中状态
-            setSelectedTemplateIds(new Set());
-            
-            // 关闭确认对话框
-            setIsDeleteConfirmOpen(false);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully deleted ${templateIdsArray.length} template(s)!`);
-        } catch (error) {
-            console.error('Failed to batch delete templates:', error);
-            alert('Failed to delete templates. Please try again.');
-        }
+        const templateIdsArray = Array.from(selectedTemplateIds);
+        const count = templateIdsArray.length;
+        
+        // 备份当前数据
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除所有选中的模板
+        const optimisticData = { ...templateData };
+        Object.keys(optimisticData).forEach(mainCategory => {
+            optimisticData[mainCategory] = optimisticData[mainCategory].map((subCategory: any) => ({
+                ...subCategory,
+                templates: subCategory.templates.filter((t: any) => !selectedTemplateIds.has(t.id))
+            }));
+        });
+        setTemplateData(optimisticData);
+        
+        // 清空选中状态
+        setSelectedTemplateIds(new Set());
+        
+        // 关闭确认对话框
+        setIsDeleteConfirmOpen(false);
+        
+        const deletePromise = batchDeleteTemplates(templateIdsArray)
+            .then(async () => {
+                // 重新从数据库加载（Admin Panel用）
+                const freshTemplates = await getAllTemplates();
+                setTemplateData(freshTemplates);
+                setCategoryOrder(Object.keys(freshTemplates));
+                
+                // 通知父组件刷新前端模板数据
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+            })
+            .catch((error) => {
+                // 恢复备份数据和选中状态
+                setTemplateData(backupData);
+                setSelectedTemplateIds(new Set(templateIdsArray));
+                console.error('Failed to batch delete templates:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting ${count} template(s)...`,
+            success: `Successfully deleted ${count} template(s)! ✨`,
+            error: 'Failed to delete templates. Please try again.',
+        });
     };
 
     // 获取选中模板的详细信息（用于确认对话框）
@@ -1760,10 +1839,10 @@ const TemplateManagement: React.FC<{
                         }
                         
                         setIsCategoryModalOpen(false);
-                        alert(`"${categoryName}" added! Now you can add templates to it.`);
+                        toast.success(`"${categoryName}" added! Now you can add templates to it. ✨`);
                     } catch (error) {
                         console.error('Failed to add category:', error);
-                        alert('Failed to add category. Please try again.');
+                        toast.error('Failed to add category. Please try again.');
                     }
                 }}
             />
@@ -2094,7 +2173,7 @@ const CategoryModal: React.FC<{
 
     const handleSubmit = () => {
         if (!categoryName.trim()) {
-            alert('Please enter a category name');
+            toast.error('Please enter a category name');
             return;
         }
         onSave(categoryName.trim());

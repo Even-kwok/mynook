@@ -31,6 +31,7 @@ import { SlidingPanel } from './components/SlidingPanel';
 import { GalleryWallSection } from './components/GalleryWallSection';
 import { UserMenu as DarkUserMenu } from './components/UserMenu';
 import { supabase } from './config/supabase';
+import { Toaster } from 'sonner';
 
 // --- Re-styled Helper Components ---
 
@@ -4114,6 +4115,7 @@ const App: React.FC = () => {
     
     return (
         <TemplateProvider>
+            <Toaster position="top-right" richColors closeButton />
             <div className="h-screen w-screen bg-slate-50 flex flex-col font-sans">
                 <ErrorNotification message={error} onDismiss={() => setError(null)} />
             <AnimatePresence>
