@@ -1,9 +1,12 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers, IconSettings, IconPencil, IconTrash, IconPlus, IconChevronDown, IconArrowDown, IconArrowUp, IconX, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom, IconUpload, IconTag } from './Icons';
 import { PERMISSION_MAP } from '../constants';
-import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory } from '../types';
+import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory, DashboardOverview, SimilarCategoryGroup } from '../types';
+import { analyzeSimilarCategories } from '../services/categoryMergeService';
+import { supabase } from '../config/supabase';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
@@ -28,18 +31,28 @@ export interface AdminPageProps {
     categoryOrder: string[];
     setCategoryOrder: React.Dispatch<React.SetStateAction<string[]>>;
     onTemplatesUpdated?: () => void;
+    dashboardData: DashboardOverview | null;
+    isDashboardLoading: boolean;
+    onRefreshDashboard?: () => void | Promise<void>;
 }
 
 // --- Sub-Components ---
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; subtitle?: string; isLoading?: boolean }> = ({ title, value, icon, subtitle, isLoading = false }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
         <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
             {icon}
         </div>
-        <div>
+        <div className="flex-1">
             <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-            <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
+            {isLoading ? (
+                <div className="mt-2 h-7 w-24 rounded-lg bg-slate-200 animate-pulse" />
+            ) : (
+                <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
+            )}
+            {subtitle && !isLoading && (
+                <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+            )}
         </div>
     </div>
 );
@@ -48,74 +61,348 @@ const Dashboard: React.FC<{
     users: User[];
     generationHistory: GenerationBatch[];
     totalDesignsGenerated: number;
-}> = ({ users, generationHistory, totalDesignsGenerated }) => {
-    
-    const activeSubscriptions = useMemo(() => {
-        return users.filter(u => u.permissionLevel > 1).length;
-    }, [users]);
+    data: DashboardOverview | null;
+    isLoading: boolean;
+    onRefresh?: () => void | Promise<void>;
+}> = ({ users, generationHistory, totalDesignsGenerated, data, isLoading, onRefresh }) => {
 
-    const monthlyRevenue = useMemo(() => {
-        const PLAN_PRICES = { 2: 39, 3: 99, 4: 299 }; // Pro, Premium, Business
-        return users.reduce((total, user) => {
-            if (user.permissionLevel > 1) {
-                return total + (PLAN_PRICES[user.permissionLevel as keyof typeof PLAN_PRICES] || 0);
-            }
-            return total;
-        }, 0);
-    }, [users]);
+    const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+    const percentageFormatter = useMemo(() => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }), []);
+    const currencyFormatter = useMemo(() => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }), []);
+
+    const membershipRows = useMemo(() => {
+        if (data?.membershipDistribution && data.membershipDistribution.length > 0) {
+            return data.membershipDistribution;
+        }
+        if (users.length === 0) return [];
+
+        const map = new Map<string, { tier: string; userCount: number; totalCredits: number }>();
+        users.forEach(user => {
+            const tier = user.membershipTier || 'free';
+            const entry = map.get(tier) || { tier, userCount: 0, totalCredits: 0 };
+            entry.userCount += 1;
+            entry.totalCredits += user.credits;
+            map.set(tier, entry);
+        });
+
+        return Array.from(map.values())
+            .map(entry => ({
+                ...entry,
+                percentage: users.length > 0 ? Number(((entry.userCount / users.length) * 100).toFixed(1)) : 0,
+            }))
+            .sort((a, b) => b.userCount - a.userCount);
+    }, [data?.membershipDistribution, users]);
+
+    const metrics = data?.metrics;
+    const totalUsersValue = metrics?.totalUsers ?? users.length;
+    const newUsersValue = metrics?.newUsersThisWeek ?? 0;
+    const totalGenerationsValue = metrics?.totalGenerations ?? totalDesignsGenerated;
+    const averageGenerationsValue = metrics?.averageGenerationsPerUser ?? (users.length > 0 ? Number((totalGenerationsValue / users.length).toFixed(2)) : 0);
+    const activeSubscriptionsValue = metrics?.activeSubscriptions ?? users.filter(u => u.permissionLevel > 1).length;
+    const monthlyRevenueValue = metrics?.monthlyRecurringRevenue ?? (activeSubscriptionsValue * 39);
+
+    const fallbackRemaining = users.reduce((acc, user) => acc + user.credits, 0);
+    const credits = data?.credit ?? {
+        totalPurchased: totalGenerationsValue + fallbackRemaining,
+        totalRemaining: fallbackRemaining,
+        totalConsumed: totalGenerationsValue,
+    };
+
+    const templateDistribution = data?.templateDistribution ?? [];
+    const categoryDistribution = data?.categoryDistribution ?? [];
+    const topTemplates = templateDistribution.slice(0, 10);
+    const topCategories = categoryDistribution.slice(0, 10);
+
+    const lastUpdated = data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : null;
 
     const recentActivities: RecentActivity[] = useMemo(() => {
-        const userActivities: RecentActivity[] = users
+        const userActivities: RecentActivity[] = [...users]
             .sort((a, b) => new Date(b.joined).getTime() - new Date(a.joined).getTime())
             .slice(0, 3)
             .map(user => ({
                 id: `user-${user.id}`,
-                type: 'new_user',
+                type: 'new_user' as const,
                 timestamp: new Date(user.joined),
-                details: `${user.email} joined.`
+                details: `${user.email} joined.`,
             }));
 
         const designActivities: RecentActivity[] = generationHistory
             .slice(0, 3)
             .map(batch => ({
                 id: `design-${batch.id}`,
-                type: 'new_design',
+                type: 'new_design' as const,
                 timestamp: new Date(batch.timestamp),
-                details: `New '${batch.type}' generation created.`
+                details: `New '${batch.type}' generation created.`,
             }));
 
         return [...userActivities, ...designActivities]
             .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-            .slice(0, 5);
+            .slice(0, 6);
     }, [users, generationHistory]);
+
+    const formatDate = (value: string | null) => {
+        if (!value) return '—';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleString();
+    };
+
+    const formatTier = (tier: string) => {
+        return tier
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+
+    const renderSkeletonRows = (columns: number) => (
+        <tbody className="divide-y divide-slate-200">
+            {Array.from({ length: 4 }).map((_, index) => (
+                <tr key={`skeleton-${index}`} className="animate-pulse">
+                    {Array.from({ length: columns }).map((__, colIndex) => (
+                        <td key={colIndex} className="py-3 px-3">
+                            <div className="h-4 w-full rounded bg-slate-200" />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+        </tbody>
+    );
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Users" value={users.length.toString()} icon={<IconUsers className="w-6 h-6" />} />
-                <StatCard title="Designs Generated" value={totalDesignsGenerated.toString()} icon={<IconSparkles className="w-6 h-6" />} />
-                <StatCard title="Active Subscriptions" value={activeSubscriptions.toString()} icon={<IconUserCircle className="w-6 h-6" />} />
-                <StatCard title="Revenue (MTD)" value={`$${monthlyRevenue.toLocaleString()}`} icon={<span className="text-2xl font-bold">$</span>} />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-semibold text-slate-900">Analytics Overview</h2>
+                    <p className="text-sm text-slate-500">Monitor growth, usage, and credit health for Mynook AI.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className="text-xs text-slate-400">Last updated: {lastUpdated || '—'}</span>
+                    {onRefresh && (
+                        <Button primary onClick={() => onRefresh?.()} disabled={isLoading} className="text-sm px-4 py-2">
+                            {isLoading ? '刷新中...' : '刷新数据'}
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
-                <div className="mt-4 space-y-4">
-                    {recentActivities.length > 0 ? (
-                        recentActivities.map(activity => (
-                            <div key={activity.id} className="flex items-start gap-4 p-3 -mx-3 rounded-lg hover:bg-slate-50">
-                                <div className={`p-2 rounded-full ${activity.type === 'new_user' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                                    {activity.type === 'new_user' ? <IconUserCircle className="w-5 h-5" /> : <IconPhoto className="w-5 h-5" />}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <StatCard
+                    title="Total Users"
+                    value={numberFormatter.format(totalUsersValue)}
+                    subtitle={`+${numberFormatter.format(newUsersValue)} new this week`}
+                    icon={<IconUsers className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Total Generations"
+                    value={numberFormatter.format(totalGenerationsValue)}
+                    subtitle={`Avg ${averageGenerationsValue} per user`}
+                    icon={<IconSparkles className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Active Subscriptions"
+                    value={numberFormatter.format(activeSubscriptionsValue)}
+                    subtitle={activeSubscriptionsValue > 0 ? `${percentageFormatter.format((activeSubscriptionsValue / Math.max(totalUsersValue, 1)) * 100)}% of users` : 'No paid members'}
+                    icon={<IconUserCircle className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Monthly Recurring Revenue"
+                    value={currencyFormatter.format(monthlyRevenueValue)}
+                    subtitle="Normalized for yearly plans"
+                    icon={<span className="text-2xl font-bold">$</span>}
+                    isLoading={isLoading && !data}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                    title="Credits Purchased"
+                    value={numberFormatter.format(credits.totalPurchased)}
+                    subtitle="Lifetime (consumed + remaining)"
+                    icon={<IconTag className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Credits Consumed"
+                    value={numberFormatter.format(credits.totalConsumed)}
+                    subtitle="Tied to total generations"
+                    icon={<IconPhoto className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+                <StatCard
+                    title="Credits Remaining"
+                    value={numberFormatter.format(credits.totalRemaining)}
+                    subtitle="Current balance across all users"
+                    icon={<IconSparkles className="w-6 h-6" />}
+                    isLoading={isLoading && !data}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Membership Breakdown</h3>
+                            <p className="text-sm text-slate-500">Active users by tier and available credits</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tier</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Users</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Share</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Credits</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(4)
+                            ) : membershipRows.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {membershipRows.map(row => (
+                                        <tr key={row.tier}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">{formatTier(row.tier)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(row.userCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{percentageFormatter.format(row.percentage)}%</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(row.totalCredits)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={4} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading membership data...' : 'No membership data available yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
+                        <span className="text-xs text-slate-400">Last 6 events</span>
+                    </div>
+                    <div className="mt-4 space-y-4">
+                        {recentActivities.length > 0 ? (
+                            recentActivities.map(activity => (
+                                <div key={activity.id} className="flex items-start gap-4 p-3 -mx-3 rounded-lg hover:bg-slate-50">
+                                    <div className={`p-2 rounded-full ${activity.type === 'new_user' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                                        {activity.type === 'new_user' ? <IconUserCircle className="w-5 h-5" /> : <IconPhoto className="w-5 h-5" />}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-700">{activity.details}</p>
+                                        <p className="text-xs text-slate-500">{activity.timestamp.toLocaleString()}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-slate-700">{activity.details}</p>
-                                    <p className="text-xs text-slate-500">{activity.timestamp.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-slate-500 text-sm">No recent activity to show.</p>
-                    )}
+                            ))
+                        ) : (
+                            <p className="text-slate-500 text-sm">No recent activity to show.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Top Templates by Usage</h3>
+                            <p className="text-sm text-slate-500">Based on template_usage_stats (top 10)</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Template</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Category</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Usage</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Last Used</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(4)
+                            ) : topTemplates.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {topTemplates.map(template => (
+                                        <tr key={template.templateId}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">{template.templateName}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">
+                                                <div className="flex flex-col">
+                                                    <span>{template.mainCategory}</span>
+                                                    <span className="text-xs text-slate-400">{template.subCategory}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(template.usageCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{formatDate(template.lastUsedAt)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={4} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading template usage...' : 'No template usage data captured yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800">Category Performance</h3>
+                            <p className="text-sm text-slate-500">Aggregated usage by main & sub category</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Category</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Usage</th>
+                                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Last Used</th>
+                                </tr>
+                            </thead>
+                            {isLoading && !data ? (
+                                renderSkeletonRows(3)
+                            ) : topCategories.length > 0 ? (
+                                <tbody className="divide-y divide-slate-200">
+                                    {topCategories.map(category => (
+                                        <tr key={`${category.mainCategory}-${category.subCategory}`}>
+                                            <td className="px-3 py-3 text-sm font-medium text-slate-700">
+                                                <div className="flex flex-col">
+                                                    <span>{category.mainCategory}</span>
+                                                    <span className="text-xs text-slate-400">{category.subCategory}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{numberFormatter.format(category.usageCount)}</td>
+                                            <td className="px-3 py-3 text-sm text-slate-500">{formatDate(category.lastUsedAt)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={3} className="px-3 py-6 text-center text-sm text-slate-500">
+                                            {isLoading ? 'Loading category usage...' : 'No category usage data captured yet.'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -197,23 +484,381 @@ const DesignManagement: React.FC<{
     generationHistory: GenerationBatch[];
     onDeleteBatch: (batchId: string) => void;
 }> = ({ generationHistory, onDeleteBatch }) => {
+    const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+
+    const summary = useMemo(() => {
+        if (!generationHistory || generationHistory.length === 0) {
+            return {
+                totalBatches: 0,
+                totalImages: 0,
+                uniqueUsers: 0,
+                uniqueTemplates: 0,
+                lastGeneratedAt: null as string | null,
+            };
+        }
+
+        let totalImages = 0;
+        const uniqueUsers = new Set<string>();
+        const uniqueTemplates = new Set<string>();
+        let lastGenerated: Date | null = null;
+
+        generationHistory.forEach(batch => {
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!lastGenerated || timestamp > lastGenerated) {
+                    lastGenerated = timestamp;
+                }
+            }
+
+            totalImages += batch.results?.length || 0;
+
+            if (batch.userId) {
+                uniqueUsers.add(batch.userId);
+            }
+
+            batch.templateIds?.forEach(id => {
+                if (id) {
+                    uniqueTemplates.add(id);
+                }
+            });
+
+            batch.results?.forEach(result => {
+                if (result.templateId) {
+                    uniqueTemplates.add(result.templateId);
+                }
+            });
+        });
+
+        return {
+            totalBatches: generationHistory.length,
+            totalImages,
+            uniqueUsers: uniqueUsers.size,
+            uniqueTemplates: uniqueTemplates.size,
+            lastGeneratedAt: lastGenerated ? lastGenerated.toLocaleString() : null,
+        };
+    }, [generationHistory]);
+
+    const typeStats = useMemo(() => {
+        const map = new Map<string, { type: string; batchCount: number; totalResults: number; lastGenerated: Date | null }>();
+
+        generationHistory.forEach(batch => {
+            const type = batch.type || 'unknown';
+            const entry = map.get(type) || { type, batchCount: 0, totalResults: 0, lastGenerated: null };
+
+            entry.batchCount += 1;
+            entry.totalResults += batch.results?.length || 0;
+
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                    entry.lastGenerated = timestamp;
+                }
+            }
+
+            map.set(type, entry);
+        });
+
+        return Array.from(map.values()).sort((a, b) => b.totalResults - a.totalResults || b.batchCount - a.batchCount);
+    }, [generationHistory]);
+
+    const templateStats = useMemo(() => {
+        const map = new Map<string, {
+            templateId: string;
+            templateName?: string;
+            category?: string;
+            usageCount: number;
+            batchCount: number;
+            lastGenerated: Date | null;
+        }>();
+
+        generationHistory.forEach(batch => {
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            const templateIds = new Set<string>();
+
+            batch.templateIds?.forEach(id => {
+                if (id) {
+                    templateIds.add(id);
+                }
+            });
+
+            batch.results?.forEach(result => {
+                if (result.templateId) {
+                    templateIds.add(result.templateId);
+                    const entry = map.get(result.templateId) || {
+                        templateId: result.templateId,
+                        usageCount: 0,
+                        batchCount: 0,
+                        lastGenerated: null,
+                    };
+
+                    entry.usageCount += 1;
+                    if (result.templateName) {
+                        entry.templateName = result.templateName;
+                    }
+                    if (result.templateCategory) {
+                        entry.category = result.templateCategory;
+                    }
+                    if (!Number.isNaN(timestamp.getTime())) {
+                        if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                            entry.lastGenerated = timestamp;
+                        }
+                    }
+
+                    map.set(result.templateId, entry);
+                }
+            });
+
+            templateIds.forEach(id => {
+                const entry = map.get(id) || {
+                    templateId: id,
+                    usageCount: 0,
+                    batchCount: 0,
+                    lastGenerated: null,
+                };
+
+                entry.batchCount += 1;
+                if (!Number.isNaN(timestamp.getTime())) {
+                    if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                        entry.lastGenerated = timestamp;
+                    }
+                }
+
+                map.set(id, entry);
+            });
+        });
+
+        return Array.from(map.values())
+            .sort((a, b) => b.usageCount - a.usageCount || b.batchCount - a.batchCount)
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const userStats = useMemo(() => {
+        const map = new Map<string, { userId: string; batchCount: number; totalResults: number; lastGenerated: Date | null }>();
+
+        generationHistory.forEach(batch => {
+            if (!batch.userId) {
+                return;
+            }
+
+            const entry = map.get(batch.userId) || { userId: batch.userId, batchCount: 0, totalResults: 0, lastGenerated: null };
+
+            entry.batchCount += 1;
+            entry.totalResults += batch.results?.length || 0;
+
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                    entry.lastGenerated = timestamp;
+                }
+            }
+
+            map.set(batch.userId, entry);
+        });
+
+        return Array.from(map.values())
+            .sort((a, b) => b.totalResults - a.totalResults || b.batchCount - a.batchCount)
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const recentBatches = useMemo(() => {
+        return [...generationHistory]
+            .sort((a, b) => {
+                const aTime = (a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp)).getTime();
+                const bTime = (b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp)).getTime();
+                return bTime - aTime;
+            })
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const formatDateTime = (value: Date | string | null | undefined) => {
+        if (!value) return '—';
+        const parsed = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleString();
+    };
+
+    const formatGenerationType = (type: GenerationBatch['type']) => {
+        if (!type) return 'Unknown';
+        return type
+            .split('_')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-800">Design History</h3>
-            <div className="mt-4 space-y-3">
-                {generationHistory.slice(0, 10).map(batch => (
-                    <div key={batch.id} className="p-3 border border-slate-200 rounded-xl flex justify-between items-center">
-                        <div>
-                            <p className="font-medium text-slate-800">{batch.type} - <span className="text-slate-500">{batch.prompt}</span></p>
-                            <p className="text-xs text-slate-500">
-                                {new Date(batch.timestamp).toLocaleString()} - {batch.results.length} result(s)
-                            </p>
-                        </div>
-                        <Button onClick={() => onDeleteBatch(batch.id)} className="!px-3 !py-1.5 text-sm !bg-red-50 hover:!bg-red-100 !text-red-600 !border-red-200">
-                            <IconTrash className="w-4 h-4" /> Delete
-                        </Button>
+        <div className="bg-white p-6 rounded-2xl shadow-sm space-y-6">
+            <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-slate-800">Design History</h3>
+                <p className="text-sm text-slate-500">统计用户生成设计的总体情况，聚焦于数据指标而非图片预览。</p>
+                <span className="text-xs text-slate-400">最后一次生成时间：{summary.lastGeneratedAt || '—'}</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <StatCard
+                    title="Total Batches"
+                    value={numberFormatter.format(summary.totalBatches)}
+                    subtitle="记录的生成任务总数"
+                    icon={<IconLayoutDashboard className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Images Generated"
+                    value={numberFormatter.format(summary.totalImages)}
+                    subtitle="累计输出图片数量"
+                    icon={<IconPhoto className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Active Creators"
+                    value={numberFormatter.format(summary.uniqueUsers)}
+                    subtitle="参与生成的唯一用户"
+                    icon={<IconUsers className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Templates Used"
+                    value={numberFormatter.format(summary.uniqueTemplates)}
+                    subtitle="覆盖的模板数量"
+                    icon={<IconSparkles className="w-6 h-6" />}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div>
+                    <h4 className="text-sm font-semibold text-slate-700">Generation Type 分布</h4>
+                    <div className="mt-3 overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-slate-500">
+                                    <th className="py-2 pr-3 font-medium">类型</th>
+                                    <th className="py-2 px-3 font-medium">批次数</th>
+                                    <th className="py-2 px-3 font-medium">图片数</th>
+                                    <th className="py-2 px-3 font-medium">最近生成</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                                {typeStats.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-4 text-center text-slate-400">暂无生成数据</td>
+                                    </tr>
+                                ) : (
+                                    typeStats.map(stat => (
+                                        <tr key={stat.type}>
+                                            <td className="py-3 pr-3 text-slate-700 font-medium">{formatGenerationType(stat.type as GenerationBatch['type'])}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.totalResults)}</td>
+                                            <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                ))}
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-semibold text-slate-700">模板使用 Top 10</h4>
+                    <div className="mt-3 overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-slate-500">
+                                    <th className="py-2 pr-3 font-medium">模板</th>
+                                    <th className="py-2 px-3 font-medium">批次数</th>
+                                    <th className="py-2 px-3 font-medium">图片数</th>
+                                    <th className="py-2 px-3 font-medium">最近生成</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                                {templateStats.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-4 text-center text-slate-400">暂无模板使用记录</td>
+                                    </tr>
+                                ) : (
+                                    templateStats.map(stat => (
+                                        <tr key={stat.templateId}>
+                                            <td className="py-3 pr-3">
+                                                <div className="flex flex-col">
+                                                    <span className="text-slate-700 font-medium">{stat.templateName || stat.templateId}</span>
+                                                    {stat.category && <span className="text-xs text-slate-400">{stat.category}</span>}
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.usageCount)}</td>
+                                            <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 className="text-sm font-semibold text-slate-700">高频用户 Top 10</h4>
+                <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-slate-500">
+                                <th className="py-2 pr-3 font-medium">用户 ID</th>
+                                <th className="py-2 px-3 font-medium">批次数</th>
+                                <th className="py-2 px-3 font-medium">图片数</th>
+                                <th className="py-2 px-3 font-medium">最近生成</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {userStats.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="py-4 text-center text-slate-400">暂无用户生成记录</td>
+                                </tr>
+                            ) : (
+                                userStats.map(stat => (
+                                    <tr key={stat.userId}>
+                                        <td className="py-3 pr-3 text-slate-700 font-medium">{stat.userId}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.totalResults)}</td>
+                                        <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 className="text-sm font-semibold text-slate-700">最近的生成任务</h4>
+                <div className="mt-3 overflow-hidden border border-slate-200 rounded-xl">
+                    <table className="min-w-full text-sm">
+                        <thead className="bg-slate-50 text-slate-500">
+                            <tr>
+                                <th className="py-3 pl-4 pr-3 text-left font-medium">类型</th>
+                                <th className="py-3 px-3 text-left font-medium">提示词</th>
+                                <th className="py-3 px-3 text-left font-medium">生成时间</th>
+                                <th className="py-3 px-3 text-left font-medium">结果数</th>
+                                <th className="py-3 pr-4 text-right font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {recentBatches.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-6 text-center text-slate-400">暂无生成记录</td>
+                                </tr>
+                            ) : (
+                                recentBatches.map(batch => (
+                                    <tr key={batch.id}>
+                                        <td className="py-3 pl-4 pr-3 font-medium text-slate-700">{formatGenerationType(batch.type)}</td>
+                                        <td className="py-3 px-3 text-slate-500 max-w-xs truncate" title={batch.prompt}>{batch.prompt}</td>
+                                        <td className="py-3 px-3 text-slate-500">{formatDateTime(batch.timestamp)}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(batch.results?.length || 0)}</td>
+                                        <td className="py-3 pr-4 text-right">
+                                            <Button onClick={() => onDeleteBatch(batch.id)} className="!px-3 !py-1.5 text-sm !bg-red-50 hover:!bg-red-100 !text-red-600 !border-red-200">
+                                                <IconTrash className="w-4 h-4" /> Delete
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
@@ -311,6 +956,14 @@ const TemplateManagement: React.FC<{
     const [isBatchImageMatcherOpen, setIsBatchImageMatcherOpen] = useState(false);
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    
+    // Smart Merge 相关状态
+    const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+    const [currentMergeCategory, setCurrentMergeCategory] = useState<string>('');
+    const [mergeSuggestions, setMergeSuggestions] = useState<SimilarCategoryGroup[]>([]);
+    const [selectedMerges, setSelectedMerges] = useState<Set<number>>(new Set());
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isMerging, setIsMerging] = useState(false);
 
     // 保存主分类折叠状态到 localStorage
     useEffect(() => {
@@ -418,37 +1071,56 @@ const TemplateManagement: React.FC<{
             }
             
             setIsTemplateModalOpen(false);
-            
-            alert('Template saved successfully!');
+            toast.success('Template saved successfully! ✨');
             
         } catch (error) {
             console.error('Failed to save template:', error);
-            alert('Failed to save template. Please try again.');
+            toast.error('Failed to save template. Please try again.');
         }
     };
 
     const handleDeleteTemplate = async (templateId: string, mainCategory: string, subCategoryName: string) => {
         if (!confirm('Are you sure you want to delete this template?')) return;
         
-        try {
-            // Delete from database
-            await deleteTemplateFromDB(templateId);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
+        // 备份当前数据，用于失败时恢复
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        if (optimisticData[mainCategory]) {
+            const subCategoryIndex = optimisticData[mainCategory].findIndex(
+                (sub: any) => sub.name === subCategoryName
+            );
+            if (subCategoryIndex !== -1) {
+                const updatedTemplates = optimisticData[mainCategory][subCategoryIndex].templates.filter(
+                    (t: any) => t.id !== templateId
+                );
+                optimisticData[mainCategory][subCategoryIndex].templates = updatedTemplates;
             }
-            
-            alert('Template deleted successfully!');
-        } catch (error) {
-            console.error('Failed to delete template:', error);
-            alert('Failed to delete template. Please try again.');
         }
+        setTemplateData(optimisticData);
+        
+        // 使用 toast.promise 显示异步操作状态
+        const deletePromise = deleteTemplateFromDB(templateId)
+            .then(async () => {
+                // ✅ 删除成功，只在后台通知前端刷新（不影响 Admin Panel 的折叠状态）
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+                // ✅ Admin Panel 已经通过乐观更新完成了 UI 变化，不需要重新加载
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                console.error('Failed to delete template:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: 'Deleting template...',
+            success: 'Template deleted successfully! ✨',
+            error: 'Failed to delete template. Please try again.',
+        });
     };
 
     const toggleMainCategory = async (mainCategory: string) => {
@@ -482,7 +1154,7 @@ const TemplateManagement: React.FC<{
             console.log(`✅ Main category ${mainCategory} toggled to ${newEnabledState}`);
         } catch (error) {
             console.error('Failed to toggle main category:', error);
-            alert('Failed to update main category status. Please try again.');
+            toast.error('Failed to update main category status. Please try again.');
         }
     };
 
@@ -495,24 +1167,44 @@ const TemplateManagement: React.FC<{
     const handleDeleteMainCategory = async (mainCategory: string) => {
         if (!confirm(`Are you sure you want to delete the entire "${mainCategory}" category? This will delete ALL templates under it.`)) return;
         
-        try {
-            await deleteMainCategoryFromDB(mainCategory);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully deleted "${mainCategory}" category!`);
-        } catch (error) {
-            console.error('Failed to delete main category:', error);
-            alert('Failed to delete category. Please try again.');
-        }
+        // 备份当前数据
+        const backupData = { ...templateData };
+        const backupOrder = [...categoryOrder];
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        delete optimisticData[mainCategory];
+        setTemplateData(optimisticData);
+        setCategoryOrder(Object.keys(optimisticData));
+        
+        // 同时从折叠状态中移除该分类
+        setCollapsedMainCategories(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(mainCategory);
+            return newSet;
+        });
+        
+        const deletePromise = deleteMainCategoryFromDB(mainCategory)
+            .then(async () => {
+                // ✅ 删除成功，只在后台通知前端刷新
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                setCategoryOrder(backupOrder);
+                console.error('Failed to delete main category:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting "${mainCategory}"...`,
+            success: `Successfully deleted "${mainCategory}"! ✨`,
+            error: 'Failed to delete category. Please try again.',
+        });
     };
 
     const handleAddSubCategory = (mainCategory: string) => {
@@ -525,24 +1217,46 @@ const TemplateManagement: React.FC<{
     const handleDeleteSubCategory = async (mainCategory: string, subCategoryName: string) => {
         if (!confirm(`Are you sure you want to delete "${subCategoryName}"? This will delete ALL templates under it.`)) return;
         
-        try {
-            await deleteSubCategoryFromDB(mainCategory, subCategoryName);
-            
-            // 重新从数据库加载（Admin Panel用）
-            const freshTemplates = await getAllTemplates();
-            setTemplateData(freshTemplates);
-            setCategoryOrder(Object.keys(freshTemplates));
-            
-            // 通知父组件刷新前端模板数据
-            if (onTemplatesUpdated) {
-                await onTemplatesUpdated();
-            }
-            
-            alert(`Successfully deleted "${subCategoryName}"!`);
-        } catch (error) {
-            console.error('Failed to delete sub category:', error);
-            alert('Failed to delete category. Please try again.');
+        // 备份当前数据
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除
+        const optimisticData = { ...templateData };
+        if (optimisticData[mainCategory]) {
+            optimisticData[mainCategory] = optimisticData[mainCategory].filter(
+                (sub: any) => sub.name !== subCategoryName
+            );
         }
+        setTemplateData(optimisticData);
+        
+        // 同时从折叠状态中移除该子分类
+        const subKey = `${mainCategory}::${subCategoryName}`;
+        setCollapsedSubCategories(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(subKey);
+            return newSet;
+        });
+        
+        const deletePromise = deleteSubCategoryFromDB(mainCategory, subCategoryName)
+            .then(async () => {
+                // ✅ 删除成功，只在后台通知前端刷新
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
+            })
+            .catch((error) => {
+                // 恢复备份数据
+                setTemplateData(backupData);
+                console.error('Failed to delete sub category:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting "${subCategoryName}"...`,
+            success: `Successfully deleted "${subCategoryName}"! ✨`,
+            error: 'Failed to delete category. Please try again.',
+        });
     };
 
     const toggleSubCategory = async (mainCategory: string, subCategoryName: string) => {
@@ -575,7 +1289,7 @@ const TemplateManagement: React.FC<{
             console.log(`✅ Category ${mainCategory} > ${subCategoryName} toggled to ${newEnabledState}`);
         } catch (error) {
             console.error('Failed to toggle category:', error);
-            alert('Failed to update category status. Please try again.');
+            toast.error('Failed to update category status. Please try again.');
         }
     };
 
@@ -642,7 +1356,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Main category sorted successfully');
         } catch (error) {
             console.error('Failed to sort main category:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -695,7 +1409,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Sub category sorted successfully');
         } catch (error) {
             console.error('Failed to sort sub category:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -754,7 +1468,7 @@ const TemplateManagement: React.FC<{
             console.log('✅ Template sorted successfully');
         } catch (error) {
             console.error('Failed to sort template:', error);
-            alert('排序失败，请重试');
+            toast.error('排序失败，请重试');
         } finally {
             setIsSorting(false);
         }
@@ -802,34 +1516,231 @@ const TemplateManagement: React.FC<{
     const confirmBatchDelete = async () => {
         if (selectedTemplateIds.size === 0) return;
 
+        const templateIdsArray = Array.from(selectedTemplateIds);
+        const count = templateIdsArray.length;
+        
+        // 备份当前数据
+        const backupData = { ...templateData };
+        
+        // 乐观更新：立即从 UI 移除所有选中的模板
+        const optimisticData = { ...templateData };
+        Object.keys(optimisticData).forEach(mainCategory => {
+            optimisticData[mainCategory] = optimisticData[mainCategory].map((subCategory: any) => ({
+                ...subCategory,
+                templates: subCategory.templates.filter((t: any) => !selectedTemplateIds.has(t.id))
+            }));
+        });
+        setTemplateData(optimisticData);
+        
+        // 清空选中状态
+        setSelectedTemplateIds(new Set());
+        
+        // 关闭确认对话框
+        setIsDeleteConfirmOpen(false);
+        
+        const deletePromise = batchDeleteTemplates(templateIdsArray)
+            .then(async () => {
+                // ✅ 批量删除成功，只在后台通知前端刷新
+                if (onTemplatesUpdated) {
+                    await onTemplatesUpdated();
+                }
+                // ✅ Admin Panel 已经通过乐观更新完成，不需要重新加载
+            })
+            .catch((error) => {
+                // 恢复备份数据和选中状态
+                setTemplateData(backupData);
+                setSelectedTemplateIds(new Set(templateIdsArray));
+                console.error('Failed to batch delete templates:', error);
+                throw error;
+            });
+        
+        toast.promise(deletePromise, {
+            loading: `Deleting ${count} template(s)...`,
+            success: `Successfully deleted ${count} template(s)! ✨`,
+            error: 'Failed to delete templates. Please try again.',
+        });
+    };
+
+    // ==================== Smart Merge 功能 ====================
+    
+    // 分析相似分类
+    const handleAnalyzeSimilarCategories = async (mainCategory: string) => {
+        setIsAnalyzing(true);
+        setCurrentMergeCategory(mainCategory);
+        
         try {
-            const templateIdsArray = Array.from(selectedTemplateIds);
+            const subCategories = templateData[mainCategory]?.map(sub => ({
+                name: sub.name,
+                templateCount: sub.templates.length
+            })) || [];
             
-            // 调用批量删除API
-            await batchDeleteTemplates(templateIdsArray);
+            console.log('🔍 Analyzing categories for:', mainCategory);
+            console.log('Subcategories:', subCategories);
             
-            // 清空选中状态
-            setSelectedTemplateIds(new Set());
+            if (subCategories.length < 2) {
+                toast.info('Need at least 2 subcategories to analyze');
+                setIsAnalyzing(false);
+                return;
+            }
             
-            // 关闭确认对话框
-            setIsDeleteConfirmOpen(false);
+            toast.loading('AI is analyzing categories...', { id: 'analyzing' });
             
-            // 重新从数据库加载（Admin Panel用）
+            const suggestions = await analyzeSimilarCategories(mainCategory, subCategories);
+            
+            console.log('✅ AI analysis complete. Suggestions:', suggestions);
+            
+            toast.dismiss('analyzing');
+            
+            if (suggestions.length === 0) {
+                toast.success('✅ No similar categories found. Your categories are well organized!');
+                setIsAnalyzing(false);
+                return;
+            }
+            
+            setMergeSuggestions(suggestions);
+            setSelectedMerges(new Set(suggestions.map((_, idx) => idx))); // 默认全选
+            setIsMergeModalOpen(true);
+            toast.success(`Found ${suggestions.length} merge suggestion(s)! 🎯`);
+            
+        } catch (error) {
+            console.error('❌ Failed to analyze categories:', error);
+            toast.dismiss('analyzing');
+            toast.error(`Failed to analyze: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+    
+    // 切换合并选择
+    const toggleMergeSelection = (index: number) => {
+        setSelectedMerges(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+            }
+            return newSet;
+        });
+    };
+    
+    // 执行合并
+    const handleConfirmMerge = async () => {
+        const selectedSuggestions = mergeSuggestions.filter((_, idx) => 
+            selectedMerges.has(idx)
+        );
+        
+        if (selectedSuggestions.length === 0) {
+            toast.error('Please select at least one merge suggestion');
+            return;
+        }
+        
+        setIsMerging(true);
+        
+        try {
+            console.log('🔄 Starting merge process...');
+            console.log('Selected suggestions:', selectedSuggestions);
+            
+            let totalMoved = 0;
+            const results = [];
+            
+            // 判断是 Interior Design 还是其他分类
+            const isInteriorDesign = currentMergeCategory === 'Interior Design';
+            const fieldToUpdate = isInteriorDesign ? 'room_type' : 'sub_category';
+            
+            console.log(`📝 Category: ${currentMergeCategory}, Field to update: ${fieldToUpdate}`);
+            
+            // 逐个处理每组合并
+            for (const suggestion of selectedSuggestions) {
+                console.log(`\n📦 Merging: ${suggestion.categories.join(', ')} → ${suggestion.suggestedName}`);
+                
+                // 先查询有多少模板会被影响 - 使用正确的字段
+                const { data: existingTemplates, error: countError } = await supabase
+                    .from('design_templates')
+                    .select(`id, name, ${fieldToUpdate}`)
+                    .eq('main_category', currentMergeCategory)
+                    .in(fieldToUpdate, suggestion.categories);
+                
+                if (countError) {
+                    console.error('❌ Failed to query templates:', countError);
+                }
+                
+                console.log(`📊 Found ${existingTemplates?.length || 0} templates in categories:`, suggestion.categories);
+                if (existingTemplates && existingTemplates.length > 0) {
+                    console.log('Templates breakdown:', existingTemplates.map((t: any) => {
+                        const fieldValue = isInteriorDesign ? t.room_type : t.sub_category;
+                        return `${t.name} (${fieldValue})`;
+                    }));
+                }
+                
+                if (!existingTemplates || existingTemplates.length === 0) {
+                    console.log('⚠️ No templates found to move. These categories might be empty.');
+                    results.push({ success: true, movedCount: 0 });
+                    continue;
+                }
+                
+                // 构建更新对象 - 根据分类类型更新正确的字段
+                const updateData = isInteriorDesign 
+                    ? { room_type: suggestion.suggestedName }
+                    : { sub_category: suggestion.suggestedName };
+                
+                console.log('Update data:', updateData);
+                
+                // 将所有源分类的模板迁移到目标分类
+                const { data: movedTemplates, error: updateError } = await supabase
+                    .from('design_templates')
+                    .update(updateData)
+                    .eq('main_category', currentMergeCategory)
+                    .in(fieldToUpdate, suggestion.categories)
+                    .select('id');
+                
+                if (updateError) {
+                    console.error('❌ Failed to merge:', updateError);
+                    results.push({ success: false, error: updateError.message });
+                    continue;
+                }
+                
+                const movedCount = movedTemplates?.length || 0;
+                totalMoved += movedCount;
+                
+                console.log(`✅ Moved ${movedCount} templates to "${suggestion.suggestedName}"`);
+                results.push({ success: true, movedCount });
+            }
+            
+            console.log(`\n✅ Merge complete. Total templates moved: ${totalMoved}`);
+            
+            // 关闭弹窗
+            setIsMergeModalOpen(false);
+            
+            // 刷新数据
+            console.log('🔄 Refreshing template data...');
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
             
-            // 通知父组件刷新前端模板数据
+            console.log('✅ Template data refreshed');
+            
+            // 通知前端刷新
             if (onTemplatesUpdated) {
+                console.log('🔄 Notifying parent to refresh...');
                 await onTemplatesUpdated();
             }
             
-            alert(`Successfully deleted ${templateIdsArray.length} template(s)!`);
+            if (totalMoved === 0) {
+                toast.warning('Merge completed, but no templates were moved. Categories might already be merged or empty.');
+            } else {
+                toast.success(`Successfully merged ${selectedSuggestions.length} category group(s)! Moved ${totalMoved} templates. ✨`);
+            }
+            
         } catch (error) {
-            console.error('Failed to batch delete templates:', error);
-            alert('Failed to delete templates. Please try again.');
+            console.error('❌ Failed to merge categories:', error);
+            toast.error(`Failed to merge categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsMerging(false);
         }
     };
+    
+    // ==================== End Smart Merge ====================
 
     // 获取选中模板的详细信息（用于确认对话框）
     const getSelectedTemplatesInfo = () => {
@@ -930,6 +1841,16 @@ const TemplateManagement: React.FC<{
                                     title="Delete Category"
                                 >
                                     <IconTrash className="w-4 h-4" />
+                                </button>
+                                {/* Smart Merge 按钮 */}
+                                <button
+                                    onClick={() => handleAnalyzeSimilarCategories(mainCategory)}
+                                    disabled={isAnalyzing}
+                                    className="ml-2 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 text-xs font-medium flex items-center gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                                    title="AI-powered category merge suggestions"
+                                >
+                                    <IconSparkles className="w-3.5 h-3.5" />
+                                    {isAnalyzing ? 'Analyzing...' : 'Smart Merge'}
                                 </button>
                             </div>
                             <label className="inline-flex items-center cursor-pointer">
@@ -1118,10 +2039,10 @@ const TemplateManagement: React.FC<{
                         }
                         
                         setIsCategoryModalOpen(false);
-                        alert(`"${categoryName}" added! Now you can add templates to it.`);
+                        toast.success(`"${categoryName}" added! Now you can add templates to it. ✨`);
                     } catch (error) {
                         console.error('Failed to add category:', error);
-                        alert('Failed to add category. Please try again.');
+                        toast.error('Failed to add category. Please try again.');
                     }
                 }}
             />
@@ -1240,6 +2161,18 @@ const TemplateManagement: React.FC<{
                     </motion.div>
                 )}
             </AnimatePresence>
+            
+            {/* Smart Merge Modal */}
+            <MergeSuggestionsModal
+                isOpen={isMergeModalOpen}
+                onClose={() => setIsMergeModalOpen(false)}
+                mainCategory={currentMergeCategory}
+                suggestions={mergeSuggestions}
+                selectedMerges={selectedMerges}
+                onToggleSelection={toggleMergeSelection}
+                onConfirm={handleConfirmMerge}
+                isMerging={isMerging}
+            />
         </div>
     );
 };
@@ -1452,7 +2385,7 @@ const CategoryModal: React.FC<{
 
     const handleSubmit = () => {
         if (!categoryName.trim()) {
-            alert('Please enter a category name');
+            toast.error('Please enter a category name');
             return;
         }
         onSave(categoryName.trim());
@@ -1731,6 +2664,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     categoryOrder,
     setCategoryOrder,
     onTemplatesUpdated,
+    dashboardData,
+    isDashboardLoading,
+    onRefreshDashboard,
 }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const tabs = [
@@ -1752,7 +2688,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <Dashboard users={users} generationHistory={generationHistory} totalDesignsGenerated={totalDesignsGenerated} />;
+                return (
+                    <Dashboard
+                        users={users}
+                        generationHistory={generationHistory}
+                        totalDesignsGenerated={totalDesignsGenerated}
+                        data={dashboardData}
+                        isLoading={isDashboardLoading}
+                        onRefresh={onRefreshDashboard}
+                    />
+                );
             case 'users':
                 return <UserManagement users={users} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} />;
             case 'designs':
@@ -1804,5 +2749,200 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 </div>
             </main>
         </div>
+    );
+};
+
+// --- Merge Suggestions Modal Component ---
+interface MergeSuggestionsModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    mainCategory: string;
+    suggestions: SimilarCategoryGroup[];
+    selectedMerges: Set<number>;
+    onToggleSelection: (index: number) => void;
+    onConfirm: () => void;
+    isMerging: boolean;
+}
+
+const MergeSuggestionsModal: React.FC<MergeSuggestionsModalProps> = ({
+    isOpen,
+    onClose,
+    mainCategory,
+    suggestions,
+    selectedMerges,
+    onToggleSelection,
+    onConfirm,
+    isMerging
+}) => {
+    if (!isOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+            >
+                <motion.div
+                    className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                    <IconSparkles className="w-6 h-6 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Smart Category Merge</h3>
+                                    <p className="text-sm text-slate-600 mt-0.5">AI-powered category optimization</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-white rounded-lg transition-colors"
+                                disabled={isMerging}
+                            >
+                                <IconX className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                            <p className="text-sm text-blue-800">
+                                <strong className="font-semibold">Category:</strong> {mainCategory}<br />
+                                <strong className="font-semibold">Found:</strong> {suggestions.length} merge suggestion(s)<br />
+                                <strong className="font-semibold">Instructions:</strong> Select which groups you want to merge, then click "Merge Selected"
+                            </p>
+                        </div>
+
+                        {suggestions.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400">
+                                <div className="text-5xl mb-4">✅</div>
+                                <p className="text-lg font-medium">No similar categories found</p>
+                                <p className="text-sm mt-2">Your categories are well organized!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {suggestions.map((suggestion, index) => (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className={`border-2 rounded-xl p-5 transition-all ${selectedMerges.has(index)
+                                            ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                            }`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedMerges.has(index)}
+                                                onChange={() => onToggleSelection(index)}
+                                                className="mt-1 w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                disabled={isMerging}
+                                            />
+
+                                            <div className="flex-1">
+                                                {/* Before */}
+                                                <div className="mb-3">
+                                                    <div className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Before:</div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {suggestion.categories.map(cat => (
+                                                            <span
+                                                                key={cat}
+                                                                className="px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-medium"
+                                                            >
+                                                                {cat}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Arrow */}
+                                                <div className="text-center py-2">
+                                                    <div className="inline-block px-4 py-1 bg-slate-100 rounded-full">
+                                                        <span className="text-2xl">↓</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* After */}
+                                                <div className="mb-3">
+                                                    <div className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">After:</div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold shadow-sm">
+                                                            {suggestion.suggestedName}
+                                                        </span>
+                                                        <span className="text-xs text-slate-500 font-medium">
+                                                            ({suggestion.templateCount} templates)
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Reason */}
+                                                <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-lg">💡</span>
+                                                        <p className="text-sm text-slate-700 italic leading-relaxed">
+                                                            {suggestion.reason}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    {suggestions.length > 0 && (
+                        <div className="p-6 border-t border-slate-200 bg-slate-50">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="text-sm text-slate-600">
+                                    <span className="font-semibold">{selectedMerges.size}</span> of {suggestions.length} groups selected
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={onClose}
+                                        disabled={isMerging}
+                                        className="px-6 py-2.5 border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-medium disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={onConfirm}
+                                        disabled={selectedMerges.size === 0 || isMerging}
+                                        className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {isMerging ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Merging...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <IconSparkles className="w-4 h-4" />
+                                                Merge {selectedMerges.size} Group{selectedMerges.size !== 1 ? 's' : ''}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
     );
 };
