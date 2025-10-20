@@ -246,7 +246,7 @@ export const AITemplateCreator: React.FC = () => {
           </div>
           <div className="flex gap-2 text-sm">
             <button
-              onClick={() => setSelectedCategories(availableCategories.map(c => c.category_name))}
+              onClick={() => setSelectedCategories(availableCategories.map(c => c.name))}
               className="px-3 py-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
               disabled={isProcessing || isLoadingCategories}
             >
