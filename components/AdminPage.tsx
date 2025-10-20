@@ -1648,6 +1648,28 @@ const TemplateManagement: React.FC<{
             for (const suggestion of selectedSuggestions) {
                 console.log(`\n📦 Merging: ${suggestion.categories.join(', ')} → ${suggestion.suggestedName}`);
                 
+                // 先查询有多少模板会被影响
+                const { data: existingTemplates, error: countError } = await supabase
+                    .from('templates')
+                    .select('id, name, sub_category')
+                    .eq('main_category', currentMergeCategory)
+                    .in('sub_category', suggestion.categories);
+                
+                if (countError) {
+                    console.error('❌ Failed to query templates:', countError);
+                }
+                
+                console.log(`📊 Found ${existingTemplates?.length || 0} templates in categories:`, suggestion.categories);
+                if (existingTemplates && existingTemplates.length > 0) {
+                    console.log('Templates breakdown:', existingTemplates.map(t => `${t.name} (${t.sub_category})`));
+                }
+                
+                if (!existingTemplates || existingTemplates.length === 0) {
+                    console.log('⚠️ No templates found to move. These categories might be empty.');
+                    results.push({ success: true, movedCount: 0 });
+                    continue;
+                }
+                
                 // 将所有源分类的模板迁移到目标分类
                 const { data: movedTemplates, error: updateError } = await supabase
                     .from('templates')
