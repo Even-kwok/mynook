@@ -130,6 +130,55 @@ export interface ManagedPromptTemplateCategory {
 
 export type ManagedTemplateData = Record<string, ManagedPromptTemplateCategory[]>;
 
+// --- Admin Dashboard Types ---
+
+export interface DashboardMetrics {
+  totalUsers: number;
+  newUsersThisWeek: number;
+  totalGenerations: number;
+  activeSubscriptions: number;
+  monthlyRecurringRevenue: number;
+  averageGenerationsPerUser: number;
+}
+
+export interface CreditStats {
+  totalPurchased: number;
+  totalRemaining: number;
+  totalConsumed: number;
+}
+
+export interface MembershipDistributionStat {
+  tier: string;
+  userCount: number;
+  percentage: number;
+  totalCredits: number;
+}
+
+export interface TemplateUsageStat {
+  templateId: string;
+  templateName: string;
+  mainCategory: string;
+  subCategory: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+export interface CategoryUsageStat {
+  mainCategory: string;
+  subCategory: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+export interface DashboardOverview {
+  metrics: DashboardMetrics;
+  credit: CreditStats;
+  membershipDistribution: MembershipDistributionStat[];
+  templateDistribution: TemplateUsageStat[];
+  categoryDistribution: CategoryUsageStat[];
+  generatedAt: string;
+}
+
 
 // --- Free Canvas Types ---
 export type CanvasImage = {
@@ -258,4 +307,29 @@ export interface HeroSection {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// --- Category Merge Types ---
+
+// 相似分类组（AI 分析结果）
+export interface SimilarCategoryGroup {
+  suggestedName: string;      // 建议的合并后名称
+  categories: string[];        // 要合并的分类列表
+  reason: string;              // AI 给出的合并原因
+  templateCount?: number;      // 涉及的模板总数
+}
+
+// 合并请求
+export interface MergeCategoriesRequest {
+  mainCategory: string;
+  targetSubCategory: string;
+  sourceSubCategories: string[];
+}
+
+// 合并响应
+export interface MergeCategoriesResponse {
+  success: boolean;
+  mergedCount: number;
+  targetCategory: string;
+  movedTemplates: number;
 }

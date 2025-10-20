@@ -125,6 +125,9 @@ export default async function handler(
     isAdmin = true;
   } else {
     // Use JWT authentication
+    if (!authHeader || typeof authHeader !== 'string') {
+      return res.status(401).json({ error: 'Missing or invalid authorization header', code: 'AUTH_REQUIRED' });
+    }
     const { userId: verifiedUserId, error: authError } = await verifyUserToken(authHeader);
     if (authError || !verifiedUserId) {
       return res.status(401).json({ error: 'Unauthorized', code: 'AUTH_REQUIRED' });

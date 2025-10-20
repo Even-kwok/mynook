@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { GoogleGenAI, Chat, Content } from "@google/genai";
 // FIX: Import ManagedTemplateData and ManagedPromptTemplateCategory to resolve type errors.
-import { GeneratedImage, PromptTemplateCategory, GenerationBatch, PromptTemplate, AdvisorPersona, ChatMessage, User, ManagedTemplateData, ManagedPromptTemplateCategory, CanvasImage, DrawablePath, Annotation, PromptPreset } from './types';
+import { GeneratedImage, PromptTemplateCategory, GenerationBatch, PromptTemplate, AdvisorPersona, ChatMessage, User, ManagedTemplateData, ManagedPromptTemplateCategory, CanvasImage, DrawablePath, Annotation, PromptPreset, DashboardOverview } from './types';
 import { toBase64 } from './utils/imageUtils';
 import { generateImage, generateTextResponse } from './services/geminiService';
 import { Button } from './components/Button';
@@ -31,6 +31,7 @@ import { SlidingPanel } from './components/SlidingPanel';
 import { GalleryWallSection } from './components/GalleryWallSection';
 import { UserMenu as DarkUserMenu } from './components/UserMenu';
 import { supabase } from './config/supabase';
+import { Toaster } from 'sonner';
 
 // --- Re-styled Helper Components ---
 
@@ -1968,10 +1969,12 @@ const App: React.FC = () => {
     
     // New UI state - for sliding panel
     const [isPanelOpen, setIsPanelOpen] = useState(false);
-    
+
     // Admin users data state
     const [users, setUsers] = useState<User[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    const [dashboardData, setDashboardData] = useState<DashboardOverview | null>(null);
+    const [isDashboardLoading, setIsDashboardLoading] = useState(false);
     
     // 自动打开功能页面的面板
     useEffect(() => {
@@ -2097,7 +2100,30 @@ const App: React.FC = () => {
         
         loadUsers();
     }, [isAdmin]);
-    
+
+    const refreshDashboardData = useCallback(async () => {
+        if (!isAdmin) {
+            setDashboardData(null);
+            setIsDashboardLoading(false);
+            return;
+        }
+
+        setIsDashboardLoading(true);
+        try {
+            const { fetchDashboardOverview } = await import('./services/dashboardService');
+            const overview = await fetchDashboardOverview();
+            setDashboardData(overview);
+        } catch (error) {
+            console.error('Failed to load dashboard overview:', error);
+        } finally {
+            setIsDashboardLoading(false);
+        }
+    }, [isAdmin]);
+
+    useEffect(() => {
+        refreshDashboardData();
+    }, [refreshDashboardData]);
+
     // Monitor URL hash for admin access
     useEffect(() => {
         const handleHashChange = () => {
@@ -3441,18 +3467,21 @@ const App: React.FC = () => {
                 }
                 
                 // Render AdminPage with data
-                return <AdminPage 
-                    users={users} 
-                    onUpdateUser={handleUpdateUser} 
-                    onDeleteUser={handleDeleteUser} 
-                    generationHistory={generationHistory} 
-                    totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)} 
-                    onDeleteBatch={handleDeleteGenerationBatch} 
-                    templateData={adminTemplateDataFull} 
-                    setTemplateData={setAdminTemplateDataFull} 
-                    categoryOrder={adminCategoryOrderFull} 
+                return <AdminPage
+                    users={users}
+                    onUpdateUser={handleUpdateUser}
+                    onDeleteUser={handleDeleteUser}
+                    generationHistory={generationHistory}
+                    totalDesignsGenerated={generationHistory.reduce((acc, b) => acc + b.results.length, 0)}
+                    onDeleteBatch={handleDeleteGenerationBatch}
+                    templateData={adminTemplateDataFull}
+                    setTemplateData={setAdminTemplateDataFull}
+                    categoryOrder={adminCategoryOrderFull}
                     setCategoryOrder={setAdminCategoryOrderFull}
                     onTemplatesUpdated={refreshTemplateData}
+                    dashboardData={dashboardData}
+                    isDashboardLoading={isDashboardLoading}
+                    onRefreshDashboard={refreshDashboardData}
                   />
             default: return renderMainGenerator();
         }
@@ -4086,6 +4115,7 @@ const App: React.FC = () => {
     
     return (
         <TemplateProvider>
+            <Toaster position="top-right" richColors closeButton />
             <div className="h-screen w-screen bg-slate-50 flex flex-col font-sans">
                 <ErrorNotification message={error} onDismiss={() => setError(null)} />
             <AnimatePresence>
