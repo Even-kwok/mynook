@@ -1644,16 +1644,22 @@ const TemplateManagement: React.FC<{
             let totalMoved = 0;
             const results = [];
             
+            // 判断是 Interior Design 还是其他分类
+            const isInteriorDesign = currentMergeCategory === 'Interior Design';
+            const fieldToUpdate = isInteriorDesign ? 'room_type' : 'sub_category';
+            
+            console.log(`📝 Category: ${currentMergeCategory}, Field to update: ${fieldToUpdate}`);
+            
             // 逐个处理每组合并
             for (const suggestion of selectedSuggestions) {
                 console.log(`\n📦 Merging: ${suggestion.categories.join(', ')} → ${suggestion.suggestedName}`);
                 
-                // 先查询有多少模板会被影响
+                // 先查询有多少模板会被影响 - 使用正确的字段
                 const { data: existingTemplates, error: countError } = await supabase
                     .from('templates')
-                    .select('id, name, sub_category')
+                    .select(`id, name, ${fieldToUpdate}`)
                     .eq('main_category', currentMergeCategory)
-                    .in('sub_category', suggestion.categories);
+                    .in(fieldToUpdate, suggestion.categories);
                 
                 if (countError) {
                     console.error('❌ Failed to query templates:', countError);
@@ -1661,7 +1667,10 @@ const TemplateManagement: React.FC<{
                 
                 console.log(`📊 Found ${existingTemplates?.length || 0} templates in categories:`, suggestion.categories);
                 if (existingTemplates && existingTemplates.length > 0) {
-                    console.log('Templates breakdown:', existingTemplates.map(t => `${t.name} (${t.sub_category})`));
+                    console.log('Templates breakdown:', existingTemplates.map((t: any) => {
+                        const fieldValue = isInteriorDesign ? t.room_type : t.sub_category;
+                        return `${t.name} (${fieldValue})`;
+                    }));
                 }
                 
                 if (!existingTemplates || existingTemplates.length === 0) {
@@ -1670,12 +1679,19 @@ const TemplateManagement: React.FC<{
                     continue;
                 }
                 
+                // 构建更新对象 - 根据分类类型更新正确的字段
+                const updateData = isInteriorDesign 
+                    ? { room_type: suggestion.suggestedName }
+                    : { sub_category: suggestion.suggestedName };
+                
+                console.log('Update data:', updateData);
+                
                 // 将所有源分类的模板迁移到目标分类
                 const { data: movedTemplates, error: updateError } = await supabase
                     .from('templates')
-                    .update({ sub_category: suggestion.suggestedName })
+                    .update(updateData)
                     .eq('main_category', currentMergeCategory)
-                    .in('sub_category', suggestion.categories)
+                    .in(fieldToUpdate, suggestion.categories)
                     .select('id');
                 
                 if (updateError) {
