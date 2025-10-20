@@ -43,11 +43,26 @@ export const AITemplateCreator: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 二级分类相关状态
+  const [availableSubCategories, setAvailableSubCategories] = useState<string[]>([]);
+  const [autoDetectSubCategory, setAutoDetectSubCategory] = useState<boolean>(true);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  const [customSubCategory, setCustomSubCategory] = useState<string>('');
 
   // 从 design_templates 表加载所有大分类
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // 当主分类选择变化时，加载对应的二级分类
+  useEffect(() => {
+    if (selectedCategories.length > 0) {
+      loadSubCategories(selectedCategories);
+    } else {
+      setAvailableSubCategories([]);
+    }
+  }, [selectedCategories]);
 
   const loadCategories = async () => {
     setIsLoadingCategories(true);
@@ -55,13 +70,15 @@ export const AITemplateCreator: React.FC = () => {
       // 从 design_templates 表读取实际存在的分类
       const { data, error } = await supabase
         .from('design_templates')
-        .select('category')
-        .not('category', 'is', null);
+        .select('main_category');
 
       if (error) throw error;
       
       // 提取并去重分类名称
-      const uniqueCategories = [...new Set(data?.map(item => item.category).filter(Boolean))] || [];
+      const categories = (data as any[] || [])
+        .map((item: any) => item.main_category)
+        .filter((cat): cat is string => Boolean(cat));
+      const uniqueCategories = [...new Set(categories)] as string[];
       
       // 转换为选择器格式
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
@@ -81,6 +98,34 @@ export const AITemplateCreator: React.FC = () => {
     }
   };
 
+  const loadSubCategories = async (mainCategories: string[]) => {
+    try {
+      // 从 design_templates 表读取选中主分类下的所有二级分类
+      const { data, error } = await supabase
+        .from('design_templates')
+        .select('sub_category, main_category, room_type');
+
+      if (error) throw error;
+      
+      // 提取二级分类（包括 sub_category 和 room_type）
+      const subCats = (data as any[] || [])
+        .filter((item: any) => mainCategories.includes(item.main_category))
+        .flatMap((item: any) => {
+          const cats: string[] = [];
+          if (item.sub_category) cats.push(item.sub_category);
+          if (item.room_type) cats.push(item.room_type);
+          return cats;
+        })
+        .filter(Boolean);
+      
+      const uniqueSubCats = [...new Set(subCats)] as string[];
+      setAvailableSubCategories(uniqueSubCats.sort());
+    } catch (error) {
+      console.error('Failed to load sub-categories:', error);
+      setAvailableSubCategories([]);
+    }
+  };
+
   const getAuthToken = async (): Promise<string | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || null;
@@ -96,7 +141,7 @@ export const AITemplateCreator: React.FC = () => {
     }
     
     // 最多70张
-    const validFiles = files.slice(0, 70);
+    const validFiles = files.slice(0, 70) as File[];
     
     if (files.length > 70) {
       alert(`最多只能上传70张图片，已自动截取前70张。`);
@@ -159,6 +204,10 @@ export const AITemplateCreator: React.FC = () => {
           originalImage,
           thumbnailImage,
           allowedCategories: selectedCategories,
+          autoDetectSubCategory,
+          manualSubCategory: autoDetectSubCategory 
+            ? null 
+            : (customSubCategory.trim() || selectedSubCategory || null),
         }),
       });
 
@@ -246,7 +295,7 @@ export const AITemplateCreator: React.FC = () => {
           </div>
           <div className="flex gap-2 text-sm">
             <button
-              onClick={() => setSelectedCategories(availableCategories.map(c => c.category_name))}
+              onClick={() => setSelectedCategories(availableCategories.map(c => c.name))}
               className="px-3 py-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
               disabled={isProcessing || isLoadingCategories}
             >
@@ -324,6 +373,115 @@ export const AITemplateCreator: React.FC = () => {
             )}
           </span>
         </div>
+      </div>
+
+      {/* 二级分类设置 */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 className="font-semibold text-slate-900 mb-4">二级分类设置</h3>
+        
+        {/* AI自动识别开关 */}
+        <label className="flex items-start gap-3 mb-4 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200 cursor-pointer hover:border-indigo-300 transition-colors">
+          <input
+            type="checkbox"
+            checked={autoDetectSubCategory}
+            onChange={(e) => {
+              setAutoDetectSubCategory(e.target.checked);
+              if (e.target.checked) {
+                // 开启自动识别时清空手动选择
+                setSelectedSubCategory('');
+                setCustomSubCategory('');
+              }
+            }}
+            disabled={isProcessing}
+            className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-5 h-5"
+          />
+          <div className="flex-1">
+            <div className="font-medium text-slate-900 flex items-center gap-2">
+              <IconSparkles className="w-5 h-5 text-indigo-600" />
+              使用AI自动识别/创建二级分类
+            </div>
+            <p className="text-xs text-slate-600 mt-1">
+              开启后，AI会根据图片内容自动识别并创建合适的二级分类（例如：Floor Style → "Hardwood - Herringbone"）
+            </p>
+          </div>
+        </label>
+
+        {/* 手动选择/创建区域 */}
+        {!autoDetectSubCategory && (
+          <div className="space-y-4 pl-8 border-l-2 border-indigo-200">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                选择现有二级分类
+              </label>
+              {availableSubCategories.length > 0 ? (
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => {
+                    setSelectedSubCategory(e.target.value);
+                    setCustomSubCategory(''); // 清空自定义输入
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  disabled={isProcessing}
+                >
+                  <option value="">-- 选择现有分类 --</option>
+                  {availableSubCategories.map(subCat => (
+                    <option key={subCat} value={subCat}>{subCat}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="text-sm text-slate-500 py-2 px-3 bg-slate-50 rounded-lg border border-slate-200">
+                  暂无可用的二级分类，请先选择主分类或直接创建新分类
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-300"></div>
+              <span className="text-xs text-slate-500 font-medium">或</span>
+              <div className="flex-1 h-px bg-slate-300"></div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                创建新的二级分类
+              </label>
+              <input
+                type="text"
+                value={customSubCategory}
+                onChange={(e) => {
+                  setCustomSubCategory(e.target.value);
+                  setSelectedSubCategory(''); // 清空下拉选择
+                }}
+                placeholder="例如: Modern Minimalist, Scandinavian Style, Oak Herringbone..."
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                disabled={isProcessing}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                💡 建议使用英文命名，多个单词用空格或连字符分隔
+              </p>
+            </div>
+
+            {/* 验证提示 */}
+            {!selectedSubCategory && !customSubCategory && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <span className="text-amber-600 text-lg">⚠️</span>
+                <p className="text-sm text-amber-800">
+                  请选择现有分类或输入新的分类名称
+                </p>
+              </div>
+            )}
+            
+            {/* 当前设置显示 */}
+            {(selectedSubCategory || customSubCategory) && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <IconCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <p className="text-sm text-green-800">
+                  将使用二级分类: <strong>{customSubCategory || selectedSubCategory}</strong>
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 上传区域 */}
