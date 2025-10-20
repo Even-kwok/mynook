@@ -43,9 +43,20 @@ The final image must be of Hasselblad quality, photorealistic, with extreme deta
   /**
    * 生成AI识别提示词（基于大分类）
    * @param allowedCategories 允许的大分类列表
+   * @param autoDetect 是否自动识别二级分类
+   * @param manualSubCat 手动指定的二级分类
    */
-  const generateExtractorPrompt = (allowedCategories: string[]): string => {
+  const generateExtractorPrompt = (
+    allowedCategories: string[], 
+    autoDetect: boolean,
+    manualSubCat: string | null
+  ): string => {
     const categoryList = allowedCategories.map(cat => `'${cat}'`).join(' OR ');
+    
+    // 根据是否自动识别，生成不同的二级分类指令
+    const subCategoryInstruction = autoDetect
+      ? `"secondaryCategory": "Automatically identify or create appropriate sub-category based on the design"`
+      : `"secondaryCategory": "Use exactly this value: '${manualSubCat}'"`;
 
     return `Analyze this design image and extract information in JSON format.
 
@@ -53,11 +64,12 @@ Return ONLY a valid JSON object with these exact fields:
 {
   "templateName": "Short descriptive name (e.g., 'Oak Herringbone Floor' or 'Modern Kitchen Design')",
   "mainCategory": "MUST BE ONE OF: ${categoryList}",
-  "secondaryCategory": "Automatically identify or create appropriate sub-category based on the design",
+  ${subCategoryInstruction},
   "styleDescription": "A single detailed sentence describing key features, materials, colors, patterns, and characteristics",
   "fullPrompt": "Complete MyNook-V1.0-Universal format prompt with [INSERT...] section filled in"
 }
 
+${autoDetect ? `
 **Category-specific sub-category guidelines:**
 - For "Floor Style": Identify material and pattern (e.g., "Hardwood - Herringbone", "Tile - Subway", "Marble - Polished")
 - For "Interior Design": Identify room type (e.g., "living-room", "bedroom", "kitchen", "bathroom")
@@ -66,10 +78,15 @@ Return ONLY a valid JSON object with these exact fields:
 - For "Wall Paint": Identify style/type (e.g., "Solid Color", "Textured", "Accent Wall", "Mural")
 - For "Garden & Backyard Design": Identify garden style (e.g., "Zen Garden", "English Garden", "Modern Minimalist")
 - If the sub-category doesn't exist in the database, create a new meaningful one
+` : `
+**Important: Use exactly the provided secondaryCategory value: "${manualSubCat}"**
+- Do NOT try to identify or create a different sub-category
+- Simply use the exact value provided above
+`}
 
 **Important Rules:**
 - mainCategory MUST exactly match one of: ${categoryList}
-- secondaryCategory will be automatically created if it doesn't exist
+- secondaryCategory ${autoDetect ? 'will be automatically created if it doesn\'t exist' : 'must be exactly as specified above'}
 - styleDescription should be detailed and specific to what you see in the image
 - fullPrompt must follow MyNook-V1.0-Universal template with the [INSERT...] section replaced by styleDescription
 
@@ -131,10 +148,23 @@ export default async function handler(
     return res.status(403).json({ error: 'Admin access required' });
   }
 
-  const { originalImage, thumbnailImage, allowedCategories } = req.body;
+  const { 
+    originalImage, 
+    thumbnailImage, 
+    allowedCategories,
+    autoDetectSubCategory = true,
+    manualSubCategory = null 
+  } = req.body;
 
   if (!originalImage || !thumbnailImage) {
     return res.status(400).json({ error: 'Missing required fields: originalImage, thumbnailImage' });
+  }
+
+  // 验证手动模式时必须提供二级分类
+  if (!autoDetectSubCategory && !manualSubCategory) {
+    return res.status(400).json({ 
+      error: 'When autoDetectSubCategory is false, manualSubCategory is required' 
+    });
   }
 
   try {
@@ -145,9 +175,14 @@ export default async function handler(
     }
 
       // Generate extractor prompt based on selected main categories
-      const extractorPrompt = generateExtractorPrompt(allowedCategories);
+      const extractorPrompt = generateExtractorPrompt(
+        allowedCategories, 
+        autoDetectSubCategory, 
+        manualSubCategory
+      );
     
     console.log('🤖 Using AI extraction for categories:', allowedCategories.join(', '));
+    console.log('🏷️ Sub-category mode:', autoDetectSubCategory ? 'Auto-detect' : `Manual: ${manualSubCategory}`);
 
     // Call Gemini to extract information
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
@@ -199,6 +234,14 @@ export default async function handler(
         extracted,
         allowedCategories 
       });
+    }
+
+    // 如果是手动模式，确保使用手动指定的二级分类
+    if (!autoDetectSubCategory && manualSubCategory) {
+      extracted.secondaryCategory = manualSubCategory;
+      console.log('✅ Using manual sub-category:', manualSubCategory);
+    } else {
+      console.log('🤖 Using AI-detected sub-category:', extracted.secondaryCategory);
     }
 
     // Upload thumbnail to Supabase Storage
