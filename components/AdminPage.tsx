@@ -481,23 +481,381 @@ const DesignManagement: React.FC<{
     generationHistory: GenerationBatch[];
     onDeleteBatch: (batchId: string) => void;
 }> = ({ generationHistory, onDeleteBatch }) => {
+    const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+
+    const summary = useMemo(() => {
+        if (!generationHistory || generationHistory.length === 0) {
+            return {
+                totalBatches: 0,
+                totalImages: 0,
+                uniqueUsers: 0,
+                uniqueTemplates: 0,
+                lastGeneratedAt: null as string | null,
+            };
+        }
+
+        let totalImages = 0;
+        const uniqueUsers = new Set<string>();
+        const uniqueTemplates = new Set<string>();
+        let lastGenerated: Date | null = null;
+
+        generationHistory.forEach(batch => {
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!lastGenerated || timestamp > lastGenerated) {
+                    lastGenerated = timestamp;
+                }
+            }
+
+            totalImages += batch.results?.length || 0;
+
+            if (batch.userId) {
+                uniqueUsers.add(batch.userId);
+            }
+
+            batch.templateIds?.forEach(id => {
+                if (id) {
+                    uniqueTemplates.add(id);
+                }
+            });
+
+            batch.results?.forEach(result => {
+                if (result.templateId) {
+                    uniqueTemplates.add(result.templateId);
+                }
+            });
+        });
+
+        return {
+            totalBatches: generationHistory.length,
+            totalImages,
+            uniqueUsers: uniqueUsers.size,
+            uniqueTemplates: uniqueTemplates.size,
+            lastGeneratedAt: lastGenerated ? lastGenerated.toLocaleString() : null,
+        };
+    }, [generationHistory]);
+
+    const typeStats = useMemo(() => {
+        const map = new Map<string, { type: string; batchCount: number; totalResults: number; lastGenerated: Date | null }>();
+
+        generationHistory.forEach(batch => {
+            const type = batch.type || 'unknown';
+            const entry = map.get(type) || { type, batchCount: 0, totalResults: 0, lastGenerated: null };
+
+            entry.batchCount += 1;
+            entry.totalResults += batch.results?.length || 0;
+
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                    entry.lastGenerated = timestamp;
+                }
+            }
+
+            map.set(type, entry);
+        });
+
+        return Array.from(map.values()).sort((a, b) => b.totalResults - a.totalResults || b.batchCount - a.batchCount);
+    }, [generationHistory]);
+
+    const templateStats = useMemo(() => {
+        const map = new Map<string, {
+            templateId: string;
+            templateName?: string;
+            category?: string;
+            usageCount: number;
+            batchCount: number;
+            lastGenerated: Date | null;
+        }>();
+
+        generationHistory.forEach(batch => {
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            const templateIds = new Set<string>();
+
+            batch.templateIds?.forEach(id => {
+                if (id) {
+                    templateIds.add(id);
+                }
+            });
+
+            batch.results?.forEach(result => {
+                if (result.templateId) {
+                    templateIds.add(result.templateId);
+                    const entry = map.get(result.templateId) || {
+                        templateId: result.templateId,
+                        usageCount: 0,
+                        batchCount: 0,
+                        lastGenerated: null,
+                    };
+
+                    entry.usageCount += 1;
+                    if (result.templateName) {
+                        entry.templateName = result.templateName;
+                    }
+                    if (result.templateCategory) {
+                        entry.category = result.templateCategory;
+                    }
+                    if (!Number.isNaN(timestamp.getTime())) {
+                        if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                            entry.lastGenerated = timestamp;
+                        }
+                    }
+
+                    map.set(result.templateId, entry);
+                }
+            });
+
+            templateIds.forEach(id => {
+                const entry = map.get(id) || {
+                    templateId: id,
+                    usageCount: 0,
+                    batchCount: 0,
+                    lastGenerated: null,
+                };
+
+                entry.batchCount += 1;
+                if (!Number.isNaN(timestamp.getTime())) {
+                    if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                        entry.lastGenerated = timestamp;
+                    }
+                }
+
+                map.set(id, entry);
+            });
+        });
+
+        return Array.from(map.values())
+            .sort((a, b) => b.usageCount - a.usageCount || b.batchCount - a.batchCount)
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const userStats = useMemo(() => {
+        const map = new Map<string, { userId: string; batchCount: number; totalResults: number; lastGenerated: Date | null }>();
+
+        generationHistory.forEach(batch => {
+            if (!batch.userId) {
+                return;
+            }
+
+            const entry = map.get(batch.userId) || { userId: batch.userId, batchCount: 0, totalResults: 0, lastGenerated: null };
+
+            entry.batchCount += 1;
+            entry.totalResults += batch.results?.length || 0;
+
+            const timestamp = batch.timestamp instanceof Date ? batch.timestamp : new Date(batch.timestamp);
+            if (!Number.isNaN(timestamp.getTime())) {
+                if (!entry.lastGenerated || timestamp > entry.lastGenerated) {
+                    entry.lastGenerated = timestamp;
+                }
+            }
+
+            map.set(batch.userId, entry);
+        });
+
+        return Array.from(map.values())
+            .sort((a, b) => b.totalResults - a.totalResults || b.batchCount - a.batchCount)
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const recentBatches = useMemo(() => {
+        return [...generationHistory]
+            .sort((a, b) => {
+                const aTime = (a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp)).getTime();
+                const bTime = (b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp)).getTime();
+                return bTime - aTime;
+            })
+            .slice(0, 10);
+    }, [generationHistory]);
+
+    const formatDateTime = (value: Date | string | null | undefined) => {
+        if (!value) return '—';
+        const parsed = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleString();
+    };
+
+    const formatGenerationType = (type: GenerationBatch['type']) => {
+        if (!type) return 'Unknown';
+        return type
+            .split('_')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-800">Design History</h3>
-            <div className="mt-4 space-y-3">
-                {generationHistory.slice(0, 10).map(batch => (
-                    <div key={batch.id} className="p-3 border border-slate-200 rounded-xl flex justify-between items-center">
-                        <div>
-                            <p className="font-medium text-slate-800">{batch.type} - <span className="text-slate-500">{batch.prompt}</span></p>
-                            <p className="text-xs text-slate-500">
-                                {new Date(batch.timestamp).toLocaleString()} - {batch.results.length} result(s)
-                            </p>
-                        </div>
-                        <Button onClick={() => onDeleteBatch(batch.id)} className="!px-3 !py-1.5 text-sm !bg-red-50 hover:!bg-red-100 !text-red-600 !border-red-200">
-                            <IconTrash className="w-4 h-4" /> Delete
-                        </Button>
+        <div className="bg-white p-6 rounded-2xl shadow-sm space-y-6">
+            <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-slate-800">Design History</h3>
+                <p className="text-sm text-slate-500">统计用户生成设计的总体情况，聚焦于数据指标而非图片预览。</p>
+                <span className="text-xs text-slate-400">最后一次生成时间：{summary.lastGeneratedAt || '—'}</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <StatCard
+                    title="Total Batches"
+                    value={numberFormatter.format(summary.totalBatches)}
+                    subtitle="记录的生成任务总数"
+                    icon={<IconLayoutDashboard className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Images Generated"
+                    value={numberFormatter.format(summary.totalImages)}
+                    subtitle="累计输出图片数量"
+                    icon={<IconPhoto className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Active Creators"
+                    value={numberFormatter.format(summary.uniqueUsers)}
+                    subtitle="参与生成的唯一用户"
+                    icon={<IconUsers className="w-6 h-6" />}
+                />
+                <StatCard
+                    title="Templates Used"
+                    value={numberFormatter.format(summary.uniqueTemplates)}
+                    subtitle="覆盖的模板数量"
+                    icon={<IconSparkles className="w-6 h-6" />}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div>
+                    <h4 className="text-sm font-semibold text-slate-700">Generation Type 分布</h4>
+                    <div className="mt-3 overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-slate-500">
+                                    <th className="py-2 pr-3 font-medium">类型</th>
+                                    <th className="py-2 px-3 font-medium">批次数</th>
+                                    <th className="py-2 px-3 font-medium">图片数</th>
+                                    <th className="py-2 px-3 font-medium">最近生成</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                                {typeStats.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-4 text-center text-slate-400">暂无生成数据</td>
+                                    </tr>
+                                ) : (
+                                    typeStats.map(stat => (
+                                        <tr key={stat.type}>
+                                            <td className="py-3 pr-3 text-slate-700 font-medium">{formatGenerationType(stat.type as GenerationBatch['type'])}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.totalResults)}</td>
+                                            <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                ))}
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-semibold text-slate-700">模板使用 Top 10</h4>
+                    <div className="mt-3 overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-slate-500">
+                                    <th className="py-2 pr-3 font-medium">模板</th>
+                                    <th className="py-2 px-3 font-medium">批次数</th>
+                                    <th className="py-2 px-3 font-medium">图片数</th>
+                                    <th className="py-2 px-3 font-medium">最近生成</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                                {templateStats.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-4 text-center text-slate-400">暂无模板使用记录</td>
+                                    </tr>
+                                ) : (
+                                    templateStats.map(stat => (
+                                        <tr key={stat.templateId}>
+                                            <td className="py-3 pr-3">
+                                                <div className="flex flex-col">
+                                                    <span className="text-slate-700 font-medium">{stat.templateName || stat.templateId}</span>
+                                                    {stat.category && <span className="text-xs text-slate-400">{stat.category}</span>}
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                            <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.usageCount)}</td>
+                                            <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 className="text-sm font-semibold text-slate-700">高频用户 Top 10</h4>
+                <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-slate-500">
+                                <th className="py-2 pr-3 font-medium">用户 ID</th>
+                                <th className="py-2 px-3 font-medium">批次数</th>
+                                <th className="py-2 px-3 font-medium">图片数</th>
+                                <th className="py-2 px-3 font-medium">最近生成</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {userStats.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="py-4 text-center text-slate-400">暂无用户生成记录</td>
+                                </tr>
+                            ) : (
+                                userStats.map(stat => (
+                                    <tr key={stat.userId}>
+                                        <td className="py-3 pr-3 text-slate-700 font-medium">{stat.userId}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.batchCount)}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(stat.totalResults)}</td>
+                                        <td className="py-3 px-3 text-slate-400">{formatDateTime(stat.lastGenerated)}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 className="text-sm font-semibold text-slate-700">最近的生成任务</h4>
+                <div className="mt-3 overflow-hidden border border-slate-200 rounded-xl">
+                    <table className="min-w-full text-sm">
+                        <thead className="bg-slate-50 text-slate-500">
+                            <tr>
+                                <th className="py-3 pl-4 pr-3 text-left font-medium">类型</th>
+                                <th className="py-3 px-3 text-left font-medium">提示词</th>
+                                <th className="py-3 px-3 text-left font-medium">生成时间</th>
+                                <th className="py-3 px-3 text-left font-medium">结果数</th>
+                                <th className="py-3 pr-4 text-right font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {recentBatches.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-6 text-center text-slate-400">暂无生成记录</td>
+                                </tr>
+                            ) : (
+                                recentBatches.map(batch => (
+                                    <tr key={batch.id}>
+                                        <td className="py-3 pl-4 pr-3 font-medium text-slate-700">{formatGenerationType(batch.type)}</td>
+                                        <td className="py-3 px-3 text-slate-500 max-w-xs truncate" title={batch.prompt}>{batch.prompt}</td>
+                                        <td className="py-3 px-3 text-slate-500">{formatDateTime(batch.timestamp)}</td>
+                                        <td className="py-3 px-3 text-slate-500">{numberFormatter.format(batch.results?.length || 0)}</td>
+                                        <td className="py-3 pr-4 text-right">
+                                            <Button onClick={() => onDeleteBatch(batch.id)} className="!px-3 !py-1.5 text-sm !bg-red-50 hover:!bg-red-100 !text-red-600 !border-red-200">
+                                                <IconTrash className="w-4 h-4" /> Delete
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
