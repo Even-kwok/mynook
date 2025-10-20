@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconPencil, IconX, IconUpload, IconPhoto, IconVideo, IconPlus, IconTrash, IconMoveUp, IconMoveDown, IconMoveToTop, IconMoveToBottom } from './Icons';
-import { HomeSection, HomeSectionMediaType, HomeSectionLayout } from '../types';
+import { HomeSection, HomeSectionMediaType, HomeSectionLayout, HomeSectionDisplayMode, GalleryFilterType } from '../types';
 import {
   getAllHomeSectionsForAdmin,
   createHomeSection,
@@ -391,7 +391,11 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
     button_link: 'Interior Design',
     layout_direction: 'left-image',
     is_active: true,
-    sort_order: existingSections.length
+    sort_order: existingSections.length,
+    display_mode: 'media_showcase',
+    gallery_filter_type: null,
+    gallery_main_category: null,
+    gallery_sub_category: null
   });
 
   const [uploading, setUploading] = useState(false);
@@ -399,7 +403,7 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
 
   const availablePages = [
     'Interior Design',
-    'Wall Design',
+    'Wall Paint',
     'Floor Style',
     'Garden & Backyard Design',
     'Exterior Design',
@@ -476,37 +480,66 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
     try {
       setSaving(true);
 
-      // Validation
-      if (!formData.title.trim()) {
-        alert('Title is required');
-        return;
+      // Validation - 根据 display_mode 验证不同的字段
+      if (formData.display_mode === 'media_showcase') {
+        // Media Showcase 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required');
+          return;
+        }
+        if (!formData.card_title.trim()) {
+          alert('Card title is required');
+          return;
+        }
+        if (!formData.card_subtitle.trim()) {
+          alert('Card subtitle is required');
+          return;
+        }
+        if (!formData.media_url && formData.media_type !== 'comparison') {
+          alert('Please upload a media file');
+          return;
+        }
+        if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
+          alert('Please upload both before and after images for comparison');
+          return;
+        }
+      } else if (formData.display_mode === 'gallery_wall') {
+        // Gallery Wall 模式验证 - 不验证title/subtitle（会使用默认值）
+        if (!formData.gallery_filter_type) {
+          alert('Please select a filter type for Gallery Wall');
+          return;
+        }
+        // 如果选择了特定分类，验证是否选择了分类
+        if (['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && !formData.gallery_main_category) {
+          alert('Please select a main category');
+          return;
+        }
+        if (formData.gallery_filter_type === 'sub_category' && !formData.gallery_sub_category) {
+          alert('Please enter a sub category name');
+          return;
+        }
       }
-      if (!formData.subtitle.trim()) {
-        alert('Subtitle is required');
-        return;
-      }
-      if (!formData.card_title.trim()) {
-        alert('Card title is required');
-        return;
-      }
-      if (!formData.card_subtitle.trim()) {
-        alert('Card subtitle is required');
-        return;
-      }
+
+      // 通用验证
       if (!formData.button_text.trim()) {
         alert('Button text is required');
         return;
       }
-      if (!formData.media_url && formData.media_type !== 'comparison') {
-        alert('Please upload a media file');
-        return;
-      }
-      if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
-        alert('Please upload both before and after images for comparison');
-        return;
-      }
 
-      await createHomeSection(formData);
+      // 为 Gallery Wall 模式设置默认值
+      const dataToSave = formData.display_mode === 'gallery_wall' ? {
+        ...formData,
+        media_url: formData.media_url || '',
+        card_title: formData.card_title || 'Gallery',
+        card_subtitle: formData.card_subtitle || '',
+        layout_direction: 'left-image' as const,
+      } : formData;
+
+      await createHomeSection(dataToSave);
 
       onSave();
       alert('Section created successfully!');
@@ -546,137 +579,253 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
         </div>
 
         <div className="p-6 space-y-6">
-          {/* 标题和副标题 - 使用与 EditSectionModal 相同的字段 */}
+          {/* Title and Subtitle - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Title
+                </label>
+                <textarea
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Subtitle
+                </label>
+                <textarea
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section subtitle"
+                />
+              </div>
+            </>
+          )}
+
+          {/* 卡片标题 - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Title (Left)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_title}
+                  onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., AI DESIGN PREVIEW"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Subtitle (Right)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_subtitle}
+                  onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Interior Design"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 按钮配置 - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.button_text}
+                  onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Get Started"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Link (Page)
+                </label>
+                <select
+                  value={formData.button_link}
+                  onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {availablePages.map((page) => (
+                    <option key={page} value={page}>
+                      {page}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* 显示模式选择 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Title
+              Display Mode
             </label>
-            <textarea
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder="Enter section title"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Subtitle
-            </label>
-            <textarea
-              value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder="Enter section subtitle"
-            />
-          </div>
-
-          {/* 卡片标题 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Title (Left)
-              </label>
-              <input
-                type="text"
-                value={formData.card_title}
-                onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., AI DESIGN PREVIEW"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Subtitle (Right)
-              </label>
-              <input
-                type="text"
-                value={formData.card_subtitle}
-                onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Interior Design"
-              />
-            </div>
-          </div>
-
-          {/* 按钮配置 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Button Text
-              </label>
-              <input
-                type="text"
-                value={formData.button_text}
-                onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Get Started"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Button Link (Page)
-              </label>
-              <select
-                value={formData.button_link}
-                onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {availablePages.map((page) => (
-                  <option key={page} value={page}>
-                    {page}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* 媒体类型选择 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Media Type
-            </label>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setFormData({ ...formData, media_type: 'image' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'image'
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'media_showcase' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'media_showcase'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <IconPhoto className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Image</div>
+                <div className="text-sm font-medium">📺 Media Showcase</div>
+                <div className="text-xs text-slate-500 mt-1">Image/Video/Comparison</div>
               </button>
               <button
-                onClick={() => setFormData({ ...formData, media_type: 'video' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'video'
+                type="button"
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  display_mode: 'gallery_wall',
+                  gallery_filter_type: 'all_random',
+                  title: 'Explore Our Templates',
+                  subtitle: 'Browse through our collection'
+                })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'gallery_wall'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <IconVideo className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Video</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'comparison'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-lg mb-1">⇄</div>
-                <div className="text-sm font-medium">Before/After</div>
+                <div className="text-sm font-medium">🖼️ Gallery Wall</div>
+                <div className="text-xs text-slate-500 mt-1">Template Showcase</div>
               </button>
             </div>
           </div>
+
+          {/* Gallery Wall配置（仅当选择gallery_wall时显示）*/}
+          {formData.display_mode === 'gallery_wall' && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
+              <h4 className="font-medium text-slate-800 flex items-center gap-2">
+                <span>🎨</span> Gallery Wall Settings
+              </h4>
+              
+              {/* 筛选类型 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Filter Type
+                </label>
+                <select
+                  value={formData.gallery_filter_type || 'all_random'}
+                  onChange={(e) => setFormData({ ...formData, gallery_filter_type: e.target.value as GalleryFilterType })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all_random">Random from All Categories</option>
+                  <option value="main_category">Specific Main Category</option>
+                  <option value="main_random">Random from Specific Category</option>
+                  <option value="sub_category">Specific Sub Category</option>
+                </select>
+              </div>
+              
+              {/* 主分类选择（当需要时显示）*/}
+              {formData.gallery_filter_type && ['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Main Category
+                  </label>
+                  <select
+                    value={formData.gallery_main_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_main_category: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Select Category...</option>
+                    <option value="Interior Design">Interior Design</option>
+                    <option value="Exterior Design">Exterior Design</option>
+                    <option value="Garden & Backyard Design">Garden & Backyard Design</option>
+                    <option value="Festive Decor">Festive Decor</option>
+                    <option value="Wall Paint">Wall Paint</option>
+                    <option value="Floor Style">Floor Style</option>
+                  </select>
+                </div>
+              )}
+              
+              {/* 二级分类（仅sub_category模式显示）*/}
+              {formData.gallery_filter_type === 'sub_category' && formData.gallery_main_category && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Sub Category
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallery_sub_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_sub_category: e.target.value })}
+                    placeholder="e.g., Modern, Victorian, Minimalist"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enter the exact sub-category name from your template database
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 媒体类型选择（仅当选择media_showcase时显示）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Media Type
+              </label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'image' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconPhoto className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Image</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'video' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'video'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconVideo className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Video</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'comparison'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">⇄</div>
+                  <div className="text-sm font-medium">Before/After</div>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 媒体上传 - 简化版，复用 MediaUploadField */}
-          {formData.media_type !== 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type !== 'comparison' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Media File
@@ -716,7 +865,7 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
           )}
 
           {/* Comparison Images Upload */}
-          {formData.media_type === 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type === 'comparison' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -779,34 +928,38 @@ const CreateSectionModal: React.FC<CreateSectionModalProps> = ({ existingSection
             </div>
           )}
 
-          {/* 布局方向 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Layout Direction
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'left-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                ← Image on Left
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'right-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                Image on Right →
-              </button>
+          {/* 布局方向（仅media_showcase模式）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Layout Direction
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'left-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  ← Image on Left
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'right-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Image on Right →
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Active Status */}
           <div className="flex items-center gap-3">
@@ -860,7 +1013,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
 
   const availablePages = [
     'Interior Design',
-    'Wall Design',
+    'Wall Paint',
     'Floor Style',
     'Garden & Backyard Design',
     'Exterior Design',
@@ -950,50 +1103,66 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
     try {
       setSaving(true);
 
-      // Validation
-      if (!formData.title.trim()) {
-        alert('Title is required');
-        return;
+      // Validation - 根据 display_mode 验证不同的字段
+      if (formData.display_mode === 'media_showcase') {
+        // Media Showcase 模式验证
+        if (!formData.title.trim()) {
+          alert('Title is required');
+          return;
+        }
+        if (!formData.subtitle.trim()) {
+          alert('Subtitle is required');
+          return;
+        }
+        if (!formData.card_title.trim()) {
+          alert('Card title is required');
+          return;
+        }
+        if (!formData.card_subtitle.trim()) {
+          alert('Card subtitle is required');
+          return;
+        }
+        if (!formData.media_url && formData.media_type !== 'comparison') {
+          alert('Please upload a media file');
+          return;
+        }
+        if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
+          alert('Please upload both before and after images for comparison');
+          return;
+        }
+      } else if (formData.display_mode === 'gallery_wall') {
+        // Gallery Wall 模式验证 - 不验证title/subtitle（会使用默认值）
+        if (!formData.gallery_filter_type) {
+          alert('Please select a filter type for Gallery Wall');
+          return;
+        }
+        // 如果选择了特定分类，验证是否选择了分类
+        if (['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && !formData.gallery_main_category) {
+          alert('Please select a main category');
+          return;
+        }
+        if (formData.gallery_filter_type === 'sub_category' && !formData.gallery_sub_category) {
+          alert('Please enter a sub category name');
+          return;
+        }
       }
-      if (!formData.subtitle.trim()) {
-        alert('Subtitle is required');
-        return;
-      }
-      if (!formData.card_title.trim()) {
-        alert('Card title is required');
-        return;
-      }
-      if (!formData.card_subtitle.trim()) {
-        alert('Card subtitle is required');
-        return;
-      }
+
+      // 通用验证
       if (!formData.button_text.trim()) {
         alert('Button text is required');
         return;
       }
-      if (!formData.media_url && formData.media_type !== 'comparison') {
-        alert('Please upload a media file');
-        return;
-      }
-      if (formData.media_type === 'comparison' && (!formData.comparison_before_url || !formData.comparison_after_url)) {
-        alert('Please upload both before and after images for comparison');
-        return;
-      }
 
-      await updateHomeSection(section.id, {
-        title: formData.title,
-        subtitle: formData.subtitle,
-        media_url: formData.media_url,
-        media_type: formData.media_type,
-        comparison_before_url: formData.comparison_before_url,
-        comparison_after_url: formData.comparison_after_url,
-        card_title: formData.card_title,
-        card_subtitle: formData.card_subtitle,
-        button_text: formData.button_text,
-        button_link: formData.button_link,
-        layout_direction: formData.layout_direction,
-        is_active: formData.is_active
-      });
+      // 为 Gallery Wall 模式设置默认值
+      const dataToSave = formData.display_mode === 'gallery_wall' ? {
+        ...formData,
+        media_url: formData.media_url || '',
+        card_title: formData.card_title || 'Gallery',
+        card_subtitle: formData.card_subtitle || '',
+        layout_direction: 'left-image' as const,
+      } : formData;
+
+      await updateHomeSection(section.id, dataToSave);
 
       onSave();
     } catch (error) {
@@ -1032,50 +1201,158 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Media Type Selection */}
+          {/* 显示模式选择 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Media Type
+              Display Mode
             </label>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setFormData({ ...formData, media_type: 'image' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'image'
+                type="button"
+                onClick={() => setFormData({ ...formData, display_mode: 'media_showcase' })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'media_showcase'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <IconPhoto className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Image</div>
+                <div className="text-sm font-medium">📺 Media Showcase</div>
+                <div className="text-xs text-slate-500 mt-1">Image/Video/Comparison</div>
               </button>
               <button
-                onClick={() => setFormData({ ...formData, media_type: 'video' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'video'
+                type="button"
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  display_mode: 'gallery_wall',
+                  gallery_filter_type: formData.gallery_filter_type || 'all_random',
+                  title: formData.title || 'Explore Our Templates',
+                  subtitle: formData.subtitle || 'Browse through our collection'
+                })}
+                className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                  formData.display_mode === 'gallery_wall'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <IconVideo className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm font-medium">Video</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.media_type === 'comparison'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-lg mb-1">⇄</div>
-                <div className="text-sm font-medium">Before/After</div>
+                <div className="text-sm font-medium">🖼️ Gallery Wall</div>
+                <div className="text-xs text-slate-500 mt-1">Template Showcase</div>
               </button>
             </div>
           </div>
 
+          {/* Gallery Wall配置（仅当选择gallery_wall时显示）*/}
+          {formData.display_mode === 'gallery_wall' && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
+              <h4 className="font-medium text-slate-800 flex items-center gap-2">
+                <span>🎨</span> Gallery Wall Settings
+              </h4>
+              
+              {/* 筛选类型 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Filter Type
+                </label>
+                <select
+                  value={formData.gallery_filter_type || 'all_random'}
+                  onChange={(e) => setFormData({ ...formData, gallery_filter_type: e.target.value as GalleryFilterType })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all_random">Random from All Categories</option>
+                  <option value="main_category">Specific Main Category</option>
+                  <option value="main_random">Random from Specific Category</option>
+                  <option value="sub_category">Specific Sub Category</option>
+                </select>
+              </div>
+              
+              {/* 主分类选择（当需要时显示）*/}
+              {formData.gallery_filter_type && ['main_category', 'main_random', 'sub_category'].includes(formData.gallery_filter_type) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Main Category
+                  </label>
+                  <select
+                    value={formData.gallery_main_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_main_category: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Select Category...</option>
+                    <option value="Interior Design">Interior Design</option>
+                    <option value="Exterior Design">Exterior Design</option>
+                    <option value="Garden & Backyard Design">Garden & Backyard Design</option>
+                    <option value="Festive Decor">Festive Decor</option>
+                    <option value="Wall Paint">Wall Paint</option>
+                    <option value="Floor Style">Floor Style</option>
+                  </select>
+                </div>
+              )}
+              
+              {/* 二级分类（仅sub_category模式显示）*/}
+              {formData.gallery_filter_type === 'sub_category' && formData.gallery_main_category && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Sub Category
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallery_sub_category || ''}
+                    onChange={(e) => setFormData({ ...formData, gallery_sub_category: e.target.value })}
+                    placeholder="e.g., Modern, Victorian, Minimalist"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enter the exact sub-category name from your template database
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Media Type Selection（仅当选择media_showcase时显示）*/}
+          {formData.display_mode === 'media_showcase' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Media Type
+              </label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'image' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconPhoto className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Image</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'video' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'video'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <IconVideo className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-sm font-medium">Video</div>
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, media_type: 'comparison' })}
+                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.media_type === 'comparison'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">⇄</div>
+                  <div className="text-sm font-medium">Before/After</div>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Media Upload */}
-          {formData.media_type !== 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type !== 'comparison' && (
             <MediaUploadField
               label="Media File"
               currentUrl={formData.media_url}
@@ -1087,7 +1364,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
           )}
 
           {/* Comparison Images Upload */}
-          {formData.media_type === 'comparison' && (
+          {formData.display_mode === 'media_showcase' && formData.media_type === 'comparison' && (
             <div className="grid grid-cols-2 gap-4">
               <MediaUploadField
                 label="Before Image"
@@ -1108,122 +1385,134 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose, o
             </div>
           )}
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Title
-            </label>
-            <textarea
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder="Enter section title (use line breaks for multiline)"
-            />
-          </div>
+          {/* Title and Subtitle - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Title
+                </label>
+                <textarea
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section title (use line breaks for multiline)"
+                />
+              </div>
 
-          {/* Subtitle */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Subtitle
-            </label>
-            <textarea
-              value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              rows={3}
-              placeholder="Enter section subtitle"
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Section Subtitle
+                </label>
+                <textarea
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3}
+                  placeholder="Enter section subtitle"
+                />
+              </div>
+            </>
+          )}
 
-          {/* Card Titles */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Card Titles - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Title (Left)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_title}
+                  onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., AI DESIGN PREVIEW"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Card Subtitle (Right)
+                </label>
+                <input
+                  type="text"
+                  value={formData.card_subtitle}
+                  onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Interior Design"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Button Text & Button Link - 只在 Media Showcase 模式显示 */}
+          {formData.display_mode === 'media_showcase' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.button_text}
+                  onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., Get Started"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Button Link (Page)
+                </label>
+                <select
+                  value={formData.button_link}
+                  onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {availablePages.map((page) => (
+                    <option key={page} value={page}>
+                      {page}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* Layout Direction（仅media_showcase模式）*/}
+          {formData.display_mode === 'media_showcase' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Title (Left)
+                Layout Direction
               </label>
-              <input
-                type="text"
-                value={formData.card_title}
-                onChange={(e) => setFormData({ ...formData, card_title: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., AI DESIGN PREVIEW"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'left-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-sm font-medium">← Image on Left</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
+                  className={`py-3 px-4 rounded-xl border-2 transition-all ${
+                    formData.layout_direction === 'right-image'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-sm font-medium">Image on Right →</div>
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Card Subtitle (Right)
-              </label>
-              <input
-                type="text"
-                value={formData.card_subtitle}
-                onChange={(e) => setFormData({ ...formData, card_subtitle: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Interior Design"
-              />
-            </div>
-          </div>
-
-          {/* Button Text */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Button Text
-            </label>
-            <input
-              type="text"
-              value={formData.button_text}
-              onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="e.g., Get Started"
-            />
-          </div>
-
-          {/* Button Link */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Button Link (Page)
-            </label>
-            <select
-              value={formData.button_link}
-              onChange={(e) => setFormData({ ...formData, button_link: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {availablePages.map((page) => (
-                <option key={page} value={page}>
-                  {page}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Layout Direction */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Layout Direction
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'left-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'left-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-sm font-medium">← Image on Left</div>
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, layout_direction: 'right-image' })}
-                className={`py-3 px-4 rounded-xl border-2 transition-all ${
-                  formData.layout_direction === 'right-image'
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="text-sm font-medium">Image on Right →</div>
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* Active Status */}
           <div className="flex items-center gap-3">
