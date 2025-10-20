@@ -6,7 +6,7 @@ import { IconUserCircle, IconSparkles, IconPhoto, IconLayoutDashboard, IconUsers
 import { PERMISSION_MAP } from '../constants';
 import { PromptTemplate, User, GenerationBatch, RecentActivity, ManagedTemplateData, ManagedPromptTemplateCategory, DashboardOverview, SimilarCategoryGroup } from '../types';
 import { analyzeSimilarCategories } from '../services/categoryMergeService';
-import { batchMergeCategories } from '../api/merge-categories';
+import { supabase } from '../config/supabase';
 import { Button } from './Button';
 import { toBase64 } from '../utils/imageUtils';
 import { BatchTemplateUpload } from './BatchTemplateUpload';
@@ -1641,18 +1641,35 @@ const TemplateManagement: React.FC<{
             console.log('🔄 Starting merge process...');
             console.log('Selected suggestions:', selectedSuggestions);
             
-            // 构建批量合并请求
-            const mergeGroups = selectedSuggestions.map(suggestion => ({
-                targetSubCategory: suggestion.suggestedName,
-                sourceSubCategories: suggestion.categories,
-            }));
+            let totalMoved = 0;
+            const results = [];
             
-            console.log('Merge groups:', mergeGroups);
+            // 逐个处理每组合并
+            for (const suggestion of selectedSuggestions) {
+                console.log(`\n📦 Merging: ${suggestion.categories.join(', ')} → ${suggestion.suggestedName}`);
+                
+                // 将所有源分类的模板迁移到目标分类
+                const { data: movedTemplates, error: updateError } = await supabase
+                    .from('templates')
+                    .update({ sub_category: suggestion.suggestedName })
+                    .eq('main_category', currentMergeCategory)
+                    .in('sub_category', suggestion.categories)
+                    .select('id');
+                
+                if (updateError) {
+                    console.error('❌ Failed to merge:', updateError);
+                    results.push({ success: false, error: updateError.message });
+                    continue;
+                }
+                
+                const movedCount = movedTemplates?.length || 0;
+                totalMoved += movedCount;
+                
+                console.log(`✅ Moved ${movedCount} templates to "${suggestion.suggestedName}"`);
+                results.push({ success: true, movedCount });
+            }
             
-            // 执行批量合并
-            const result = await batchMergeCategories(currentMergeCategory, mergeGroups);
-            
-            console.log('✅ Merge result:', result);
+            console.log(`\n✅ Merge complete. Total templates moved: ${totalMoved}`);
             
             // 关闭弹窗
             setIsMergeModalOpen(false);
@@ -1671,10 +1688,8 @@ const TemplateManagement: React.FC<{
                 await onTemplatesUpdated();
             }
             
-            const totalMoved = result.results.reduce((sum, r) => sum + r.movedTemplates, 0);
-            
             if (totalMoved === 0) {
-                toast.warning('Merge completed, but no templates were moved. Categories might already be merged.');
+                toast.warning('Merge completed, but no templates were moved. Categories might already be merged or empty.');
             } else {
                 toast.success(`Successfully merged ${selectedSuggestions.length} category group(s)! Moved ${totalMoved} templates. ✨`);
             }
