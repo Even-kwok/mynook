@@ -1574,6 +1574,9 @@ const TemplateManagement: React.FC<{
                 templateCount: sub.templates.length
             })) || [];
             
+            console.log('🔍 Analyzing categories for:', mainCategory);
+            console.log('Subcategories:', subCategories);
+            
             if (subCategories.length < 2) {
                 toast.info('Need at least 2 subcategories to analyze');
                 setIsAnalyzing(false);
@@ -1583,6 +1586,8 @@ const TemplateManagement: React.FC<{
             toast.loading('AI is analyzing categories...', { id: 'analyzing' });
             
             const suggestions = await analyzeSimilarCategories(mainCategory, subCategories);
+            
+            console.log('✅ AI analysis complete. Suggestions:', suggestions);
             
             toast.dismiss('analyzing');
             
@@ -1598,9 +1603,9 @@ const TemplateManagement: React.FC<{
             toast.success(`Found ${suggestions.length} merge suggestion(s)! 🎯`);
             
         } catch (error) {
-            console.error('Failed to analyze categories:', error);
+            console.error('❌ Failed to analyze categories:', error);
             toast.dismiss('analyzing');
-            toast.error('Failed to analyze categories. Please try again.');
+            toast.error(`Failed to analyze: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsAnalyzing(false);
         }
@@ -1633,34 +1638,50 @@ const TemplateManagement: React.FC<{
         setIsMerging(true);
         
         try {
+            console.log('🔄 Starting merge process...');
+            console.log('Selected suggestions:', selectedSuggestions);
+            
             // 构建批量合并请求
             const mergeGroups = selectedSuggestions.map(suggestion => ({
                 targetSubCategory: suggestion.suggestedName,
                 sourceSubCategories: suggestion.categories,
             }));
             
+            console.log('Merge groups:', mergeGroups);
+            
             // 执行批量合并
             const result = await batchMergeCategories(currentMergeCategory, mergeGroups);
+            
+            console.log('✅ Merge result:', result);
             
             // 关闭弹窗
             setIsMergeModalOpen(false);
             
             // 刷新数据
+            console.log('🔄 Refreshing template data...');
             const freshTemplates = await getAllTemplates();
             setTemplateData(freshTemplates);
             setCategoryOrder(Object.keys(freshTemplates));
             
+            console.log('✅ Template data refreshed');
+            
             // 通知前端刷新
             if (onTemplatesUpdated) {
+                console.log('🔄 Notifying parent to refresh...');
                 await onTemplatesUpdated();
             }
             
             const totalMoved = result.results.reduce((sum, r) => sum + r.movedTemplates, 0);
-            toast.success(`Successfully merged ${selectedSuggestions.length} category group(s)! Moved ${totalMoved} templates. ✨`);
+            
+            if (totalMoved === 0) {
+                toast.warning('Merge completed, but no templates were moved. Categories might already be merged.');
+            } else {
+                toast.success(`Successfully merged ${selectedSuggestions.length} category group(s)! Moved ${totalMoved} templates. ✨`);
+            }
             
         } catch (error) {
-            console.error('Failed to merge categories:', error);
-            toast.error('Failed to merge categories. Please try again.');
+            console.error('❌ Failed to merge categories:', error);
+            toast.error(`Failed to merge categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsMerging(false);
         }
