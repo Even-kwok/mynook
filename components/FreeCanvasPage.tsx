@@ -9,7 +9,7 @@ import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
 import { ROOM_TYPES, BUILDING_TYPES } from '../constants';
-import removeBackground from '@imgly/background-removal';
+import { removeBackground } from '@imgly/background-removal';
 
 
 interface FreeCanvasPageProps {
