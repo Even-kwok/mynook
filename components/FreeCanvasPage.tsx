@@ -9,6 +9,7 @@ import { UpgradeModal } from './UpgradeModal';
 import { IconUpload, IconSparkles, IconCursorArrow, IconBrush, IconPhoto, IconX, IconDownload, IconUndo, IconTrash, IconArrowDown, IconArrowUp, IconViewLarge, IconViewMedium, IconViewSmall, IconChevronDown, IconChevronRight, IconCrop, IconPencil, IconRotateRight, IconTag, IconRectangle, IconCircle, IconLock } from './Icons';
 import { GenerationBatch, GeneratedImage, User, CanvasImage, DrawablePath } from '../types';
 import { ROOM_TYPES, BUILDING_TYPES } from '../constants';
+import removeBackground from '@imgly/background-removal';
 
 
 interface FreeCanvasPageProps {
@@ -474,6 +475,7 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const clearButtonRef = useRef<HTMLButtonElement>(null);
     const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+    const [removingBgImageId, setRemovingBgImageId] = useState<string | null>(null);
     
     // Track component mount state to prevent state updates after unmount
     const isMountedRef = useRef<boolean>(true);
@@ -623,6 +625,56 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
             }
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    // Remove background function
+    const handleRemoveBackground = async (imageId: string) => {
+        const image = images.find(img => img.id === imageId);
+        if (!image) return;
+
+        try {
+            setRemovingBgImageId(imageId);
+            
+            // Create a temporary Image object to load the original image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = image.src;
+            
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            // Call background removal library
+            const blob = await removeBackground(img.src, {
+                progress: (key, current, total) => {
+                    console.log(`🎨 Processing background removal: ${key} - ${current}/${total}`);
+                },
+                model: 'medium', // Options: 'small' | 'medium' | 'large'
+            });
+
+            // Convert Blob to Data URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                
+                // Update the image src with the background-removed version
+                setImages(prev => prev.map(img => 
+                    img.id === imageId 
+                        ? { ...img, src: dataUrl }
+                        : img
+                ));
+                
+                setRemovingBgImageId(null);
+                console.log('✅ Background removed successfully');
+            };
+            reader.readAsDataURL(blob);
+
+        } catch (error) {
+            console.error('❌ Background removal failed:', error);
+            onError('Failed to remove background. Please try again.');
+            setRemovingBgImageId(null);
+        }
     };
 
     const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>, imageId?: string) => {
@@ -1760,6 +1812,24 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 onDragOver={handleDragOver}
                                 onDrop={handleDrop}
                             >
+                                {/* Background removal progress indicator */}
+                                <AnimatePresence>
+                                    {removingBgImageId && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50"
+                                        >
+                                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3">
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <span className="text-sm font-medium" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                    Removing background...
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                                 {images.map((image, index) => {
                                     if (cropState?.imageId === image.id) return null; // Hide normal image when cropping
                                     const isSelected = selectedImageId === image.id && activeTool === 'select';
@@ -1788,6 +1858,19 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                                     <div className="w-px h-4 bg-slate-200 mx-1"></div>
                                                     <button onClick={(e) => { e.stopPropagation(); handleStartCrop(image.id); }} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Crop image">
                                                         <IconCrop className="w-4 h-4" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); handleRemoveBackground(image.id); }} 
+                                                        disabled={removingBgImageId === image.id}
+                                                        className="p-1.5 text-slate-600 hover:bg-purple-500 hover:text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                                                        aria-label="Remove background"
+                                                        title="Remove Background"
+                                                    >
+                                                        {removingBgImageId === image.id ? (
+                                                            <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                                                        ) : (
+                                                            <IconSparkles className="w-4 h-4" />
+                                                        )}
                                                     </button>
                                                 </div>
                                                 
