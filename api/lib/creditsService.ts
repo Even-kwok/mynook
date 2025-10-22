@@ -29,6 +29,7 @@ export const CREDIT_COSTS = {
   TEXT_GENERATION: 1,      // 文本生成消耗 1 点
   IMAGE_GENERATION: 1,     // 图片生成消耗 1 点
   IMAGE_EDIT: 3,           // 图片编辑消耗 3 点
+  IMAGE_UPSCALE: 1,        // 图片放大消耗 1 点
 } as const;
 
 /**

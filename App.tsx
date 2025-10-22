@@ -14,6 +14,7 @@ import { SubscriptionSuccessPage } from './components/SubscriptionSuccessPage';
 import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
 import { AdminPage } from './components/AdminPage';
 import { ImageComparison } from './components/ImageComparison';
+import { ImageUpscalePage } from './components/ImageUpscalePage';
 import { HomeSection, HeroSection } from './types';
 import { getAllHomeSections } from './services/homeSectionService';
 import { getHeroSection } from './services/heroSectionService';
@@ -1990,7 +1991,8 @@ const App: React.FC = () => {
             'Reference Style Match',
             'AI Design Advisor',
             'Multi-Item Preview',
-            'Free Canvas'
+            'Free Canvas',
+            'Image Upscale'
         ];
         
         // 如果切换到功能页面，自动打开面板
@@ -3415,6 +3417,10 @@ const App: React.FC = () => {
             title: 'Multi-Item Preview',
             description: 'See how multiple pieces look together. Upload your room and up to nine items to create a cohesive scene.',
         },
+        'Image Upscale': {
+            title: 'Image Upscale',
+            description: 'Enhance your images with AI-powered upscaling. Scale up to 8x while maintaining quality.',
+        },
     };
 
     const renderPage = () => {
@@ -3430,6 +3436,12 @@ const App: React.FC = () => {
                 return <TermsPage />;
             case 'Privacy':
                 return <PrivacyPage />;
+            case 'Image Upscale':
+                return <ImageUpscalePage 
+                    currentUser={currentUser}
+                    onLoginRequest={() => auth.setShowLoginModal(true)}
+                    onUpgrade={() => setActivePage('Pricing')}
+                />;
             case 'Admin':
                 // Check admin permissions
                 if (!currentUser) {
