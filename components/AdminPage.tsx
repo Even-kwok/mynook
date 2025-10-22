@@ -2579,7 +2579,7 @@ const ToolsOrderManagement: React.FC = () => {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h4 className="font-semibold text-slate-800">{tool.name}</h4>
-                                        {tool.isPremium && (
+                                        {tool.isPremium && tool.id !== 'image-upscale' && (
                                             <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
                                                 Premium
                                             </span>
