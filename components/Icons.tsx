@@ -95,8 +95,8 @@ export const IconSelect = ({ className = "w-6 h-6" }: { className?: string }) =>
 );
 
 export const IconCursorArrow = ({ className = "w-6 h-6" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 8.445 4.5 19.128V4.5h14.628l-3.951 3.945Z" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l7.5 18L13 13l8-2.5L3 3z" />
     </svg>
 );
 
