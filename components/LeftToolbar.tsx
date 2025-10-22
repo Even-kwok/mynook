@@ -134,11 +134,9 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
                 </span>
                 
                 {/* Premium VIP 标记 */}
-                {tool.isPremium && (
+                {tool.isPremium && tool.id !== 'image-upscale' && (
                   <div className="absolute top-1 right-1">
-                    <span className="text-sm">
-                      {tool.id === 'image-upscale' ? 'testing' : '👑'}
-                    </span>
+                    <span className="text-sm">👑</span>
                   </div>
                 )}
               </motion.button>

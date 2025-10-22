@@ -316,23 +316,20 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
               )}
 
               {/* Upscale Button */}
-              <div className="relative">
-                {!hasAccess && (
-                  <div className="absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
-                    <div className="text-center">
-                      <IconLock className="w-12 h-12 text-[#666666] mx-auto mb-4" />
-                      <p className="text-white mb-4" style={{ fontFamily: 'Arial, sans-serif' }}>
-                        This feature requires Pro membership
-                      </p>
-                      <Button onClick={onUpgrade} primary>
-                        Upgrade to Pro
-                      </Button>
-                    </div>
-                  </div>
-                )}
+              {!hasAccess ? (
+                <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-6 text-center">
+                  <IconLock className="w-12 h-12 text-[#666666] mx-auto mb-4" />
+                  <p className="text-white mb-6 text-lg" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    This feature requires Pro membership
+                  </p>
+                  <Button onClick={onUpgrade} primary className="mx-auto">
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              ) : (
                 <button
                   onClick={handleUpscale}
-                  disabled={isUpscaling || !hasAccess}
+                  disabled={isUpscaling}
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
@@ -348,7 +345,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
                     </>
                   )}
                 </button>
-              </div>
+              )}
 
               {/* Result */}
               {upscaledUrl && (
