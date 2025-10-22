@@ -3670,6 +3670,7 @@ const App: React.FC = () => {
                             activePage === 'AI Design Advisor' ? 'ai-advisor' :
                             activePage === 'Multi-Item Preview' ? 'multi-item' :
                             activePage === 'Free Canvas' ? 'free-canvas' :
+                            activePage === 'Image Upscale' ? 'image-upscale' :
                             null
                         }
                         onToolClick={(toolId) => {
@@ -3686,6 +3687,7 @@ const App: React.FC = () => {
                                 'ai-advisor': 'AI Design Advisor',
                                 'multi-item': 'Multi-Item Preview',
                                 'free-canvas': 'Free Canvas',
+                                'image-upscale': 'Image Upscale',
                             };
                             const page = pageMap[toolId] || activePage;
                             setActivePage(page);
