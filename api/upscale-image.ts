@@ -94,11 +94,25 @@ export default async function handler(
 
     console.log(`✅ Upscale completed for user ${userId}`);
     console.log(`- Output type: ${typeof output}`);
-    console.log(`- Output: ${JSON.stringify(output).substring(0, 200)}`);
+    console.log(`- Output: ${JSON.stringify(output).substring(0, 500)}`);
+
+    // Replicate 可能返回数组或字符串，需要正确提取
+    let imageUrl: string;
+    if (Array.isArray(output)) {
+      imageUrl = output[0]; // 如果是数组，取第一个元素
+    } else if (typeof output === 'string') {
+      imageUrl = output; // 如果直接是字符串
+    } else if (output && typeof output === 'object' && 'url' in output) {
+      imageUrl = (output as any).url; // 如果是对象，取 url 字段
+    } else {
+      throw new Error(`Unexpected output format: ${typeof output}`);
+    }
+
+    console.log(`📷 Final image URL: ${imageUrl}`);
 
     return res.status(200).json({
       success: true,
-      upscaledImageUrl: output,
+      upscaledImageUrl: imageUrl,
       scale: scale,
       creditsUsed: requiredCredits,
       remainingCredits: remainingCredits,
