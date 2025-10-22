@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from 'react';
 import { Button } from './Button';
-import { IconUpload, IconSparkles, IconDownload, IconLock } from './Icons';
+import { IconUpload, IconSparkles, IconDownload, IconLock, IconTrash } from './Icons';
 import { upscaleImage, getUpscaleResolution, getUpscaleCreditCost } from '../services/imageUpscaleService';
 import { AuthContext } from '../context/AuthContext';
 import { User } from '../types';
@@ -30,6 +30,16 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
   const hasAccess = currentUser && currentUser.permissionLevel >= 2;
   const userCredits = profile?.credits || 0;
   const originalSize = 1024; // 假设原图是1024x1024
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setUpscaledUrl(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -198,6 +208,14 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
                   </h3>
                 </div>
                 <div className="relative aspect-square max-w-md mx-auto bg-[#0a0a0a] rounded-lg overflow-hidden">
+                  <button
+                    onClick={handleRemoveImage}
+                    type="button"
+                    className="absolute top-3 right-3 flex items-center justify-center w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                    aria-label="Remove image"
+                  >
+                    <IconTrash className="w-5 h-5" />
+                  </button>
                   <img
                     src={imagePreview}
                     alt="Original"
