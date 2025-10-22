@@ -1845,53 +1845,101 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                         <img src={image.src} alt="canvas element" draggable="false" className="w-full h-full object-cover pointer-events-none rounded-lg" />
                                         {isSelected && (
                                             <>
-                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 p-1 bg-white rounded-full shadow-md">
-                                                    <button onClick={() => handleLayerChange(image.id, 'down')} disabled={isFirst} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Move layer down">
-                                                        <IconArrowDown />
-                                                    </button>
-                                                    <button onClick={(e) => handleDeleteImage(e, image.id)} className="p-1.5 text-slate-600 hover:bg-red-500 hover:text-white rounded-full transition-colors" aria-label="Delete image">
-                                                        <IconTrash className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => handleLayerChange(image.id, 'up')} disabled={isLast} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Move layer up">
-                                                        <IconArrowUp />
-                                                    </button>
-                                                    <div className="w-px h-4 bg-slate-200 mx-1"></div>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleStartCrop(image.id); }} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Crop image">
-                                                        <IconCrop className="w-4 h-4" />
-                                                    </button>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); handleRemoveBackground(image.id); }} 
-                                                        disabled={removingBgImageId === image.id}
-                                                        className="p-1.5 text-slate-600 hover:bg-purple-500 hover:text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                                                        aria-label="Remove background"
-                                                        title="Remove Background"
-                                                    >
-                                                        {removingBgImageId === image.id ? (
-                                                            <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                                                        ) : (
-                                                            <IconSparkles className="w-4 h-4" />
-                                                        )}
-                                                    </button>
+                                                {/* 优化后的工具栏 - 方案B：横向带文字标签 */}
+                                                <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-3 py-2 bg-black/80 backdrop-blur-md rounded-xl shadow-2xl border border-white/10">
+                                                    {/* 图层控制组 */}
+                                                    <div className="flex items-center gap-1 pr-2 border-r border-white/10">
+                                                        <button 
+                                                            onClick={() => handleLayerChange(image.id, 'down')} 
+                                                            disabled={isFirst} 
+                                                            className="group flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95" 
+                                                            aria-label="Move layer down"
+                                                        >
+                                                            <IconArrowDown className="w-4 h-4" />
+                                                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>Down</span>
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => handleDeleteImage(e, image.id)} 
+                                                            className="group flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-red-500/90 transition-all hover:scale-105 active:scale-95" 
+                                                            aria-label="Delete image"
+                                                        >
+                                                            <IconTrash className="w-4 h-4" />
+                                                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>Delete</span>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleLayerChange(image.id, 'up')} 
+                                                            disabled={isLast} 
+                                                            className="group flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95" 
+                                                            aria-label="Move layer up"
+                                                        >
+                                                            <IconArrowUp className="w-4 h-4" />
+                                                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>Up</span>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    {/* 编辑工具组 */}
+                                                    <div className="flex items-center gap-1 pl-2">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleStartCrop(image.id); }} 
+                                                            className="group flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-indigo-500/80 transition-all hover:scale-105 active:scale-95" 
+                                                            aria-label="Crop image"
+                                                        >
+                                                            <IconCrop className="w-4 h-4" />
+                                                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>Crop</span>
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleRemoveBackground(image.id); }} 
+                                                            disabled={removingBgImageId === image.id}
+                                                            className="group flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-purple-500/80 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" 
+                                                            aria-label="Remove background"
+                                                        >
+                                                            {removingBgImageId === image.id ? (
+                                                                <div className="w-4 h-4 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
+                                                            ) : (
+                                                                <IconSparkles className="w-4 h-4" />
+                                                            )}
+                                                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                                {removingBgImageId === image.id ? 'Processing...' : 'Remove BG'}
+                                                            </span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 
-                                                <div className={`absolute -top-[48px] left-1/2 -translate-x-1/2 w-px h-6 pointer-events-none transition-colors ${isRotationSnapped ? 'bg-green-500' : 'bg-indigo-500'}`} />
-                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 gap-2">
-                                                    <button onMouseDown={(e) => e.stopPropagation()} onClick={() => handleQuickRotate(image.id, -90)} className="p-1.5 bg-white rounded-full shadow-md text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Rotate left 90 degrees">
+                                                {/* 优化后的旋转控制器 */}
+                                                <div className={`absolute -top-[72px] left-1/2 -translate-x-1/2 w-px h-4 pointer-events-none transition-all ${isRotationSnapped ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]'}`} />
+                                                <div className="absolute -top-24 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 gap-2">
+                                                    <button 
+                                                        onMouseDown={(e) => e.stopPropagation()} 
+                                                        onClick={() => handleQuickRotate(image.id, -90)} 
+                                                        className="group flex flex-col items-center gap-0.5 p-2 bg-black/80 backdrop-blur-md rounded-lg shadow-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all hover:scale-110 active:scale-95" 
+                                                        aria-label="Rotate left 90 degrees"
+                                                    >
                                                         <IconUndo className="w-4 h-4" />
+                                                        <span className="text-[8px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: 'Arial, sans-serif' }}>90°</span>
                                                     </button>
-                                                    <div
-                                                        onMouseDown={(e) => handleRotationMouseDown(e, image.id)}
-                                                        className={`w-5 h-5 bg-white border-2 rounded-full cursor-[grab] active:cursor-[grabbing] shadow transition-colors ${isRotationSnapped ? 'border-green-500' : 'border-indigo-500'}`}
-                                                    />
-                                                    <button onMouseDown={(e) => e.stopPropagation()} onClick={() => handleQuickRotate(image.id, 90)} className="p-1.5 bg-white rounded-full shadow-md text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Rotate right 90 degrees">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div
+                                                            onMouseDown={(e) => handleRotationMouseDown(e, image.id)}
+                                                            className={`w-6 h-6 bg-gradient-to-br from-black/90 to-black/70 backdrop-blur-md border-2 rounded-full cursor-[grab] active:cursor-[grabbing] shadow-xl transition-all hover:scale-110 ${isRotationSnapped ? 'border-green-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]' : 'border-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.6)]'}`}
+                                                        />
+                                                        <span className="text-[8px] font-medium text-white/50 whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>Rotate</span>
+                                                    </div>
+                                                    <button 
+                                                        onMouseDown={(e) => e.stopPropagation()} 
+                                                        onClick={() => handleQuickRotate(image.id, 90)} 
+                                                        className="group flex flex-col items-center gap-0.5 p-2 bg-black/80 backdrop-blur-md rounded-lg shadow-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all hover:scale-110 active:scale-95" 
+                                                        aria-label="Rotate right 90 degrees"
+                                                    >
                                                         <IconRotateRight className="w-4 h-4" />
+                                                        <span className="text-[8px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: 'Arial, sans-serif' }}>90°</span>
                                                     </button>
                                                 </div>
 
-                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'tl')} className="absolute -top-2 -left-2 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full cursor-nwse-resize z-10 shadow"></div>
-                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'tr')} className="absolute -top-2 -right-2 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full cursor-nesw-resize z-10 shadow"></div>
-                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'bl')} className="absolute -bottom-2 -left-2 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full cursor-nesw-resize z-10 shadow"></div>
-                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'br')} className="absolute -bottom-2 -right-2 w-4 h-4 bg-white border-2 border-indigo-500 rounded-full cursor-nwse-resize z-10 shadow"></div>
+                                                {/* 缩放控制点 - 深色毛玻璃风格 */}
+                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'tl')} className="absolute -top-2 -left-2 w-4 h-4 bg-black/70 backdrop-blur-sm border-2 border-indigo-400 rounded-full cursor-nwse-resize z-10 shadow-xl hover:scale-125 hover:border-indigo-300 hover:shadow-[0_0_12px_rgba(129,140,248,0.6)] transition-all"></div>
+                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'tr')} className="absolute -top-2 -right-2 w-4 h-4 bg-black/70 backdrop-blur-sm border-2 border-indigo-400 rounded-full cursor-nesw-resize z-10 shadow-xl hover:scale-125 hover:border-indigo-300 hover:shadow-[0_0_12px_rgba(129,140,248,0.6)] transition-all"></div>
+                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'bl')} className="absolute -bottom-2 -left-2 w-4 h-4 bg-black/70 backdrop-blur-sm border-2 border-indigo-400 rounded-full cursor-nesw-resize z-10 shadow-xl hover:scale-125 hover:border-indigo-300 hover:shadow-[0_0_12px_rgba(129,140,248,0.6)] transition-all"></div>
+                                                <div onMouseDown={(e) => handleResizeMouseDown(e, image.id, 'br')} className="absolute -bottom-2 -right-2 w-4 h-4 bg-black/70 backdrop-blur-sm border-2 border-indigo-400 rounded-full cursor-nwse-resize z-10 shadow-xl hover:scale-125 hover:border-indigo-300 hover:shadow-[0_0_12px_rgba(129,140,248,0.6)] transition-all"></div>
                                             </>
                                         )}
                                     </div>
