@@ -94,7 +94,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
       console.log('📤 Uploading image to storage...');
       
       const { error: uploadError } = await supabase.storage
-        .from('template-thumbnails')
+        .from('upscale-images')
         .upload(filePath, selectedImage, {
           cacheControl: '3600',
           upsert: true
@@ -106,7 +106,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
 
       // 获取公开 URL
       const { data: urlData } = supabase.storage
-        .from('template-thumbnails')
+        .from('upscale-images')
         .getPublicUrl(filePath);
 
       const publicUrl = urlData.publicUrl;
@@ -123,7 +123,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
       // 第3步：可选 - 删除临时文件（等待一段时间后再删除，确保 Replicate 已经读取）
       setTimeout(async () => {
         try {
-          await supabase.storage.from('template-thumbnails').remove([filePath]);
+          await supabase.storage.from('upscale-images').remove([filePath]);
           console.log('🗑️ Temporary file cleaned up');
         } catch (e) {
           console.warn('Failed to clean up temporary file:', e);
