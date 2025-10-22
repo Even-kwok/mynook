@@ -94,16 +94,36 @@ export default async function handler(
 
     console.log(`✅ Upscale completed for user ${userId}`);
     console.log(`- Output type: ${typeof output}`);
-    console.log(`- Output: ${JSON.stringify(output).substring(0, 500)}`);
-
-    // Replicate 可能返回数组或字符串，需要正确提取
+    console.log(`- Output constructor: ${output?.constructor?.name}`);
+    
+    // Replicate 可能返回不同格式，需要正确提取 URL
     let upscaledImageUrl: string;
+    
     if (Array.isArray(output)) {
-      upscaledImageUrl = output[0]; // 如果是数组，取第一个元素
+      // 格式1：数组 ["https://..."]
+      upscaledImageUrl = output[0];
     } else if (typeof output === 'string') {
-      upscaledImageUrl = output; // 如果直接是字符串
-    } else if (output && typeof output === 'object' && 'url' in output) {
-      upscaledImageUrl = (output as any).url; // 如果是对象，取 url 字段
+      // 格式2：直接字符串 "https://..."
+      upscaledImageUrl = output;
+    } else if (output && typeof output === 'object') {
+      // 格式3：FileOutput 对象或包含 url 的对象
+      if (typeof (output as any).url === 'function') {
+        // url 是方法，需要调用
+        upscaledImageUrl = (output as any).url();
+      } else if (typeof (output as any).url === 'string') {
+        // url 是属性
+        upscaledImageUrl = (output as any).url;
+      } else if (typeof (output as any).toString === 'function') {
+        // 尝试 toString()
+        const str = (output as any).toString();
+        if (str.startsWith('http')) {
+          upscaledImageUrl = str;
+        } else {
+          throw new Error(`Cannot extract URL from output: ${str}`);
+        }
+      } else {
+        throw new Error(`Output object has no url property or method`);
+      }
     } else {
       throw new Error(`Unexpected output format: ${typeof output}`);
     }
