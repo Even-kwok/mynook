@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Replicate from 'replicate';
-import { verifyUserToken, checkAndDeductCredits, refundCredits, CREDIT_COSTS } from './lib/creditsService';
+import { verifyUserToken, checkAndDeductCredits, refundCredits, CREDIT_COSTS } from './lib/creditsService.js';
 
 export default async function handler(
   req: VercelRequest,
