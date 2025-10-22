@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from 'react';
 import { Button } from './Button';
-import { IconUpload, IconSparkles, IconDownload, IconX, IconLock, IconPhoto } from './Icons';
+import { IconUpload, IconSparkles, IconDownload, IconLock } from './Icons';
 import { upscaleImage, getUpscaleResolution, getUpscaleCreditCost } from '../services/imageUpscaleService';
 import { AuthContext } from '../context/AuthContext';
 import { User } from '../types';
@@ -129,30 +129,6 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
     }
   };
 
-  const handleReset = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    setUpscaledUrl(null);
-    setError(null);
-    setScale('2x');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDeleteImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    setUpscaledUrl(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleChangeImage = () => {
-    fileInputRef.current?.click();
-  };
 
   const handleDownload = () => {
     if (!upscaledUrl) return;
@@ -182,17 +158,6 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
                 Enhance your images with AI-powered upscaling. Scale up to 8x while maintaining quality.
               </p>
             </div>
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded-lg border border-[#333333] transition-colors"
-                style={{ fontFamily: 'Arial, sans-serif' }}
-              >
-                <IconX className="w-4 h-4" />
-                Reset
-              </button>
-            )}
           </div>
 
           {/* Upload Area */}
@@ -231,29 +196,6 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
                   <h3 className="text-white font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                     Original Image
                   </h3>
-                  {/* 操作按钮 */}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleChangeImage}
-                      disabled={isUpscaling}
-                      className="px-3 py-1.5 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm border border-[#444] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      style={{ fontFamily: 'Arial, sans-serif' }}
-                    >
-                      <IconPhoto className="w-4 h-4" />
-                      Change
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteImage}
-                      disabled={isUpscaling}
-                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm border border-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      style={{ fontFamily: 'Arial, sans-serif' }}
-                    >
-                      <IconX className="w-4 h-4" />
-                      Delete
-                    </button>
-                  </div>
                 </div>
                 <div className="relative aspect-square max-w-md mx-auto bg-[#0a0a0a] rounded-lg overflow-hidden">
                   <img
