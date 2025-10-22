@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from 'react';
 import { Button } from './Button';
-import { IconUpload, IconSparkles, IconDownload, IconLock, IconTrash } from './Icons';
+import { IconUpload, IconSparkles, IconDownload, IconLock, IconTrash, IconX } from './Icons';
 import { upscaleImage, getUpscaleResolution, getUpscaleCreditCost } from '../services/imageUpscaleService';
 import { AuthContext } from '../context/AuthContext';
 import { User } from '../types';
@@ -24,6 +24,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
   const [isUpscaling, setIsUpscaling] = useState(false);
   const [upscaledUrl, setUpscaledUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 权限检查 - Pro/Premium/Business 用户可以使用
@@ -140,14 +141,39 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
   };
 
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!upscaledUrl) return;
-    const link = document.createElement('a');
-    link.href = upscaledUrl;
-    link.download = `upscaled_${scale}_${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      // 使用 fetch 获取图片，解决跨域下载问题
+      const response = await fetch(upscaledUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `upscaled_${scale}_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // 清理 blob URL
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (err) {
+      console.error('Download failed:', err);
+      // 降级：直接打开链接
+      window.open(upscaledUrl, '_blank');
+    }
+  };
+
+  const handleImageClick = () => {
+    if (upscaledUrl) {
+      setFullscreenImage(upscaledUrl);
+    }
+  };
+
+  const closeFullscreen = () => {
+    setFullscreenImage(null);
   };
 
   const targetResolution = getUpscaleResolution(originalSize, scale);
@@ -339,12 +365,20 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
                       Download
                     </button>
                   </div>
-                  <div className="relative aspect-square max-w-2xl mx-auto bg-[#0a0a0a] rounded-lg overflow-hidden">
+                  <div 
+                    className="relative aspect-square max-w-2xl mx-auto bg-[#0a0a0a] rounded-lg overflow-hidden cursor-pointer group"
+                    onClick={handleImageClick}
+                  >
                     <img
                       src={upscaledUrl}
                       alt="Upscaled result"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain transition-transform group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-sm bg-black/60 px-4 py-2 rounded-lg">
+                        点击查看大图
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -352,6 +386,30 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
           )}
         </div>
       </main>
+
+      {/* Fullscreen Image Modal */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={closeFullscreen}
+        >
+          <button
+            onClick={closeFullscreen}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10"
+            aria-label="Close"
+          >
+            <IconX className="w-6 h-6" />
+          </button>
+          <div className="max-w-7xl max-h-full flex items-center justify-center">
+            <img
+              src={fullscreenImage}
+              alt="Upscaled result - fullscreen"
+              className="max-w-full max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
