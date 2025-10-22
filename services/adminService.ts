@@ -38,7 +38,7 @@ export const checkAdminAccess = async (): Promise<boolean> => {
     if (!user.user) return false;
 
     const { data, error } = await supabase
-      .rpc('is_admin', { check_user_id: user.user.id });
+      .rpc('is_admin', { user_id_input: user.user.id });
 
     if (error) {
       console.error('Check admin access error:', error);
@@ -61,7 +61,7 @@ export const checkSuperAdminAccess = async (): Promise<boolean> => {
     if (!user.user) return false;
 
     const { data, error } = await supabase
-      .rpc('is_super_admin', { check_user_id: user.user.id });
+      .rpc('is_super_admin', { user_id_input: user.user.id });
 
     if (error) {
       console.error('Check super admin access error:', error);
@@ -84,7 +84,7 @@ export const getAdminLevel = async (): Promise<AdminLevel> => {
     if (!user.user) return 'none';
 
     const { data, error } = await supabase
-      .rpc('get_admin_level', { check_user_id: user.user.id });
+      .rpc('get_admin_level', { user_id_input: user.user.id });
 
     if (error) {
       console.error('Get admin level error:', error);
