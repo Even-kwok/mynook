@@ -1716,12 +1716,12 @@ export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({
                                 {!currentUser ? (
                                     <>
                                         <IconSparkles className="w-5 h-5" />
-                                        {isLoading ? "Generating..." : "✨ Generate (1 Credit)"}
+                                        {isLoading ? "Generating..." : "Generate (1 Credit)"}
                                     </>
                                 ) : hasGeneratePermission ? (
                                     <>
                                         <IconSparkles className="w-5 h-5" />
-                                        {isLoading ? "Generating..." : "✨ Generate (1 Credit)"}
+                                        {isLoading ? "Generating..." : "Generate (1 Credit)"}
                                     </>
                                 ) : (
                                     <>
