@@ -12,7 +12,7 @@ import { ROOM_TYPES, BUILDING_TYPES } from '../constants';
 import { removeBackground } from '@imgly/background-removal';
 
 
-interface FreeCanvasPageProps {
+interface DrawEditPageProps {
     setGenerationHistory: React.Dispatch<React.SetStateAction<GenerationBatch[]>>;
     generationHistory: GenerationBatch[];
     onDownload: (imageUrl: string, era: string) => void;
@@ -32,7 +32,7 @@ interface FreeCanvasPageProps {
         selectedImageId: string | null;
         selectedPathId: string | null;
     };
-    setCanvasState: React.Dispatch<React.SetStateAction<FreeCanvasPageProps['canvasState']>>;
+    setCanvasState: React.Dispatch<React.SetStateAction<DrawEditPageProps['canvasState']>>;
 }
 
 interface MyDesignsSidebarProps {
@@ -401,7 +401,7 @@ const ClearConfirmationModal: React.FC<ClearConfirmationModalProps> = ({ isOpen,
 };
 
 
-export const FreeCanvasPage: React.FC<FreeCanvasPageProps> = ({ 
+export const DrawEditPage: React.FC<DrawEditPageProps> = ({ 
     setGenerationHistory,
     generationHistory,
     onDownload,

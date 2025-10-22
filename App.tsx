@@ -11,7 +11,7 @@ import { ALL_ADVISORS, ALL_TEMPLATE_CATEGORIES, ROOM_TYPES, STYLES_BY_ROOM_TYPE,
 import { getAllTemplates, getAllTemplatesPublic, getTemplatePrompts } from './services/templateService';
 import { PricingPage } from './components/PricingPage';
 import { SubscriptionSuccessPage } from './components/SubscriptionSuccessPage';
-import { FreeCanvasPage, MyDesignsSidebar } from './components/FreeCanvasPage';
+import { DrawEditPage, MyDesignsSidebar } from './components/DrawEditPage';
 import { AdminPage } from './components/AdminPage';
 import { ImageComparison } from './components/ImageComparison';
 import { ImageUpscalePage } from './components/ImageUpscalePage';
@@ -1919,7 +1919,7 @@ const CustomSelect: React.FC<{
 
 // --- Main App Component ---
 
-interface FreeCanvasState {
+interface DrawEditState {
   images: CanvasImage[];
   prompt: string;
   paths: DrawablePath[];
@@ -1991,7 +1991,7 @@ const App: React.FC = () => {
             'Reference Style Match',
             'AI Design Advisor',
             'Multi-Item Preview',
-            'Free Canvas',
+            'Draw Edit',
             'Image Upscale'
         ];
         
@@ -2367,8 +2367,8 @@ const App: React.FC = () => {
     // History state
     const [generationHistory, setGenerationHistory] = useState<GenerationBatch[]>([]);
     
-    // Free Canvas State (lifted for persistence)
-    const [freeCanvasState, setFreeCanvasState] = useState<FreeCanvasState>(() => {
+    // Draw Edit State (lifted for persistence)
+    const [drawEditState, setDrawEditState] = useState<DrawEditState>(() => {
         return {
             images: [],
             prompt: '',
@@ -2417,7 +2417,7 @@ const App: React.FC = () => {
         { key: 'Reference Style Match', label: 'Reference Style Match', requiresPremium: true },
         { key: 'AI Design Advisor', label: 'AI Design Advisor', requiresPremium: true, comingSoon: true },
         { key: 'Multi-Item Preview', label: 'Multi-Item Preview', requiresPremium: true, comingSoon: true },
-        { key: 'Free Canvas', label: 'Free Canvas', requiresPremium: true },
+        { key: 'Draw Edit', label: 'Draw Edit', requiresPremium: true },
     ];
     // ⚠️ 修复：初始状态设为空对象，避免显示硬编码的残留数据
     // 前端功能页面使用的模板数据（只包含启用的模板）
@@ -3430,8 +3430,8 @@ const App: React.FC = () => {
             case 'subscription-success': return <SubscriptionSuccessPage />;
             case 'My Designs': 
                 return currentUser ? <MyRendersPage history={generationHistory} onNavigate={setActivePage} onDownload={handleDownload} setFullScreenImage={setFullScreenImage} onDelete={handleDeleteGenerationImage} /> : <div className="flex-1 flex items-center justify-center text-center p-4 pt-[72px]">Please log in to view your designs.</div>;
-            // Free Canvas 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）
-            // case 'Free Canvas': moved to default → renderMainGenerator()
+            // Draw Edit 使用 renderMainGenerator 来获得统一的布局（包含 LeftToolbar）
+            // case 'Draw Edit': moved to default → renderMainGenerator()
             case 'Terms':
                 return <TermsPage />;
             case 'Privacy':
@@ -3599,13 +3599,13 @@ const App: React.FC = () => {
             
         const currentPageInfo = pageInfo[activePage];
 
-        // Special handling for Free Canvas - it has its own sliding panel
-        if (activePage === 'Free Canvas') {
+        // Special handling for Draw Edit - it has its own sliding panel
+        if (activePage === 'Draw Edit') {
             return (
                 <div className="flex-1 flex overflow-hidden bg-[#0a0a0a]">
                     {/* Left Toolbar */}
                     <LeftToolbar 
-                        activeTool='free-canvas'
+                        activeTool='draw-edit'
                         onToolClick={(toolId) => {
                             const pageMap: Record<string, string> = {
                                 'explore': 'Explore',
@@ -3619,7 +3619,7 @@ const App: React.FC = () => {
                                 'style-match': 'Reference Style Match',
                                 'ai-advisor': 'AI Design Advisor',
                                 'multi-item': 'Multi-Item Preview',
-                                'free-canvas': 'Free Canvas',
+                                'draw-edit': 'Draw Edit',
                             };
                             const page = pageMap[toolId] || activePage;
                             setActivePage(page);
@@ -3636,8 +3636,8 @@ const App: React.FC = () => {
                         isPurchasing={isPurchasingCredits}
                     />
                     
-                    {/* Free Canvas Page with its own sliding panel */}
-                    <FreeCanvasPage 
+                    {/* Draw Edit Page with its own sliding panel */}
+                    <DrawEditPage 
                         setGenerationHistory={setGenerationHistory} 
                         generationHistory={generationHistory} 
                         onDownload={handleDownload} 
@@ -3647,8 +3647,8 @@ const App: React.FC = () => {
                         onLoginRequest={() => auth.setShowLoginModal(true)} 
                         onError={setError}
                         onUpgrade={() => setActivePage('Pricing')}
-                        canvasState={freeCanvasState}
-                        setCanvasState={setFreeCanvasState}
+                        canvasState={drawEditState}
+                        setCanvasState={setDrawEditState}
                     />
                 </div>
             );
@@ -3669,7 +3669,7 @@ const App: React.FC = () => {
                             activePage === 'Reference Style Match' ? 'style-match' :
                             activePage === 'AI Design Advisor' ? 'ai-advisor' :
                             activePage === 'Multi-Item Preview' ? 'multi-item' :
-                            activePage === 'Free Canvas' ? 'free-canvas' :
+                            activePage === 'Draw Edit' ? 'draw-edit' :
                             activePage === 'Image Upscale' ? 'image-upscale' :
                             null
                         }
@@ -3686,7 +3686,7 @@ const App: React.FC = () => {
                                 'style-match': 'Reference Style Match',
                                 'ai-advisor': 'AI Design Advisor',
                                 'multi-item': 'Multi-Item Preview',
-                                'free-canvas': 'Free Canvas',
+                                'draw-edit': 'Draw Edit',
                                 'image-upscale': 'Image Upscale',
                             };
                             const page = pageMap[toolId] || activePage;
@@ -4155,7 +4155,7 @@ const App: React.FC = () => {
             />
 
             {/* Only show Header on non-functional pages */}
-            {!['Interior Design', 'Exterior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Festive Decor', 'Item Replace', 'Reference Style Match', 'AI Design Advisor', 'Multi-Item Preview', 'Free Canvas'].includes(activePage) && (
+            {!['Interior Design', 'Exterior Design', 'Wall Design', 'Floor Style', 'Garden & Backyard Design', 'Festive Decor', 'Item Replace', 'Reference Style Match', 'AI Design Advisor', 'Multi-Item Preview', 'Draw Edit'].includes(activePage) && (
             <Header 
                 activeItem={activePage} 
                 onNavigate={setActivePage} 

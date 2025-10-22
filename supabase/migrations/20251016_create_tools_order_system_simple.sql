@@ -27,7 +27,7 @@ INSERT INTO tools_order (tool_id, name, short_name, emoji, is_premium, is_coming
   ('style-match', 'Reference Style Match', E'Style\nMatch', '🖼️', true, false, 8),
   ('ai-advisor', 'AI Design Advisor', E'AI\nAdvisor', '💬', false, true, 9),
   ('multi-item', 'Multi-Item Preview', E'Multi\nItem', '📦', false, true, 10),
-  ('free-canvas', 'Canva', 'Canva', '✏️', true, false, 11)
+  ('draw-edit', 'Draw Edit', E'Draw\nEdit', '✏️', true, false, 11)
 ON CONFLICT (tool_id) DO NOTHING;
 
 -- Enable RLS

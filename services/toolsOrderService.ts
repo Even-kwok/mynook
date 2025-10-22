@@ -30,7 +30,7 @@ export const DEFAULT_TOOLS: ToolItemConfig[] = [
   { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🖼️', isPremium: true },
   { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true },
   { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true },
-  { id: 'free-canvas', name: 'Canva', shortName: 'Canva', emoji: '✏️', isPremium: true },
+  { id: 'draw-edit', name: 'Draw Edit', shortName: 'Draw\nEdit', emoji: '✏️', isPremium: true },
   { id: 'image-upscale', name: 'Image Upscale', shortName: 'Upscale', emoji: '🔍', isPremium: true },
 ];
 

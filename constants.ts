@@ -675,7 +675,7 @@ export const GALLERY_CATEGORIES = [
   { id: 'style-match', name: 'Reference Style Match', page: 'Reference Style Match' },
   { id: 'ai-advisor', name: 'AI Design Advisor', page: 'AI Design Advisor' },
   { id: 'multi-item', name: 'Multi-Item Preview', page: 'Multi-Item Preview' },
-  { id: 'free-canvas', name: 'Free Canvas', page: 'Free Canvas' }
+  { id: 'draw-edit', name: 'Draw Edit', page: 'Draw Edit' }
 ];
 
 // Hero Banner 过渡效果配置
@@ -719,7 +719,7 @@ const generateGalleryItems = (): GalleryItem[] => {
     'style-match': ['Coastal Style', 'Bohemian Vibe', 'Art Deco Match', 'Mid-Century Look', 'Rustic Charm'],
     'ai-advisor': ['Expert Advice', 'Design Tips', 'Color Consultation', 'Layout Suggestion', 'Style Guidance'],
     'multi-item': ['Room Preview', 'Furniture Set', 'Decor Collection', 'Complete Look', 'Design Package'],
-    'free-canvas': ['Custom Design', 'Personal Touch', 'Creative Space', 'Unique Vision', 'Artistic Freedom']
+    'draw-edit': ['Custom Design', 'Personal Touch', 'Creative Space', 'Unique Vision', 'Artistic Freedom']
   };
 
   const authors = [

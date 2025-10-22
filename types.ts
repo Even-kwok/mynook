@@ -180,7 +180,7 @@ export interface DashboardOverview {
 }
 
 
-// --- Free Canvas Types ---
+// --- Draw Edit Types ---
 export type CanvasImage = {
     id: string;
     src: string;
