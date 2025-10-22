@@ -75,10 +75,12 @@ export default async function handler(
     });
 
     console.log(`🔍 Starting upscale: ${scale} for user ${userId}`);
-    console.log(`- Image URL: ${imageUrl.substring(0, 50)}...`);
+    console.log(`- Image URL: ${imageUrl}`);
+    console.log(`- Token length: ${replicateToken.length}`);
 
     const scaleNumber = parseInt(scale.replace('x', ''));
 
+    console.log('🚀 Calling Replicate API...');
     const output = await replicate.run(
       "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b",
       {
@@ -91,6 +93,8 @@ export default async function handler(
     );
 
     console.log(`✅ Upscale completed for user ${userId}`);
+    console.log(`- Output type: ${typeof output}`);
+    console.log(`- Output: ${JSON.stringify(output).substring(0, 200)}`);
 
     return res.status(200).json({
       success: true,
@@ -102,6 +106,14 @@ export default async function handler(
 
   } catch (error) {
     console.error('❌ Upscale error:', error);
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    
+    // 尝试获取更多错误信息
+    if (error && typeof error === 'object') {
+      console.error('Error details:', JSON.stringify(error, null, 2));
+    }
     
     // 失败时退款
     if (userId) {
@@ -113,6 +125,7 @@ export default async function handler(
     return res.status(500).json({
       error: 'Image upscaling failed',
       details: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error?.constructor?.name,
       code: 'UPSCALE_FAILED'
     });
   }
