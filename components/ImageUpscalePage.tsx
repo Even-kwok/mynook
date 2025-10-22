@@ -1,9 +1,10 @@
 import React, { useState, useRef, useContext } from 'react';
 import { Button } from './Button';
-import { IconUpload, IconSparkles, IconDownload, IconX, IconLock } from './Icons';
+import { IconUpload, IconSparkles, IconDownload, IconX, IconLock, IconPhoto } from './Icons';
 import { upscaleImage, getUpscaleResolution, getUpscaleCreditCost } from '../services/imageUpscaleService';
 import { AuthContext } from '../context/AuthContext';
 import { User } from '../types';
+import { supabase } from '../config/supabase';
 
 interface ImageUpscalePageProps {
   currentUser: User | null;
@@ -74,12 +75,50 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
     setError(null);
 
     try {
+      // 第1步：上传图片到 Supabase Storage 获取公开 URL
+      const timestamp = Date.now();
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `upscale-${timestamp}.${fileExt}`;
+      const filePath = `temp/${fileName}`;
+
+      console.log('📤 Uploading image to storage...');
+      
+      const { error: uploadError } = await supabase.storage
+        .from('template-thumbnails')
+        .upload(filePath, selectedImage, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(`上传失败: ${uploadError.message}`);
+      }
+
+      // 获取公开 URL
+      const { data: urlData } = supabase.storage
+        .from('template-thumbnails')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+      console.log('✅ Image uploaded:', publicUrl);
+
+      // 第2步：调用放大 API
       const result = await upscaleImage({
-        imageUrl: imagePreview,
+        imageUrl: publicUrl,
         scale,
       });
 
       setUpscaledUrl(result.upscaledImageUrl);
+
+      // 第3步：可选 - 删除临时文件（等待一段时间后再删除，确保 Replicate 已经读取）
+      setTimeout(async () => {
+        try {
+          await supabase.storage.from('template-thumbnails').remove([filePath]);
+          console.log('🗑️ Temporary file cleaned up');
+        } catch (e) {
+          console.warn('Failed to clean up temporary file:', e);
+        }
+      }, 60000); // 60秒后删除
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : '放大失败';
@@ -99,6 +138,20 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleDeleteImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setUpscaledUrl(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleChangeImage = () => {
+    fileInputRef.current?.click();
   };
 
   const handleDownload = () => {
@@ -131,6 +184,7 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
             </div>
             {imagePreview && (
               <button
+                type="button"
                 onClick={handleReset}
                 className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded-lg border border-[#333333] transition-colors"
                 style={{ fontFamily: 'Arial, sans-serif' }}
@@ -173,9 +227,34 @@ export const ImageUpscalePage: React.FC<ImageUpscalePageProps> = ({
             <>
               {/* Image Preview */}
               <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#333333]">
-                <h3 className="text-white font-semibold mb-4" style={{ fontFamily: 'Arial, sans-serif' }}>
-                  Original Image
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Original Image
+                  </h3>
+                  {/* 操作按钮 */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleChangeImage}
+                      disabled={isUpscaling}
+                      className="px-3 py-1.5 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm border border-[#444] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                      <IconPhoto className="w-4 h-4" />
+                      Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteImage}
+                      disabled={isUpscaling}
+                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm border border-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                      <IconX className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
                 <div className="relative aspect-square max-w-md mx-auto bg-[#0a0a0a] rounded-lg overflow-hidden">
                   <img
                     src={imagePreview}
