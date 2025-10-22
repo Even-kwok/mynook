@@ -1,3 +1,7 @@
+/**
+ * Image Upscale Page - Standalone Component
+ * Allows users to upscale images using AI
+ */
 import React, { useState, useRef, useContext } from 'react';
 import { Button } from './Button';
 import { IconUpload, IconSparkles, IconDownload, IconLock, IconTrash, IconX } from './Icons';
