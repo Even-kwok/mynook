@@ -3620,6 +3620,7 @@ const App: React.FC = () => {
                                 'ai-advisor': 'AI Design Advisor',
                                 'multi-item': 'Multi-Item Preview',
                                 'draw-edit': 'Draw Edit',
+                                'image-upscale': 'Image Upscale',
                             };
                             const page = pageMap[toolId] || activePage;
                             setActivePage(page);
