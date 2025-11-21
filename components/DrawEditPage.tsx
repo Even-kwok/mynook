@@ -1102,18 +1102,22 @@ export const DrawEditPage: React.FC<DrawEditPageProps> = ({
             // Continue anyway with the images that did load
         }
 
-        // Draw paths with scaling
-        paths.forEach(path => {
-            if (path.points.length < 2) return;
-            ctx.beginPath();
-            ctx.moveTo(path.points[0].x * scale, path.points[0].y * scale);
-            path.points.slice(1).forEach(point => ctx.lineTo(point.x * scale, point.y * scale));
-            ctx.strokeStyle = path.color;
-            ctx.lineWidth = path.size * scale;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.stroke();
-        });
+        // Note: We don't draw paths here because they are just visual markers for the user
+        // The user should describe what they want to change in the text prompt
+        // This prevents the red circle/brush marks from appearing in the generated image
+        
+        // Draw paths with scaling (DISABLED - paths are UI markers only)
+        // paths.forEach(path => {
+        //     if (path.points.length < 2) return;
+        //     ctx.beginPath();
+        //     ctx.moveTo(path.points[0].x * scale, path.points[0].y * scale);
+        //     path.points.slice(1).forEach(point => ctx.lineTo(point.x * scale, point.y * scale));
+        //     ctx.strokeStyle = path.color;
+        //     ctx.lineWidth = path.size * scale;
+        //     ctx.lineCap = 'round';
+        //     ctx.lineJoin = 'round';
+        //     ctx.stroke();
+        // });
 
         try {
             // Use JPEG with quality 0.85 for much faster upload (smaller file size)
@@ -1256,24 +1260,29 @@ export const DrawEditPage: React.FC<DrawEditPageProps> = ({
             // Continue anyway
         }
 
-        paths.forEach(path => {
-            if (path.points.length < 2) return;
-            ctx.beginPath();
-            const startX = (path.points[0].x - baseImage.x) * scaleX;
-            const startY = (path.points[0].y - baseImage.y) * scaleY;
-            ctx.moveTo(startX, startY);
-            path.points.slice(1).forEach(point => {
-                const pointX = (point.x - baseImage.x) * scaleX;
-                const pointY = (point.y - baseImage.y) * scaleY;
-                ctx.lineTo(pointX, pointY);
-            });
-            
-            ctx.strokeStyle = path.color;
-            ctx.lineWidth = path.size * scaleX;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.stroke();
-        });
+        // Note: We don't draw paths here because they are just visual markers for the user
+        // The user should describe what they want to change in the text prompt
+        // This prevents the red circle/brush marks from appearing in the generated image
+        
+        // Draw paths (DISABLED - paths are UI markers only)
+        // paths.forEach(path => {
+        //     if (path.points.length < 2) return;
+        //     ctx.beginPath();
+        //     const startX = (path.points[0].x - baseImage.x) * scaleX;
+        //     const startY = (path.points[0].y - baseImage.y) * scaleY;
+        //     ctx.moveTo(startX, startY);
+        //     path.points.slice(1).forEach(point => {
+        //         const pointX = (point.x - baseImage.x) * scaleX;
+        //         const pointY = (point.y - baseImage.y) * scaleY;
+        //         ctx.lineTo(pointX, pointY);
+        //     });
+        //     
+        //     ctx.strokeStyle = path.color;
+        //     ctx.lineWidth = path.size * scaleX;
+        //     ctx.lineCap = 'round';
+        //     ctx.lineJoin = 'round';
+        //     ctx.stroke();
+        // });
 
         try {
             // Use JPEG with quality 0.85 for much faster upload (smaller file size)
@@ -1391,10 +1400,10 @@ export const DrawEditPage: React.FC<DrawEditPageProps> = ({
                 console.log(`✅ Composite created: ${(imageForApi.length / 1024).toFixed(0)}KB`);
     
                 if (overlayImages.length > 0 || paths.length > 0) {
-                     finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain other overlaid images or drawings which act as instructions for what to add or change. You must seamlessly integrate these elements into the base image, guided by the user's text prompt, to produce a single, photorealistic, and cohesive final image. IMPORTANT: The drawings and overlaid images are instructional guides; they should be replaced by realistic content and must NOT appear literally in the final output. User's prompt: "${prompt}"`;
+                     finalPrompt = `You are an expert photo editor. Your task is to edit the provided base image. This image may contain overlaid images which should be seamlessly integrated. CRITICAL: Ignore any markings, circles, annotations, or brush strokes in the image - these are just UI markers. Focus only on the user's text description to understand what to edit. The user's text prompt describes the actual changes needed: "${prompt}"`;
                 } else {
                     // Only text
-                    finalPrompt = `You are an expert photo editor. Your task is to transform the provided image based on the user's prompt. Produce a new, photorealistic version of the original image with the requested changes seamlessly integrated. User's prompt: "${prompt}"`;
+                    finalPrompt = `You are an expert photo editor. Your task is to transform the provided image based on the user's prompt. CRITICAL: Ignore any markings, circles, annotations, or brush strokes in the image - these are just UI markers. Focus on the user's text description. User's prompt: "${prompt}"`;
                 }
     
             } else {
