@@ -221,8 +221,8 @@ export default async function handler(
     console.log('- Image 1 size:', normalizedImages[0]?.length || 0);
     console.log('- Image 2 size:', normalizedImages[1]?.length || 0);
 
-    // 使用 gemini-2.5-flash-image 模型（支持图像编辑）
-    const modelName = 'gemini-2.5-flash-image';
+    // 使用 gemini-3-pro-image-preview 模型（Nano Banana Pro - 最先进的图像生成和编辑模型）
+    const modelName = 'gemini-3-pro-image-preview';
 
     // 调用 Google AI Studio API（使用原型的简洁配置）
     // 注意：使用简单对象格式而不是数组格式，以确保调用正确的API端点
