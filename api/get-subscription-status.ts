@@ -6,7 +6,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { getUserActiveSubscription } from '../services/subscriptionService';
-import { getEnvVar } from './env';
+import { getEnvVar } from './lib/env';
 
 // Initialize Supabase client with service role key
 const supabaseUrl = getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
