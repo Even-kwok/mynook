@@ -1,5 +1,5 @@
-import { supabase } from '../config/supabase';
-import { ToolItemConfig } from '../services/toolsOrderService';
+import { supabase } from '../../config/supabase';
+import { ToolItemConfig } from '../../services/toolsOrderService';
 
 export interface ToolOrderDB {
   id: string;
