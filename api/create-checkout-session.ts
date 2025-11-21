@@ -6,7 +6,7 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { getEnvVar } from './lib/env';
+import { getEnvVar } from './_lib/env';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('========== Step 1: Validating request ==========');

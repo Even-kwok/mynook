@@ -7,7 +7,7 @@ import {
   refundCredits,
   CREDIT_COSTS,
   logGeneration
-} from './lib/creditsService.js';
+} from './_lib/creditsService.js';
 
 interface GenerateImageRequestBody {
   instruction?: unknown;

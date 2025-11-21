@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
-import { verifyUserToken } from './lib/creditsService.js';
+import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase admin client for server-side operations
