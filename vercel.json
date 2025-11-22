@@ -1,11 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm ci",
-  "rewrites": [
-    { "source": "/proto", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
   "functions": {
     "api/generate-image.ts": {
       "maxDuration": 100
@@ -15,4 +8,3 @@
     }
   }
 }
-
