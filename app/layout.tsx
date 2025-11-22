@@ -14,10 +14,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        {/* 临时保留 Tailwind CDN 引用，直到完全验证本地 Tailwind 配置无误 */}
-        <script src="https://cdn.tailwindcss.com"></script>
-      </head>
       <body>
         <Providers>
           {children}
