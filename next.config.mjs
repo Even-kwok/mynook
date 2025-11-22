@@ -16,6 +16,15 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  // 确保 api/ 目录下的 Serverless Functions 可以被访问
+  async rewrites() {
+    return {
+      beforeFiles: [
+        // 保留根目录 api/ 文件夹的 serverless functions
+        // Vercel 会自动处理这些文件
+      ],
+    };
+  },
   experimental: {
     serverComponentsExternalPackages: ['onnxruntime-node', '@google/genai', 'sharp'],
   },
