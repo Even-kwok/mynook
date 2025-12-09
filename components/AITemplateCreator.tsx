@@ -218,6 +218,8 @@ export const AITemplateCreator: React.FC = () => {
       });
     }
   };
+
+  const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
       // 从 design_templates 表读取实际存在的分类
