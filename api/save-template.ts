@@ -45,7 +45,7 @@ export default async function handler(
     userId = verifiedUserId;
 
     // Verify admin permission
-    const { data: adminData, error: adminError } = await supabaseAdmin
+    const { data: adminData, error: adminError } = await (supabaseAdmin as any)
       .from('admin_users')
       .select('is_active')
       .eq('user_id', userId)
@@ -84,7 +84,7 @@ export default async function handler(
     
     const { error: uploadError } = await supabaseAdmin.storage
       .from('template-thumbnails')
-      .upload(filePath, Buffer.from(thumbnailData, 'base64'), {
+      .upload(filePath, Buffer.from(thumbnailData, 'base64') as any, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: true
@@ -121,7 +121,7 @@ export default async function handler(
       sort_order: 0,
     };
 
-    const { data: insertedTemplate, error: insertError } = await supabaseAdmin
+    const { data: insertedTemplate, error: insertError } = await (supabaseAdmin as any)
       .from('design_templates')
       .insert(templateData)
       .select()

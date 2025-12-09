@@ -45,7 +45,7 @@ export async function verifyUserToken(authToken: string): Promise<{ userId: stri
     const token = authToken.replace(/^Bearer\s+/i, '');
 
     // 验证 JWT token
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    const { data, error } = await (supabaseAdmin.auth as any).getUser(token);
 
     if (error || !data.user) {
       return { userId: null, error: 'Invalid or expired token' };
@@ -63,7 +63,7 @@ export async function verifyUserToken(authToken: string): Promise<{ userId: stri
  */
 export async function getUserCredits(userId: string): Promise<{ credits: number; membershipTier: string; error: string | null }> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('users')
       .select('credits, membership_tier')
       .eq('id', userId)
@@ -113,7 +113,7 @@ export async function checkAndDeductCredits(
   amount: number
 ): Promise<{ success: boolean; remainingCredits: number; membershipTier?: string; error: string | null }> {
   try {
-    const { data, error } = await (supabaseAdmin.rpc as any)('check_and_deduct_credits', {
+    const { data, error } = await (supabaseAdmin as any).rpc('check_and_deduct_credits', {
       p_user_id: userId,
       p_amount: amount
     });
@@ -145,7 +145,7 @@ export async function deductCredits(
 ): Promise<{ success: boolean; remainingCredits: number; error: string | null }> {
   try {
     // 1. 获取当前用户信息
-    const { data: user, error: fetchError } = await supabaseAdmin
+    const { data: user, error: fetchError } = await (supabaseAdmin as any)
       .from('users')
       .select('credits, membership_tier, total_generations')
       .eq('id', userId)
@@ -192,7 +192,7 @@ export async function refundCredits(
   amount: number
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { data, error } = await (supabaseAdmin.rpc as any)('refund_credits', {
+    const { data, error } = await (supabaseAdmin as any).rpc('refund_credits', {
       p_user_id: userId,
       p_amount: amount
     });

@@ -120,7 +120,7 @@ export default async function handler(
     userId = verifiedUserId;
 
     // Verify admin permission
-    const { data: adminData, error: adminError } = await supabaseAdmin
+    const { data: adminData, error: adminError } = await (supabaseAdmin as any)
       .from('admin_users')
       .select('is_active')
       .eq('user_id', userId)
