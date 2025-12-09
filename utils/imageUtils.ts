@@ -159,3 +159,53 @@ export const cropToSquareThumbnail = (
     
     img.src = url;
 });
+
+/**
+ * Compress base64 image while maintaining aspect ratio
+ * @param base64Str - Original base64 image
+ * @param maxDim - Maximum width or height
+ * @param quality - JPEG quality (0-1)
+ */
+export const compressBase64 = (
+    base64Str: string,
+    maxDim: number = 1024,
+    quality: number = 0.8
+): Promise<string> => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = base64Str.startsWith('data:') ? base64Str : `data:image/png;base64,${base64Str}`;
+    
+    img.onload = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // Scale down if needed
+            if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject(new Error('Failed to get context'));
+            
+            // Draw white background for transparent PNGs
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (e) {
+            reject(e);
+        }
+    };
+    img.onerror = (e) => reject(e);
+});

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { IconUpload, IconSparkles, IconX, IconRefresh, IconCheck, IconPlayerPlay, IconPlayerPause } from './Icons';
-import { toBase64, cropToSquareThumbnail } from '../utils/imageUtils';
+import { toBase64, cropToSquareThumbnail, compressBase64 } from '../utils/imageUtils';
 import { Button } from './Button';
 import { supabase } from '../config/supabase';
 
@@ -544,7 +544,11 @@ export const AITemplateCreator: React.FC = () => {
       const genData = await genResponse.json();
       if (!genResponse.ok) throw new Error(genData.error || 'Generation failed');
       
-      const generatedImageUrl = genData.imageUrl; // Base64
+      const rawGeneratedImage = genData.imageUrl; // Base64
+      
+      // Compress before saving (Auto compress & ratio)
+      // Max dimension 1280px, quality 0.8
+      const compressedImage = await compressBase64(rawGeneratedImage, 1280, 0.8);
 
       // 3. Save to Template
       // Need to construct template data
@@ -558,7 +562,7 @@ export const AITemplateCreator: React.FC = () => {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          imageData: generatedImageUrl,
+          imageData: compressedImage,
           name: `${subCat} - ${taskPrompt.substring(0, 20)}...`,
           mainCategory: mainCat,
           subCategory: subCat,
