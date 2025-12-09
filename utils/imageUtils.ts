@@ -108,18 +108,24 @@ export const createSingleFramedImage = (imageUrl: string, cropRatio: string, lab
 /**
  * Crop and compress an image to a square thumbnail
  * Used for AI Auto Template Creator feature
- * @param file - Original image file
+ * @param source - Original image file or Base64 string
  * @param size - Target size (width and height), default 360px
  * @param quality - JPEG compression quality (0-1), default 0.85
  * @returns Promise<string> - Returns base64 formatted image data
  */
 export const cropToSquareThumbnail = (
-    file: File, 
+    source: File | string, 
     size: number = 360, 
     quality: number = 0.85
 ): Promise<string> => new Promise((resolve, reject) => {
     const img = new Image();
-    const url = URL.createObjectURL(file);
+    let url = '';
+    
+    if (typeof source === 'string') {
+        url = source;
+    } else {
+        url = URL.createObjectURL(source);
+    }
     
     img.onload = () => {
         try {
@@ -129,7 +135,7 @@ export const cropToSquareThumbnail = (
             const ctx = canvas.getContext('2d');
             
             if (!ctx) {
-                URL.revokeObjectURL(url);
+                if (typeof source !== 'string') URL.revokeObjectURL(url);
                 return reject(new Error('Failed to get canvas context'));
             }
             
@@ -144,16 +150,16 @@ export const cropToSquareThumbnail = (
             // Convert to base64 (JPEG format, specified quality)
             const base64 = canvas.toDataURL('image/jpeg', quality);
             
-            URL.revokeObjectURL(url);
+            if (typeof source !== 'string') URL.revokeObjectURL(url);
             resolve(base64);
         } catch (error) {
-            URL.revokeObjectURL(url);
+            if (typeof source !== 'string') URL.revokeObjectURL(url);
             reject(error);
         }
     };
     
     img.onerror = () => {
-        URL.revokeObjectURL(url);
+        if (typeof source !== 'string') URL.revokeObjectURL(url);
         reject(new Error('Failed to load image'));
     };
     
