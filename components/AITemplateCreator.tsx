@@ -27,6 +27,18 @@ interface GeneratorTask {
   extractedMeta?: any;
 }
 
+interface CategoryInfo {
+  name: string;
+  description: string;
+}
+
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'Interior Design': '室内设计风格与布局',
+  'Exterior Design': '建筑外观与景观设计',
+  'Garden': '庭院与花园设计',
+  'Floor Style': '地板材质与铺设样式',
+};
+
 // ... existing code ...
 
 export const AITemplateCreator: React.FC = () => {
@@ -46,6 +58,37 @@ export const AITemplateCreator: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const generatorRef = useRef<{ isRunning: boolean }>({ isRunning: false });
   const styleInputRef = useRef<HTMLInputElement>(null);
+
+  // Common State
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<CategoryInfo[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Sub-category State
+  const [availableSubCategories, setAvailableSubCategories] = useState<string[]>([]);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  const [customSubCategory, setCustomSubCategory] = useState<string>('');
+  const [autoDetectSubCategory, setAutoDetectSubCategory] = useState(true);
+
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const refImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Generator Mode Specific State
+  const [promptText, setPromptText] = useState('');
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategories.length > 0) {
+      loadSubCategories(selectedCategories);
+    } else {
+      setAvailableSubCategories([]);
+    }
+  }, [selectedCategories]);
 
   // ... existing code ...
 
