@@ -426,181 +426,12 @@ export const AITemplateCreator: React.FC = () => {
     await processBatch(failedResults);
   };
 
-  // --- Generator Mode Handlers ---
-  const handleReferenceImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setReferenceImage(file);
-    const base64 = await toBase64(file);
-    setReferencePreview(base64);
-  };
-
-  const createGeneratorTasks = () => {
-    if (!promptText.trim()) {
-      alert('请输入生成提示词！');
-      return;
-    }
-    if (selectedCategories.length !== 1) {
-      alert('生成模式下必须只选择一个主分类！');
-      return;
-    }
-    if (!selectedSubCategory && !customSubCategory) {
-      alert('生成模式下必须指定二级分类！');
-      return;
-    }
-
-    const prompts = promptText.split('\n').filter(p => p.trim());
-    const tasks: GeneratorTask[] = prompts.map((prompt, idx) => ({
-      id: `${Date.now()}-${idx}`,
-      prompt: prompt.trim(),
-      status: 'pending'
-    }));
-    
-    setGeneratorTasks(tasks);
-  };
-
-  const startGeneration = async () => {
-    if (generatorRef.current.isRunning) return;
-    setIsProcessing(true);
-    setIsPaused(false);
-    generatorRef.current.isRunning = true;
-    
-    await processGeneratorQueue();
-  };
-
-  const pauseGeneration = () => {
-    setIsPaused(true);
-    generatorRef.current.isRunning = false;
-  };
-  
-  const resumeGeneration = () => {
-    if (generatorRef.current.isRunning) return;
-    setIsProcessing(true);
-    setIsPaused(false);
-    generatorRef.current.isRunning = true;
-    processGeneratorQueue(); // Restart queue processing
-  };
-
-  const processGeneratorQueue = async () => {
-    const CONCURRENCY = 9;
-    
-    // Loop until paused or all done
-    while (generatorRef.current.isRunning) {
-      // Find pending tasks
-      const allTasks = [...generatorTasks]; // Get latest state? No, state update is async.
-      // We need to use functional updates or a ref for tasks if we want live updates,
-      // but simpler to re-read state in loop or rely on state triggering re-renders?
-      // Actually, standard `while` loop with async state updates is tricky in React.
-      // Better approach: process a batch, then check if we should continue.
-      
-      // However, we need to respect the concurrency limit ACROSS the whole queue.
-      // And we need to support "Pause".
-      
-      // Let's grab pending tasks from the current state (we need a way to access latest state)
-      // A common pattern is using a ref for the queue or just processing what we have.
-      // Given the `setGeneratorTasks` updates, let's use a "process next batch" recursive approach or similar.
-      // But a simple loop with `await` and state checks works if we break on pause.
-      
-      // Get currently pending tasks
-      const pendingIndices = generatorTasks
-        .map((t, i) => t.status === 'pending' || t.status === 'failed' ? i : -1)
-        .filter(i => i !== -1);
-        
-      // Filter out 'failed' unless we are explicitly retrying. 
-      // Actually `startGeneration` should only process 'pending'. 
-      // Retrying should reset 'failed' to 'pending'.
-      const pendingOnlyIndices = generatorTasks
-        .map((t, i) => t.status === 'pending' ? i : -1)
-        .filter(i => i !== -1);
-
-      if (pendingOnlyIndices.length === 0) {
-        setIsProcessing(false);
-        generatorRef.current.isRunning = false;
-        break;
-      }
-
-      // Take next chunk
-      const batchIndices = pendingOnlyIndices.slice(0, CONCURRENCY);
-      
-      // Process chunk
-      await Promise.allSettled(
-        batchIndices.map(idx => processGeneratorTask(idx))
-      );
-      
-      // Check if paused after batch
-      if (!generatorRef.current.isRunning) break;
-      
-      // We need to fetch the *latest* tasks to know what's next, 
-      // but `generatorTasks` in this closure is stale.
-      // We need to rely on the updated state. 
-      // Since we can't easily await state updates in a loop without refs, 
-      // let's use a Ref for tasks or just pass a callback?
-      // A simple hack: break and let the user click "Resume" or auto-trigger? 
-      // No, that's bad UX.
-      
-      // Correct way with React Hooks: Use a `useEffect` that watches `generatorTasks` and `isProcessing`?
-      // Or just use a Ref to store the tasks for the worker loop.
-      // Let's use `tasksRef` to sync with state.
-      break; // For now, let's process ONE batch then stop? No, we need continuous.
-      // Let's call `processGeneratorQueue` recursively via state change or just recursion.
-    }
-  };
-
-  // Effect to handle queue processing
-  useEffect(() => {
-    if (isProcessing && !isPaused) {
-       processNextGeneratorBatch();
-    }
-  }, [isProcessing, isPaused, generatorTasks]); // careful with dependency loop
-
-  const processNextGeneratorBatch = async () => {
-    // This function will be called whenever tasks change IF we are processing
-    // We need to find *how many* are currently 'processing'.
-    const processingCount = generatorTasks.filter(t => t.status === 'processing').length;
-    const pendingIndices = generatorTasks
-      .map((t, i) => t.status === 'pending' ? i : -1)
-      .filter(i => i !== -1);
-      
-    if (pendingIndices.length === 0) {
-       if (processingCount === 0) setIsProcessing(false);
-       return;
-    }
-
-    const CONCURRENCY = 9;
-    const availableSlots = CONCURRENCY - processingCount;
-    
-    if (availableSlots > 0) {
-       const toProcess = pendingIndices.slice(0, availableSlots);
-       // We need to mark them as processing IMMEDIATELY to prevent duplicate scheduling
-       // This requires updating state.
-       // The `processGeneratorTask` does this.
-       
-       // Note: This logic inside useEffect might trigger rapid fire updates.
-       // Better to have a dedicated runner function that is not an effect.
-    }
-  };
-
-  // Revert to the "Runner" approach but accessing state via functional updates or Ref
-  // For simplicity given the constraints, I will implement `runGeneratorLoop` that uses functional state updates
-  // and checks a Ref for pause state.
+  // --- Generator Control Flow ---
   
   const runGeneratorLoop = async () => {
     const CONCURRENCY = 9;
     
     while (generatorRef.current.isRunning) {
-      // 1. Find tasks that need processing
-      // We have to read from the State Setter to get latest value? No, that's write-only.
-      // We will use a Ref to track tasks as well? Or just trust `generatorTasks` if we update it?
-      // `generatorTasks` variable is stale in this async function.
-      
-      // Workaround: We pass the tasks to the function? No.
-      // Best way: Use a Ref `tasksRef` that is always in sync with `generatorTasks`.
-      
-      // Let's ignore the sophisticated queue for a moment and just process in batches of 9
-      // waiting for the WHOLE batch to finish before next. This is suboptimal but safe.
-      // The user asked for "9 at a time", which fits "Batch Processing".
-      
       let currentTasks: GeneratorTask[] = [];
       setGeneratorTasks(prev => {
         currentTasks = prev;
@@ -627,103 +458,32 @@ export const AITemplateCreator: React.FC = () => {
     }
   };
 
-  const processGeneratorTask = async (index: number) => {
-    let taskPrompt = '';
+  const startGeneration = async () => {
+    if (generatorRef.current.isRunning) return;
+    setIsProcessing(true);
+    setIsPaused(false);
+    generatorRef.current.isRunning = true;
     
-    // 1. Mark as processing
-    setGeneratorTasks(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], status: 'processing' };
-      taskPrompt = updated[index].prompt;
-      return updated;
-    });
+    await runGeneratorLoop();
+  };
 
-    try {
-      const token = await getAuthToken();
-      if (!token) throw new Error('Not authenticated');
-
-      // 2. Generate Image
-      // Need original image base64
-      if (!referencePreview) throw new Error('No reference image');
-      // Remove header if present
-      const base64Image = referencePreview.replace(/^data:image\/\w+;base64,/, '');
-
-      const genResponse = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          instruction: taskPrompt,
-          base64Images: [base64Image]
-        }),
-      });
-
-      const genData = await genResponse.json();
-      if (!genResponse.ok) throw new Error(genData.error || 'Generation failed');
-      
-      const rawGeneratedImage = genData.imageUrl; // Base64
-      
-      // Compress before saving (Auto compress & ratio)
-      // Max dimension 1280px, quality 0.8
-      const compressedImage = await compressBase64(rawGeneratedImage, 1280, 0.8);
-
-      // 3. Save to Template
-      // Need to construct template data
-      const subCat = customSubCategory.trim() || selectedSubCategory;
-      const mainCat = selectedCategories[0];
-      
-      const saveResponse = await fetch('/api/admin-save-template', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          imageData: compressedImage,
-          name: `${subCat} - ${taskPrompt.substring(0, 20)}...`,
-          mainCategory: mainCat,
-          subCategory: subCat,
-          prompt: taskPrompt,
-          styleDescription: taskPrompt
-        }),
-      });
-
-      const saveData = await saveResponse.json();
-      if (!saveResponse.ok) throw new Error(saveData.error || 'Save failed');
-
-      // Success
-      setGeneratorTasks(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          status: 'success',
-          resultUrl: saveData.template.image_url,
-          templateName: saveData.template.name
-        };
-        return updated;
-      });
-
-    } catch (error) {
-      console.error('Task failed:', error);
-      setGeneratorTasks(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        };
-        return updated;
-      });
-    }
+  const pauseGeneration = () => {
+    setIsPaused(true);
+    generatorRef.current.isRunning = false;
+  };
+  
+  const resumeGeneration = () => {
+    if (generatorRef.current.isRunning) return;
+    setIsProcessing(true);
+    setIsPaused(false);
+    generatorRef.current.isRunning = true;
+    runGeneratorLoop();
   };
 
   const retryGeneratorFailed = () => {
     setGeneratorTasks(prev => 
       prev.map(t => t.status === 'failed' ? { ...t, status: 'pending', error: undefined } : t)
     );
-    // Restart loop if needed
     if (!generatorRef.current.isRunning) {
        startGeneration();
     }
