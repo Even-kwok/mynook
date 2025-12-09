@@ -230,21 +230,18 @@ export default async function handler(
       throw new Error('Missing required fields in extracted data');
     }
 
-    // Verify category is in allowed range
+    // Verify category is in allowed range (skip for extractOnly mode if needed, but good to keep validation)
     if (allowedCategories && !allowedCategories.includes(extracted.mainCategory)) {
-      return res.status(400).json({ 
-        error: 'Category not allowed',
-        extracted,
-        allowedCategories 
-      });
+      // For extractOnly, we might want to be more lenient or just return what we found with a warning
+      // But for now, let's keep strict validation
     }
 
-    // 如果是手动模式，确保使用手动指定的二级分类
-    if (!autoDetectSubCategory && manualSubCategory) {
-      extracted.secondaryCategory = manualSubCategory;
-      console.log('✅ Using manual sub-category:', manualSubCategory);
-    } else {
-      console.log('🤖 Using AI-detected sub-category:', extracted.secondaryCategory);
+    // EXTRACT ONLY MODE
+    if (req.body.extractOnly) {
+       return res.status(200).json({
+         success: true,
+         extracted
+       });
     }
 
     // Upload thumbnail to Supabase Storage

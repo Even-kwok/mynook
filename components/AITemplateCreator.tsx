@@ -19,31 +19,15 @@ interface ProcessResult {
 
 interface GeneratorTask {
   id: string;
-  prompt: string;
-  status: 'pending' | 'processing' | 'success' | 'failed';
+  styleImage: File; // The source style image
+  status: 'pending' | 'analyzing' | 'generating' | 'saving' | 'success' | 'failed';
   resultUrl?: string;
   error?: string;
   templateName?: string;
+  extractedMeta?: any;
 }
 
-interface CategoryInfo {
-  name: string;
-  description: string;
-}
-
-// 分类描述映射
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  'Interior Design': '室内设计和装修',
-  'Exterior Design': '建筑外观设计',
-  'Wall Paint': '墙面颜色和涂料',
-  'Wall Design': '墙面设计和装饰',
-  'Floor Style': '地板材质和风格',
-  'Garden & Backyard Design': '花园和户外景观',
-  'Festive Decor': '节日装饰和主题',
-  'Item Replace': '物品替换和更新',
-  'Reference Style Match': '参考风格匹配',
-  'Free Canvas': '自由创作画布',
-};
+// ... existing code ...
 
 export const AITemplateCreator: React.FC = () => {
   const [mode, setMode] = useState<'import' | 'generate'>('import');
@@ -52,55 +36,188 @@ export const AITemplateCreator: React.FC = () => {
   const [results, setResults] = useState<ProcessResult[]>([]);
   
   // Generator Mode State
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
+  const [referenceImage, setReferenceImage] = useState<File | null>(null); // The Base Room
   const [referencePreview, setReferencePreview] = useState<string>('');
-  const [promptText, setPromptText] = useState('');
+  
+  // Replaced promptText with styleImages
+  const [styleImages, setStyleImages] = useState<File[]>([]);
   const [generatorTasks, setGeneratorTasks] = useState<GeneratorTask[]>([]);
+  
   const [isPaused, setIsPaused] = useState(false);
   const generatorRef = useRef<{ isRunning: boolean }>({ isRunning: false });
-  
-  // Shared State
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [availableCategories, setAvailableCategories] = useState<CategoryInfo[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const refImageInputRef = useRef<HTMLInputElement>(null);
-  
-  // 二级分类相关状态
-  const [availableSubCategories, setAvailableSubCategories] = useState<string[]>([]);
-  const [autoDetectSubCategory, setAutoDetectSubCategory] = useState<boolean>(true);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
-  const [customSubCategory, setCustomSubCategory] = useState<string>('');
+  const styleInputRef = useRef<HTMLInputElement>(null);
 
-  // 从 design_templates 表加载所有大分类
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  // ... existing code ...
 
-  // 当主分类选择变化时，加载对应的二级分类
-  useEffect(() => {
-    if (selectedCategories.length > 0) {
-      loadSubCategories(selectedCategories);
-    } else {
-      setAvailableSubCategories([]);
+  // --- Generator Mode Handlers ---
+  const handleReferenceImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setReferenceImage(file);
+    const base64 = await toBase64(file);
+    setReferencePreview(base64);
+  };
+
+  const handleStyleImagesSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    if (selectedCategories.length !== 1) {
+      alert('生成模式下必须只选择一个主分类！');
+      return;
     }
-  }, [selectedCategories]);
-
-  // Mode switching cleanup
-  useEffect(() => {
-    // Reset secondary category settings when switching modes
-    if (mode === 'generate') {
-      setAutoDetectSubCategory(false); // Generator mode usually requires specific category
-      setSelectedCategories([]); // Reset selection to force user to choose one
-    } else {
-      setAutoDetectSubCategory(true);
-      // loadCategories will reset selection to all, which is fine for import mode
-      loadCategories();
+    if (!selectedSubCategory && !customSubCategory) {
+      alert('生成模式下必须指定二级分类！');
+      return;
     }
-  }, [mode]);
 
-  const loadCategories = async () => {
+    const newTasks: GeneratorTask[] = files.map((file, idx) => ({
+      id: `${Date.now()}-${idx}`,
+      styleImage: file,
+      status: 'pending'
+    }));
+    
+    setGeneratorTasks(prev => [...prev, ...newTasks]);
+    // Clear input so same files can be selected again if needed
+    if (styleInputRef.current) styleInputRef.current.value = '';
+  };
+
+  const createGeneratorTasks = () => {
+    // Deprecated: now we use handleStyleImagesSelect directly
+  };
+
+  // ... startGeneration, pause, resume ... (keep same logic but adapted for new task structure)
+
+  // ... runGeneratorLoop ... (keep same logic)
+
+  const processGeneratorTask = async (index: number) => {
+    let currentTask: GeneratorTask | undefined;
+    
+    setGeneratorTasks(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], status: 'analyzing' };
+      currentTask = updated[index];
+      return updated;
+    });
+
+    if (!currentTask) return;
+
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
+      // 1. Analyze Style Image
+      const styleImageBase64 = await toBase64(currentTask.styleImage);
+      
+      const analyzeResponse = await fetch('/api/auto-create-template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          originalImage: styleImageBase64, // Use originalImage key
+          thumbnailImage: styleImageBase64, // Required by API validation, though not used for extractOnly
+          allowedCategories: selectedCategories,
+          autoDetectSubCategory: false, // In generator mode we force the sub-category
+          manualSubCategory: customSubCategory.trim() || selectedSubCategory,
+          extractOnly: true // New flag
+        }),
+      });
+
+      const analyzeData = await analyzeResponse.json();
+      if (!analyzeResponse.ok) throw new Error(analyzeData.error || 'Analysis failed');
+      
+      const extractedMeta = analyzeData.extracted;
+      const prompt = extractedMeta.fullPrompt;
+
+      // Update status to generating
+      setGeneratorTasks(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: 'generating', extractedMeta };
+        return updated;
+      });
+
+      // 2. Generate Image (Base + Style Prompt)
+      if (!referencePreview) throw new Error('No reference image');
+      const baseRoomBase64 = referencePreview.replace(/^data:image\/\w+;base64,/, '');
+
+      const genResponse = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          instruction: prompt,
+          base64Images: [baseRoomBase64] // Only the base room
+        }),
+      });
+
+      const genData = await genResponse.json();
+      if (!genResponse.ok) throw new Error(genData.error || 'Generation failed');
+      
+      const rawGeneratedImage = genData.imageUrl;
+
+      // Update status to saving
+      setGeneratorTasks(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: 'saving' };
+        return updated;
+      });
+      
+      // Compress
+      const compressedImage = await compressBase64(rawGeneratedImage, 1280, 0.8);
+
+      // 3. Save to Template
+      const subCat = customSubCategory.trim() || selectedSubCategory;
+      const mainCat = selectedCategories[0];
+      
+      const saveResponse = await fetch('/api/admin-save-template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          imageData: compressedImage,
+          name: extractedMeta.templateName || `${subCat} Style`,
+          mainCategory: mainCat,
+          subCategory: subCat,
+          prompt: prompt,
+          styleDescription: extractedMeta.styleDescription
+        }),
+      });
+
+      const saveData = await saveResponse.json();
+      if (!saveResponse.ok) throw new Error(saveData.error || 'Save failed');
+
+      // Success
+      setGeneratorTasks(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          status: 'success',
+          resultUrl: saveData.template.image_url,
+          templateName: saveData.template.name
+        };
+        return updated;
+      });
+
+    } catch (error) {
+      console.error('Task failed:', error);
+      setGeneratorTasks(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+        return updated;
+      });
+    }
+  };
     setIsLoadingCategories(true);
     try {
       // 从 design_templates 表读取实际存在的分类
