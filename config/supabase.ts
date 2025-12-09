@@ -7,9 +7,20 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 import { getEnvVar } from '../utils/env';
 
-// 从环境变量获取配置
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL');
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
+// 从环境变量获取配置 (优先使用静态访问以支持 Vite define 替换)
+const supabaseUrl = 
+  import.meta.env.VITE_SUPABASE_URL || 
+  process.env.VITE_SUPABASE_URL || 
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 
+  process.env.SUPABASE_URL || 
+  getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL');
+
+const supabaseAnonKey = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  process.env.VITE_SUPABASE_ANON_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  process.env.SUPABASE_ANON_KEY || 
+  getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
 
 // 验证环境变量
 if (!supabaseUrl || !supabaseAnonKey) {
