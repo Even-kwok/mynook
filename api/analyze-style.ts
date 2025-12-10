@@ -30,6 +30,10 @@ Employ soft, natural, and inviting lighting. For interiors, envision ample diffu
 
 [INSERT SPECIFIC STYLE, MATERIAL, FURNITURE, DECOR, AND SCENE DETAILS HERE]
 
+Perspective Enhancements (Apply adaptively):
+- Wide Angle: A wide-angle professional interior photography shot capturing the entire room's layout and atmosphere. Focus on spatial volume, flow, and the overall architectural statement. Camera: 24mm lens. High-end Architectural Digest style.
+- Top Down: Elevated Bird's Eye View. Camera is positioned high up near the ceiling, looking down at a 45-60 degree angle. Show the entire floor area and furniture layout clearly from above. Wide field of view. NOT eye-level. Professional real estate drone-style interior shot.
+
 The final image must be of Hasselblad quality, photorealistic, with extreme detail, vibrant color accuracy, and exceptional dynamic range. Rendered with V-Ray or Corona Renderer.
 ---[ 提示词结束 / PROMPT END ]---
 // Project: MyNook  // 项目：MyNook
