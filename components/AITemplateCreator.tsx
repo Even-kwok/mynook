@@ -128,13 +128,35 @@ export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplate
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      const { data, error } = await supabase.from('design_templates').select('main_category');
-      if (error) throw error;
-      
-      const categories = (data as any[] || [])
-        .map((item: any) => item.main_category)
-        .filter((cat): cat is string => Boolean(cat));
-      const uniqueCategories = [...new Set(categories)] as string[];
+      // ✅ Prefer the configured main categories so AI Template Creator still works
+      // even when there are 0 templates in design_templates (e.g. after a full reset).
+      let uniqueCategories: string[] = [];
+
+      try {
+        const { data: ordered, error: orderError } = await supabase
+          .from('main_category_order')
+          .select('main_category')
+          .order('sort_order');
+
+        if (!orderError && ordered && ordered.length > 0) {
+          uniqueCategories = (ordered as any[])
+            .map((item: any) => item.main_category)
+            .filter((cat): cat is string => Boolean(cat));
+        }
+      } catch (orderErr) {
+        console.warn('Failed to load main_category_order, falling back to template-based categories:', orderErr);
+      }
+
+      // Fallback: derive categories from existing templates (legacy behavior)
+      if (uniqueCategories.length === 0) {
+        const { data, error } = await supabase.from('design_templates').select('main_category');
+        if (error) throw error;
+
+        const categories = (data as any[] || [])
+          .map((item: any) => item.main_category)
+          .filter((cat): cat is string => Boolean(cat));
+        uniqueCategories = [...new Set(categories)] as string[];
+      }
       
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
         name: cat,
