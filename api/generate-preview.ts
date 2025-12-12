@@ -3,6 +3,7 @@ import { GoogleGenAI, Part, Modality } from '@google/genai';
 import { Buffer } from 'node:buffer';
 import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
+import { resolveGeminiImageModel } from './_lib/aiModels.js';
 
 // Initialize Supabase admin client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -107,8 +108,8 @@ export default async function handler(
       },
     };
 
-    // Using Gemini 3 Pro Image Preview model
-    const modelName = 'gemini-3-pro-image-preview';
+    // Using latest image model (default: gemini-3-pro-image-preview)
+    const modelName = resolveGeminiImageModel();
 
     const contentParts: Part[] = [
       { text: prompt },

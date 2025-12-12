@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
+import { resolveGeminiAnalyzeStyleModel } from './_lib/aiModels.js';
 
 // Initialize Supabase admin client for server-side operations
 // Use multiple environment variable names for compatibility
@@ -196,7 +197,7 @@ export default async function handler(
       : originalImage;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: resolveGeminiAnalyzeStyleModel(),
       contents: {
         parts: [
           { text: extractorPrompt },

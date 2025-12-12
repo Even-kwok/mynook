@@ -3,26 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { Buffer } from 'node:buffer';
 import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
-
-const ALLOWED_ANALYZE_STYLE_MODELS = [
-  'gemini-3-pro-preview',
-  'gemini-3-pro-image-preview',
-] as const;
-
-type AllowedAnalyzeStyleModel = (typeof ALLOWED_ANALYZE_STYLE_MODELS)[number];
-
-const resolveAnalyzeStyleModel = (): AllowedAnalyzeStyleModel => {
-  const configured = (process.env.GEMINI_ANALYZE_STYLE_MODEL || '').trim();
-  const model = (configured || 'gemini-3-pro-preview') as string;
-
-  if ((ALLOWED_ANALYZE_STYLE_MODELS as readonly string[]).includes(model)) {
-    return model as AllowedAnalyzeStyleModel;
-  }
-
-  throw new Error(
-    `Invalid GEMINI_ANALYZE_STYLE_MODEL. Allowed: ${ALLOWED_ANALYZE_STYLE_MODELS.join(', ')}. Received: ${model}`
-  );
-};
+import { resolveGeminiAnalyzeStyleModel } from './_lib/aiModels.js';
 
 const detectImageType = (buffer: Buffer): { mimeType: string } => {
   if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
@@ -320,7 +301,7 @@ export default async function handler(
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const imageData = originalImage.includes(',') ? originalImage.split(',')[1] : originalImage;
     const { mimeType } = detectImageType(Buffer.from(imageData, 'base64'));
-    const model = resolveAnalyzeStyleModel();
+    const model = resolveGeminiAnalyzeStyleModel();
 
     const response = await ai.models.generateContent({
       model,
