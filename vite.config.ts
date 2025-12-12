@@ -6,6 +6,10 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
       base: '/',
+      // Vite only exposes env vars with specific prefixes to the client bundle.
+      // We support both VITE_* (Vite default) and NEXT_PUBLIC_* (common on Vercel/Next.js),
+      // but we intentionally do NOT expose SUPABASE_* to avoid leaking service keys.
+      envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
       server: {
         port: 3000,
         host: '0.0.0.0',
