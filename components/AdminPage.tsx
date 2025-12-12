@@ -2705,7 +2705,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             case 'templates':
                 return <TemplateManagement templateData={templateData} setTemplateData={setTemplateData} categoryOrder={categoryOrder} setCategoryOrder={setCategoryOrder} onTemplatesUpdated={onTemplatesUpdated} />;
             case 'ai-creator':
-                return <AITemplateCreator />;
+                return <AITemplateCreator onTemplatesUpdated={onTemplatesUpdated} />;
             case 'tools-order':
                 return <ToolsOrderManagement />;
             case 'hero-section':

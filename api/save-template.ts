@@ -3,6 +3,36 @@ import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
 import { Buffer } from 'node:buffer';
 
+const normalizeCategoryValue = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const lowered = trimmed.toLowerCase();
+  if (lowered === 'null' || lowered === 'undefined') return null;
+  return trimmed;
+};
+
+const inferInteriorRoomTypeFromName = (templateName: string): string | null => {
+  const name = (templateName || '').toLowerCase();
+  const rules: Array<[RegExp, string]> = [
+    [/living\s*room|lounge/, 'living-room'],
+    [/bed\s*room|master\s*bedroom/, 'bedroom'],
+    [/kid(s)?\s*room|children('|’)?s\s*room/, 'kids-room'],
+    [/nursery/, 'nursery'],
+    [/kitchen/, 'kitchen'],
+    [/bath\s*room|rest\s*room|washroom|toilet/, 'bathroom'],
+    [/dining\s*room/, 'dining-room'],
+    [/home\s*office|office|study/, 'office'],
+    [/entry\s*way|entryway|foyer/, 'entryway'],
+    [/hall\s*way|hallway|corridor/, 'hallway'],
+    [/laundry/, 'laundry-room'],
+  ];
+  for (const [re, roomType] of rules) {
+    if (re.test(name)) return roomType;
+  }
+  return null;
+};
+
 // Initialize Supabase admin client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -74,8 +104,18 @@ export default async function handler(
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
     // Ensure path is clean
     const safeMainCat = mainCategory.replace(/\//g, '-');
-    const safeSubCat = secondaryCategory.replace(/\//g, '-');
-    const filePath = `${safeMainCat}/${safeSubCat}/${fileName}`;
+    const normalizedSecondaryCategory = normalizeCategoryValue(secondaryCategory);
+
+    // For Interior Design we store room type in `room_type`, and use a stable `sub_category`.
+    // If the AI returns "null"/empty, infer from templateName; otherwise fall back to "other".
+    const isInterior = mainCategory === 'Interior Design';
+    const interiorRoomType = isInterior
+      ? (normalizedSecondaryCategory || inferInteriorRoomTypeFromName(templateName) || 'other')
+      : null;
+
+    const fileSubPath = (isInterior ? interiorRoomType : (normalizedSecondaryCategory || 'uncategorized'))
+      .replace(/\//g, '-');
+    const filePath = `${safeMainCat}/${fileSubPath}/${fileName}`;
     
     // Extract base64 data
     const thumbnailData = thumbnailImage.includes(',')
@@ -100,7 +140,6 @@ export default async function handler(
       .getPublicUrl(filePath);
 
     // Create template record
-    const isInterior = mainCategory === 'Interior Design';
     
     // For Interior Design:
     // sub_category -> 'Modern Minimalist' (default) or extracted style if we want to change this later
@@ -115,8 +154,8 @@ export default async function handler(
       image_url: publicUrl,
       prompt: fullPrompt,
       main_category: mainCategory,
-      sub_category: isInterior ? 'Modern Minimalist' : secondaryCategory,
-      room_type: isInterior ? secondaryCategory : null,
+      sub_category: isInterior ? 'Modern Minimalist' : (normalizedSecondaryCategory || 'Uncategorized'),
+      room_type: isInterior ? interiorRoomType : null,
       enabled: true,
       sort_order: 0,
     };

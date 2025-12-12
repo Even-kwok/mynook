@@ -41,6 +41,10 @@ interface CategoryInfo {
   description: string;
 }
 
+interface AITemplateCreatorProps {
+  onTemplatesUpdated?: () => void | Promise<void>;
+}
+
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Interior Design': '室内设计和装修',
   'Exterior Design': '建筑外观设计',
@@ -54,7 +58,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Free Canvas': '自由创作画布',
 };
 
-export const AITemplateCreator: React.FC = () => {
+export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplatesUpdated }) => {
   // Global State
   const [baseImage, setBaseImage] = useState<string | null>(null); // Base64
   const [baseImagePreview, setBaseImagePreview] = useState<string | null>(null); // Display URL
@@ -76,11 +80,39 @@ export const AITemplateCreator: React.FC = () => {
 
   const baseImageInputRef = useRef<HTMLInputElement>(null);
   const styleImageInputRef = useRef<HTMLInputElement>(null);
+  const refreshTemplatesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // NOTE: AITemplateCreator is currently used inside AdminPage.
+  // AdminPage already has `onTemplatesUpdated` which triggers a full reload from Supabase.
+  // We debounce refresh to avoid triggering a full reload for every single item in a big batch.
+  const scheduleTemplatesRefresh = useCallback((onTemplatesUpdated?: () => void | Promise<void>) => {
+    if (refreshTemplatesTimerRef.current) {
+      clearTimeout(refreshTemplatesTimerRef.current);
+    }
+    refreshTemplatesTimerRef.current = setTimeout(() => {
+      if (onTemplatesUpdated) {
+        Promise.resolve(onTemplatesUpdated()).catch((err) => {
+          console.error('Failed to refresh template data:', err);
+        });
+        return;
+      }
+      // Fallback for legacy usage (in case a parent wants to listen globally).
+      window.dispatchEvent(new CustomEvent('mynook:templates-updated'));
+    }, 1200);
+  }, []);
 
   // --- Initialization ---
 
   useEffect(() => {
     loadCategories();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTemplatesTimerRef.current) {
+        clearTimeout(refreshTemplatesTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -274,6 +306,8 @@ export const AITemplateCreator: React.FC = () => {
         throw new Error(err.error || 'Save failed');
       }
 
+      // Let other parts of the app refresh template lists (debounced).
+      scheduleTemplatesRefresh(onTemplatesUpdated);
       updateItemStatus(item.id, { status: 'success' });
 
     } catch (error) {
