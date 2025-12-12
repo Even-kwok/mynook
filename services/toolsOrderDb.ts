@@ -1,5 +1,10 @@
 import { supabase } from '../config/supabase';
-import { ToolItemConfig } from '../services/toolsOrderService';
+import type { ToolItemConfig } from './toolsOrderService';
+
+// NOTE:
+// This module intentionally uses a loose typing approach for Supabase tables
+// because our `types/database.ts` does not include all tables (e.g. tools_order).
+// This keeps builds green while still using the existing Supabase client.
 
 export interface ToolOrderDB {
   id: string;
@@ -19,7 +24,7 @@ export interface ToolOrderDB {
  */
 export const getToolsOrderFromDB = async (): Promise<ToolItemConfig[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('tools_order')
       .select('*')
       .order('sort_order', { ascending: true });
@@ -29,8 +34,7 @@ export const getToolsOrderFromDB = async (): Promise<ToolItemConfig[]> => {
       throw error;
     }
 
-    // Convert database format to frontend format
-    return (data || []).map((tool: ToolOrderDB) => ({
+    return ((data || []) as ToolOrderDB[]).map((tool) => ({
       id: tool.tool_id,
       name: tool.name,
       shortName: tool.short_name,
@@ -49,7 +53,6 @@ export const getToolsOrderFromDB = async (): Promise<ToolItemConfig[]> => {
  */
 export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<void> => {
   try {
-    // Update each tool's sort_order
     const updates = tools.map((tool, index) => ({
       tool_id: tool.id,
       name: tool.name,
@@ -60,8 +63,7 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
       sort_order: index + 1,
     }));
 
-    // Perform batch upsert with onConflict specified
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('tools_order')
       .upsert(updates, { onConflict: 'tool_id', ignoreDuplicates: false });
 
@@ -81,4 +83,3 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
 export const resetToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<void> => {
   return updateToolsOrderInDB(tools);
 };
-

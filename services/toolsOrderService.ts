@@ -3,7 +3,7 @@
  * Now fetches from database with localStorage as cache
  */
 
-import { getToolsOrderFromDB, updateToolsOrderInDB } from '../api/toolsOrder';
+import { getToolsOrderFromDB, updateToolsOrderInDB } from './toolsOrderDb';
 
 export interface ToolItemConfig {
   id: string;
