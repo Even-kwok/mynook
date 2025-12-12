@@ -47,6 +47,116 @@ const detectImageType = (buffer: Buffer): { mimeType: string } => {
   return { mimeType: 'image/png' };
 };
 
+const normalizeText = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+};
+
+// Keep Interior Design room types canonical to avoid category explosion.
+// We intentionally collapse many variations (e.g. "open concept living & dining") into "living-room".
+const normalizeInteriorRoomType = (value: unknown): string => {
+  const raw = normalizeText(value);
+  if (!raw) return 'other';
+  const s = raw.toLowerCase();
+
+  // Chinese keywords
+  if (/(客厅|起居室|会客)/.test(s)) return 'living-room';
+  if (/(卧室|主卧|次卧)/.test(s)) return 'bedroom';
+  if (/(厨房)/.test(s)) return 'kitchen';
+  if (/(浴室|卫生间|洗手间)/.test(s)) return 'bathroom';
+  if (/(餐厅)/.test(s)) return 'dining-room';
+  if (/(书房|办公室|工作间)/.test(s)) return 'office';
+  if (/(玄关|门厅|入口)/.test(s)) return 'entryway';
+  if (/(走廊|过道)/.test(s)) return 'hallway';
+  if (/(儿童房|小孩房|婴儿房)/.test(s)) return /婴儿/.test(s) ? 'nursery' : 'kids-room';
+  if (/(衣帽间|衣橱|储物间)/.test(s)) return 'closet';
+
+  // English keywords (collapse open-plan combos into living-room)
+  if (/(open|open[-\s]?plan|open[-\s]?concept)/.test(s) && /(living|lounge)/.test(s)) return 'living-room';
+  if (/(living|lounge)/.test(s)) return 'living-room';
+  if (/(bed(room)?|master\s*bed(room)?)/.test(s)) return 'bedroom';
+  if (/(kitchen)/.test(s)) return 'kitchen';
+  if (/(bath(room)?|rest\s*room|washroom|toilet)/.test(s)) return 'bathroom';
+  if (/(dining)/.test(s)) return 'dining-room';
+  if (/(home\s*office|office|study)/.test(s)) return 'office';
+  if (/(entry\s*way|entryway|foyer|mud\s*room|mudroom)/.test(s)) return 'entryway';
+  if (/(hall\s*way|hallway|corridor)/.test(s)) return 'hallway';
+  if (/(kid(s)?\s*room|children('|’)?s\s*room)/.test(s)) return 'kids-room';
+  if (/(nursery)/.test(s)) return 'nursery';
+  if (/(closet|walk[-\s]?in\s*closet)/.test(s)) return 'closet';
+  if (/(laundry)/.test(s)) return 'laundry-room';
+
+  return 'other';
+};
+
+// Shorten template name and remove room-type words for Interior Design.
+const sanitizeTemplateName = (templateName: unknown, mainCategory: unknown, roomType: string): string => {
+  let name = normalizeText(templateName);
+  if (!name) return '';
+
+  // Remove obvious "null/undefined"
+  if (/^(null|undefined)$/i.test(name)) name = '';
+  if (!name) return '';
+
+  const isInterior = normalizeText(mainCategory) === 'Interior Design';
+  if (isInterior) {
+    // Remove room-type tokens and generic suffixes/prefixes to keep it "style only"
+    const roomTokens = [
+      /living\s*room/gi,
+      /lounge/gi,
+      /bed\s*room/gi,
+      /kitchen/gi,
+      /bath\s*room/gi,
+      /dining\s*room/gi,
+      /home\s*office/gi,
+      /\boffice\b/gi,
+      /\bstudy\b/gi,
+      /entry\s*way/gi,
+      /\bentryway\b/gi,
+      /\bfoyer\b/gi,
+      /hall\s*way/gi,
+      /\bhallway\b/gi,
+      /\bcorridor\b/gi,
+      /kids?\s*room/gi,
+      /nursery/gi,
+      /walk[-\s]?in\s*closet/gi,
+      /\bcloset\b/gi,
+      /laundry/gi,
+      /interior/gi,
+      /\bdesign\b/gi,
+      /\broom\b/gi,
+      /空间/gi,
+      /室内/gi,
+      /设计/gi,
+      /客厅|起居室|卧室|厨房|浴室|卫生间|洗手间|餐厅|书房|办公室|玄关|门厅|入口|走廊|过道|儿童房|婴儿房|衣帽间/gi,
+    ];
+
+    for (const re of roomTokens) {
+      name = name.replace(re, ' ');
+    }
+
+    // Remove separators and extra spaces
+    name = name
+      .replace(/[-–—|/,_]+/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    // If still too generic/empty, fall back to roomType + a short generic label
+    if (!name) {
+      name = roomType === 'other' ? 'Interior Style' : 'Interior Style';
+    }
+  } else {
+    // Non-interior: keep it reasonably short and remove trailing "Design"
+    name = name.replace(/\bdesign\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+  }
+
+  // Hard limit length for UI friendliness
+  if (name.length > 32) {
+    name = name.slice(0, 32).trim();
+  }
+  return name;
+};
+
 // Initialize Supabase admin client for server-side operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -98,7 +208,7 @@ const generateExtractorPrompt = (
 
 Return ONLY a valid JSON object with these exact fields:
 {
-  "templateName": "Short descriptive name (e.g., 'Oak Herringbone Floor' or 'Modern Kitchen Design')",
+  "templateName": "A SHORT style name only (2-5 words). Do NOT include room type words like living room/bedroom/kitchen. Do NOT include the word 'Design'.",
   "mainCategory": "MUST BE ONE OF: ${categoryList}",
   ${subCategoryInstruction},
   "styleDescription": "A single detailed sentence describing key features, materials, colors, patterns, and characteristics",
@@ -108,7 +218,8 @@ Return ONLY a valid JSON object with these exact fields:
 ${autoDetect ? `
 **Category-specific sub-category guidelines:**
 - For "Floor Style": Identify material and pattern (e.g., "Hardwood - Herringbone", "Tile - Subway", "Marble - Polished")
-- For "Interior Design": Identify room type (e.g., "living-room", "bedroom", "kitchen", "bathroom")
+- For "Interior Design": Identify room type MUST be ONE OF: living-room, bedroom, kitchen, bathroom, dining-room, office, entryway, hallway, kids-room, nursery, closet, laundry-room, other.
+- For "Interior Design": IMPORTANT: use only these canonical values (no adjectives, no extra words, no Chinese, no spaces).
 - For "Festive Decor": Identify festival/event (e.g., "Christmas", "Halloween", "Easter", "Birthday")
 - For "Exterior Design": Identify architectural style (e.g., "Modern", "Mediterranean", "Colonial")
 - For "Wall Paint": Identify style/type (e.g., "Solid Color", "Textured", "Accent Wall", "Mural")
@@ -237,6 +348,17 @@ export default async function handler(
     }
     
     const extracted: ExtractedTemplateData = JSON.parse(jsonText);
+
+    // Post-process to enforce canonical room types and short names (prevents category explosion).
+    const normalizedMainCategory = normalizeText(extracted.mainCategory);
+    if (normalizedMainCategory === 'Interior Design') {
+      const roomType = normalizeInteriorRoomType(extracted.secondaryCategory);
+      extracted.secondaryCategory = roomType;
+      extracted.templateName = sanitizeTemplateName(extracted.templateName, extracted.mainCategory, roomType);
+    } else {
+      extracted.templateName = sanitizeTemplateName(extracted.templateName, extracted.mainCategory, 'other');
+      extracted.secondaryCategory = normalizeText(extracted.secondaryCategory);
+    }
 
     return res.status(200).json({
       success: true,

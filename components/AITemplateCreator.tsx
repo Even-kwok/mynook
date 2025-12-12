@@ -357,6 +357,20 @@ export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplate
     }
   };
 
+  const getDisplayName = (item: QueueItem) => {
+    const name = item.extractedData?.templateName?.trim();
+    return name && name.length > 0 ? name : item.file.name;
+  };
+
+  const getDisplayCategoryLine = (item: QueueItem) => {
+    const main = item.extractedData?.mainCategory;
+    const sub = item.extractedData?.secondaryCategory;
+    if (!main) return '等待分析...';
+    // For Interior Design, do NOT show room_type here (already categorized under room type elsewhere).
+    if (main === 'Interior Design') return main;
+    return sub ? `${main} / ${sub}` : main;
+  };
+
   const triggerProcessing = useCallback(() => {
     if (isPaused) return;
 
@@ -628,7 +642,7 @@ export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplate
                         <div>
                           <div className="flex justify-between items-start">
                             <h4 className="font-medium text-slate-900 text-sm truncate" title={item.file.name}>
-                              {item.extractedData?.templateName || item.file.name}
+                              {getDisplayName(item)}
                             </h4>
                             {item.status === 'failed' && (
                               <button onClick={() => handleRetry(item.id)} className="text-indigo-600 hover:text-indigo-700" title="重试">
@@ -637,8 +651,7 @@ export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplate
                             )}
                           </div>
                           <p className="text-xs text-slate-500 truncate">
-                            {item.extractedData?.mainCategory || '等待分析...'}
-                            {item.extractedData?.secondaryCategory && ` / ${item.extractedData.secondaryCategory}`}
+                            {getDisplayCategoryLine(item)}
                           </p>
                         </div>
 
