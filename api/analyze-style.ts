@@ -1,33 +1,50 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import { Buffer } from 'node:buffer';
 import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
 
-const isModelNotFoundError = (error: unknown): boolean => {
-  const message = error instanceof Error ? error.message : String(error ?? '');
-  // @google/genai often surfaces API errors as JSON-string-like messages, e.g.:
-  // {"error":{"code":404,"message":"models/xxx is not found ...","status":"NOT_FOUND"}}
-  return (
-    message.includes('"status":"NOT_FOUND"') ||
-    message.includes('"code":404') ||
-    message.includes('models/') && message.includes('not found')
+const ALLOWED_ANALYZE_STYLE_MODELS = [
+  'gemini-3-pro-preview',
+  'gemini-3-pro-image-preview',
+] as const;
+
+type AllowedAnalyzeStyleModel = (typeof ALLOWED_ANALYZE_STYLE_MODELS)[number];
+
+const resolveAnalyzeStyleModel = (): AllowedAnalyzeStyleModel => {
+  const configured = (process.env.GEMINI_ANALYZE_STYLE_MODEL || '').trim();
+  const model = (configured || 'gemini-3-pro-preview') as string;
+
+  if ((ALLOWED_ANALYZE_STYLE_MODELS as readonly string[]).includes(model)) {
+    return model as AllowedAnalyzeStyleModel;
+  }
+
+  throw new Error(
+    `Invalid GEMINI_ANALYZE_STYLE_MODEL. Allowed: ${ALLOWED_ANALYZE_STYLE_MODELS.join(', ')}. Received: ${model}`
   );
 };
 
-const getAnalyzeStyleModelCandidates = (): string[] => {
-  const raw = [
-    process.env.GEMINI_ANALYZE_STYLE_MODEL,
-    process.env.GEMINI_MODEL,
-    // Preferred: keep aligned with other endpoints in this repo.
-    'gemini-3-pro-preview',
-    // Fast + cheap fallback
-    'gemini-2.5-flash',
-    // Conservative fallback
-    'gemini-1.5-pro',
-  ].filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
-
-  // de-dupe while preserving order
-  return Array.from(new Set(raw));
+const detectImageType = (buffer: Buffer): { mimeType: string } => {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return { mimeType: 'image/jpeg' };
+  }
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return { mimeType: 'image/png' };
+  }
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
+    return { mimeType: 'image/webp' };
+  }
+  return { mimeType: 'image/png' };
 };
 
 // Initialize Supabase admin client for server-side operations
@@ -191,37 +208,21 @@ export default async function handler(
 
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const imageData = originalImage.includes(',') ? originalImage.split(',')[1] : originalImage;
+    const { mimeType } = detectImageType(Buffer.from(imageData, 'base64'));
+    const model = resolveAnalyzeStyleModel();
 
-    const modelCandidates = getAnalyzeStyleModelCandidates();
-    let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
-    let lastError: unknown = null;
-
-    for (const model of modelCandidates) {
-      try {
-        response = await ai.models.generateContent({
-          model,
-          contents: {
-            parts: [
-              { text: extractorPrompt },
-              { inlineData: { data: imageData, mimeType: 'image/jpeg' } }
-            ],
-          },
-        });
-        break;
-      } catch (error) {
-        lastError = error;
-        if (isModelNotFoundError(error)) {
-          console.warn(`[analyze-style] Model not found, falling back. model=${model}`);
-          continue;
-        }
-        throw error;
-      }
-    }
-
-    if (!response) {
-      const details = lastError instanceof Error ? lastError.message : String(lastError ?? 'Unknown error');
-      throw new Error(`All Gemini models failed for analyze-style. Tried: ${modelCandidates.join(', ')}. Last error: ${details}`);
-    }
+    const response = await ai.models.generateContent({
+      model,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: extractorPrompt },
+            { inlineData: { data: imageData, mimeType } },
+          ],
+        },
+      ],
+    });
 
     if (!response || !response.text) {
       throw new Error('Empty response from Gemini');
