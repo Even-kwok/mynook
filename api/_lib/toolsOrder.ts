@@ -9,6 +9,7 @@ export interface ToolOrderDB {
   emoji?: string;
   is_premium: boolean;
   is_coming_soon: boolean;
+  is_visible?: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -37,6 +38,7 @@ export const getToolsOrderFromDB = async (): Promise<ToolItemConfig[]> => {
       emoji: tool.emoji,
       isPremium: tool.is_premium,
       isComingSoon: tool.is_coming_soon,
+      isVisible: (tool as any).is_visible ?? true,
     }));
   } catch (error) {
     console.error('Failed to get tools order from database:', error);
@@ -57,6 +59,7 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
       emoji: tool.emoji,
       is_premium: tool.isPremium || false,
       is_coming_soon: tool.isComingSoon || false,
+      is_visible: tool.isVisible ?? true,
       sort_order: index + 1,
     }));
 

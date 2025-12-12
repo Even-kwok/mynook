@@ -2533,6 +2533,25 @@ const ToolsOrderManagement: React.FC = () => {
         }
     };
 
+    const handleToggleVisible = async (index: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const newTools = tools.map((t, i) => {
+                if (i !== index) return t;
+                const current = t.isVisible !== false; // default true
+                return { ...t, isVisible: !current };
+            });
+            await saveToolsOrder(newTools);
+            setTools(newTools);
+        } catch (err) {
+            console.error('Failed to toggle tool visibility:', err);
+            setError('更新显示状态失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -2589,13 +2608,38 @@ const ToolsOrderManagement: React.FC = () => {
                                                 Coming Soon
                                             </span>
                                         )}
+                                        {tool.isVisible === false && (
+                                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded">
+                                                Hidden
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">ID: {tool.id}</p>
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-3">
+                                {/* Visible Toggle */}
+                                <button
+                                    onClick={() => handleToggleVisible(index)}
+                                    disabled={isLoading}
+                                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors border ${
+                                        tool.isVisible === false
+                                            ? 'bg-slate-200 border-slate-300'
+                                            : 'bg-emerald-500 border-emerald-600'
+                                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    title={tool.isVisible === false ? '当前：隐藏（点击切换为显示）' : '当前：显示（点击切换为隐藏）'}
+                                >
+                                    <span
+                                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                                            tool.isVisible === false ? 'translate-x-1' : 'translate-x-9'
+                                        }`}
+                                    />
+                                    <span className="sr-only">Toggle visibility</span>
+                                </button>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => handleMoveToTop(index)}
                                     disabled={isLoading || index === 0}
@@ -2628,6 +2672,7 @@ const ToolsOrderManagement: React.FC = () => {
                                 >
                                     <IconMoveToBottom className="w-5 h-5 text-slate-600 group-hover:text-indigo-600" />
                                 </button>
+                                </div>
                             </div>
                         </div>
                     ))}
