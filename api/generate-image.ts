@@ -8,6 +8,7 @@ import {
   CREDIT_COSTS,
   logGeneration
 } from './_lib/creditsService.js';
+import { resolveGeminiImageModel } from './_lib/aiModels.js';
 
 interface GenerateImageRequestBody {
   instruction?: unknown;
@@ -221,8 +222,8 @@ export default async function handler(
     console.log('- Image 1 size:', normalizedImages[0]?.length || 0);
     console.log('- Image 2 size:', normalizedImages[1]?.length || 0);
 
-    // 使用 gemini-3-pro-image-preview 模型（Nano Banana Pro - 最先进的图像生成和编辑模型）
-    const modelName = 'gemini-3-pro-image-preview';
+    // 使用最新生图模型（默认: gemini-3-pro-image-preview / Nano Banana Pro）
+    const modelName = resolveGeminiImageModel();
 
     // 调用 Google AI Studio API（使用原型的简洁配置）
     // 注意：使用简单对象格式而不是数组格式，以确保调用正确的API端点

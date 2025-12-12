@@ -15,7 +15,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const generateDynamicPrompt = async (themeDescription: string): Promise<string> => {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-pro-preview',
             contents: `Generate a creative and specific style for a photoshoot. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`,
         });
         return response.text;
@@ -42,7 +42,7 @@ export const generateImage = async (instruction: string, base64Images: string[])
         }));
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-pro-image-preview',
             contents: [{
                 parts: [
                     textPart,
@@ -86,7 +86,7 @@ export const extractPromptFromImage = async (base64Image: string, customPrompt: 
         };
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-pro-preview',
             contents: [{
                 parts: [textPart, imagePart],
             }],

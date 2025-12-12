@@ -12,6 +12,11 @@ export interface ToolItemConfig {
   emoji?: string;
   isPremium?: boolean;
   isComingSoon?: boolean;
+  /**
+   * Whether this tool should be shown in the left toolbar.
+   * Defaults to true when omitted (backward compatible).
+   */
+  isVisible?: boolean;
 }
 
 const CACHE_KEY = 'mynook_tools_order_cache';
@@ -20,18 +25,18 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Default tools order (fallback if database is unavailable)
 export const DEFAULT_TOOLS: ToolItemConfig[] = [
-  { id: 'interior', name: 'Interior Design', shortName: 'Interior', emoji: '🛋️', isPremium: false }, 
-  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', emoji: '🏠', isPremium: false },
-  { id: 'wall', name: 'Wall Design', shortName: 'Wall', emoji: '🎨', isPremium: false },
-  { id: 'floor', name: 'Floor Style', shortName: 'Floor', emoji: '🟫', isPremium: false },
-  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', emoji: '🌳', isPremium: false },
-  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', emoji: '🎄', isPremium: false },
-  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', emoji: '➕', isPremium: true },
-  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🖼️', isPremium: true },
-  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true },
-  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true },
-  { id: 'draw-edit', name: 'Draw Edit', shortName: 'Draw\nEdit', emoji: '✏️', isPremium: true },
-  { id: 'image-upscale', name: 'Image Upscale', shortName: 'Upscale', emoji: '🔍', isPremium: true },
+  { id: 'interior', name: 'Interior Design', shortName: 'Interior', emoji: '🛋️', isPremium: false, isVisible: true }, 
+  { id: 'exterior', name: 'Exterior Design', shortName: 'Exterior', emoji: '🏠', isPremium: false, isVisible: true },
+  { id: 'wall', name: 'Wall Design', shortName: 'Wall', emoji: '🎨', isPremium: false, isVisible: true },
+  { id: 'floor', name: 'Floor Style', shortName: 'Floor', emoji: '🟫', isPremium: false, isVisible: true },
+  { id: 'garden', name: 'Garden & Backyard Design', shortName: 'Garden', emoji: '🌳', isPremium: false, isVisible: true },
+  { id: 'festive', name: 'Festive Decor', shortName: 'Festive', emoji: '🎄', isPremium: false, isVisible: true },
+  { id: 'item-replace', name: 'Item Replace', shortName: 'Replace', emoji: '➕', isPremium: true, isVisible: true },
+  { id: 'style-match', name: 'Reference Style Match', shortName: 'Style\nMatch', emoji: '🖼️', isPremium: true, isVisible: true },
+  { id: 'ai-advisor', name: 'AI Design Advisor', shortName: 'AI\nAdvisor', emoji: '💬', isComingSoon: true, isVisible: true },
+  { id: 'multi-item', name: 'Multi-Item Preview', shortName: 'Multi\nItem', emoji: '📦', isComingSoon: true, isVisible: true },
+  { id: 'draw-edit', name: 'Draw Edit', shortName: 'Draw\nEdit', emoji: '✏️', isPremium: true, isVisible: true },
+  { id: 'image-upscale', name: 'Image Upscale', shortName: 'Upscale', emoji: '🔍', isPremium: true, isVisible: true },
 ];
 
 /**

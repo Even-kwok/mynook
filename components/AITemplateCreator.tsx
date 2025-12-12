@@ -41,6 +41,10 @@ interface CategoryInfo {
   description: string;
 }
 
+interface AITemplateCreatorProps {
+  onTemplatesUpdated?: () => void | Promise<void>;
+}
+
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Interior Design': '室内设计和装修',
   'Exterior Design': '建筑外观设计',
@@ -54,7 +58,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Free Canvas': '自由创作画布',
 };
 
-export const AITemplateCreator: React.FC = () => {
+export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplatesUpdated }) => {
   // Global State
   const [baseImage, setBaseImage] = useState<string | null>(null); // Base64
   const [baseImagePreview, setBaseImagePreview] = useState<string | null>(null); // Display URL
@@ -76,11 +80,39 @@ export const AITemplateCreator: React.FC = () => {
 
   const baseImageInputRef = useRef<HTMLInputElement>(null);
   const styleImageInputRef = useRef<HTMLInputElement>(null);
+  const refreshTemplatesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // NOTE: AITemplateCreator is currently used inside AdminPage.
+  // AdminPage already has `onTemplatesUpdated` which triggers a full reload from Supabase.
+  // We debounce refresh to avoid triggering a full reload for every single item in a big batch.
+  const scheduleTemplatesRefresh = useCallback((onTemplatesUpdated?: () => void | Promise<void>) => {
+    if (refreshTemplatesTimerRef.current) {
+      clearTimeout(refreshTemplatesTimerRef.current);
+    }
+    refreshTemplatesTimerRef.current = setTimeout(() => {
+      if (onTemplatesUpdated) {
+        Promise.resolve(onTemplatesUpdated()).catch((err) => {
+          console.error('Failed to refresh template data:', err);
+        });
+        return;
+      }
+      // Fallback for legacy usage (in case a parent wants to listen globally).
+      window.dispatchEvent(new CustomEvent('mynook:templates-updated'));
+    }, 1200);
+  }, []);
 
   // --- Initialization ---
 
   useEffect(() => {
     loadCategories();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTemplatesTimerRef.current) {
+        clearTimeout(refreshTemplatesTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -96,13 +128,48 @@ export const AITemplateCreator: React.FC = () => {
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      const { data, error } = await supabase.from('design_templates').select('main_category');
-      if (error) throw error;
-      
-      const categories = (data as any[] || [])
-        .map((item: any) => item.main_category)
-        .filter((cat): cat is string => Boolean(cat));
-      const uniqueCategories = [...new Set(categories)] as string[];
+      // ✅ Prefer the configured main categories so AI Template Creator still works
+      // even when there are 0 templates in design_templates (e.g. after a full reset).
+      let uniqueCategories: string[] = [];
+
+      try {
+        const { data: ordered, error: orderError } = await supabase
+          .from('main_category_order')
+          .select('main_category')
+          .order('sort_order');
+
+        if (!orderError && ordered && ordered.length > 0) {
+          uniqueCategories = (ordered as any[])
+            .map((item: any) => item.main_category)
+            .filter((cat): cat is string => Boolean(cat));
+        }
+      } catch (orderErr) {
+        console.warn('Failed to load main_category_order, falling back to template-based categories:', orderErr);
+      }
+
+      // Fallback: derive categories from existing templates (legacy behavior)
+      if (uniqueCategories.length === 0) {
+        const { data, error } = await supabase.from('design_templates').select('main_category');
+        if (error) throw error;
+
+        const categories = (data as any[] || [])
+          .map((item: any) => item.main_category)
+          .filter((cat): cat is string => Boolean(cat));
+        uniqueCategories = [...new Set(categories)] as string[];
+      }
+
+      // Final fallback: show the core tool categories even if DB is empty or blocked by RLS.
+      // This keeps the AI Template Creator usable right after wiping templates for retesting.
+      if (uniqueCategories.length === 0) {
+        uniqueCategories = [
+          'Interior Design',
+          'Exterior Design',
+          'Wall Design',
+          'Floor Style',
+          'Garden & Backyard Design',
+          'Festive Decor',
+        ];
+      }
       
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
         name: cat,
@@ -274,6 +341,8 @@ export const AITemplateCreator: React.FC = () => {
         throw new Error(err.error || 'Save failed');
       }
 
+      // Let other parts of the app refresh template lists (debounced).
+      scheduleTemplatesRefresh(onTemplatesUpdated);
       updateItemStatus(item.id, { status: 'success' });
 
     } catch (error) {
@@ -286,6 +355,20 @@ export const AITemplateCreator: React.FC = () => {
       processingCountRef.current--;
       triggerProcessing(); // Try to start next
     }
+  };
+
+  const getDisplayName = (item: QueueItem) => {
+    const name = item.extractedData?.templateName?.trim();
+    return name && name.length > 0 ? name : item.file.name;
+  };
+
+  const getDisplayCategoryLine = (item: QueueItem) => {
+    const main = item.extractedData?.mainCategory;
+    const sub = item.extractedData?.secondaryCategory;
+    if (!main) return '等待分析...';
+    // For Interior Design, do NOT show room_type here (already categorized under room type elsewhere).
+    if (main === 'Interior Design') return main;
+    return sub ? `${main} / ${sub}` : main;
   };
 
   const triggerProcessing = useCallback(() => {
@@ -559,7 +642,7 @@ export const AITemplateCreator: React.FC = () => {
                         <div>
                           <div className="flex justify-between items-start">
                             <h4 className="font-medium text-slate-900 text-sm truncate" title={item.file.name}>
-                              {item.extractedData?.templateName || item.file.name}
+                              {getDisplayName(item)}
                             </h4>
                             {item.status === 'failed' && (
                               <button onClick={() => handleRetry(item.id)} className="text-indigo-600 hover:text-indigo-700" title="重试">
@@ -568,8 +651,7 @@ export const AITemplateCreator: React.FC = () => {
                             )}
                           </div>
                           <p className="text-xs text-slate-500 truncate">
-                            {item.extractedData?.mainCategory || '等待分析...'}
-                            {item.extractedData?.secondaryCategory && ` / ${item.extractedData.secondaryCategory}`}
+                            {getDisplayCategoryLine(item)}
                           </p>
                         </div>
 
