@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import { getEnvVar } from './_lib/env.js';
 import { 
   verifyUserToken, 
   checkCreditsAvailable, 
@@ -153,16 +154,43 @@ export default async function handler(
 
     parts.push({ text: sanitizedInstruction });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: [{
-        role: 'user',
-        parts,
-      }],
-      config: typeof systemInstruction === 'string' && systemInstruction.trim().length > 0 ? {
-        systemInstruction: systemInstruction.trim(),
-      } : undefined,
-    });
+    const preferredModel = getEnvVar('GEMINI_TEXT_MODEL', 'GEMINI_MODEL_TEXT') ?? 'gemini-2.5-flash';
+    const fallbackModel = 'gemini-2.5-flash';
+
+    const isModelNotFoundError = (err: unknown): boolean => {
+      const message = err instanceof Error ? err.message : String(err ?? '');
+      return (
+        message.includes('is not found') ||
+        message.includes('NOT_FOUND') ||
+        message.includes('not supported for generateContent')
+      );
+    };
+
+    const runGenerate = async (model: string) => {
+      return ai.models.generateContent({
+        model,
+        contents: [{
+          role: 'user',
+          parts,
+        }],
+        config: typeof systemInstruction === 'string' && systemInstruction.trim().length > 0 ? {
+          systemInstruction: systemInstruction.trim(),
+        } : undefined,
+      });
+    };
+
+    let response;
+    try {
+      response = await runGenerate(preferredModel);
+    } catch (err) {
+      // If the configured model is unavailable on this API version, automatically fall back.
+      if (preferredModel !== fallbackModel && isModelNotFoundError(err)) {
+        console.warn(`⚠️ Model "${preferredModel}" unavailable; falling back to "${fallbackModel}"`);
+        response = await runGenerate(fallbackModel);
+      } else {
+        throw err;
+      }
+    }
 
     generationSuccess = true;
 

@@ -221,7 +221,8 @@ export default async function handler(
     console.log('- Image 1 size:', normalizedImages[0]?.length || 0);
     console.log('- Image 2 size:', normalizedImages[1]?.length || 0);
 
-    // 使用 gemini-3-pro-image-preview 模型（Nano Banana Pro - 最先进的图像生成和编辑模型）
+    // ✅ Use Nano Banana Pro (Gemini 3 Pro Image Preview) ONLY — no fallback / no downgrade.
+    // User-confirmed from Google AI Studio model list.
     const modelName = 'gemini-3-pro-image-preview';
 
     // 调用 Google AI Studio API（使用原型的简洁配置）
@@ -252,14 +253,15 @@ export default async function handler(
         ...imageParts
       );
     }
-    
+
+    // Many image-only models require responseModalities to be IMAGE-only.
     const response = await aiClient.models.generateContent({
       model: modelName,
       contents: {
-        parts: contentParts
+        parts: contentParts,
       },
       config: {
-        responseModalities: [Modality.IMAGE, Modality.TEXT],
+        responseModalities: [Modality.IMAGE],
       },
     } as any);
 
