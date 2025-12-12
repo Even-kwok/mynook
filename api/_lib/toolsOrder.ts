@@ -66,7 +66,10 @@ export const updateToolsOrderInDB = async (tools: ToolItemConfig[]): Promise<voi
     // Perform batch upsert
     const { error } = await supabase
       .from('tools_order')
-      .upsert(updates as any);
+      // IMPORTANT: tools_order has a UNIQUE constraint on tool_id.
+      // Without onConflict, upsert defaults to primary key (id) and will attempt inserts,
+      // causing duplicate key errors on tool_id.
+      .upsert(updates as any, { onConflict: 'tool_id' });
 
     if (error) {
       console.error('Error updating tools order:', error);
