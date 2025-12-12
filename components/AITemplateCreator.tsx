@@ -157,6 +157,19 @@ export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplate
           .filter((cat): cat is string => Boolean(cat));
         uniqueCategories = [...new Set(categories)] as string[];
       }
+
+      // Final fallback: show the core tool categories even if DB is empty or blocked by RLS.
+      // This keeps the AI Template Creator usable right after wiping templates for retesting.
+      if (uniqueCategories.length === 0) {
+        uniqueCategories = [
+          'Interior Design',
+          'Exterior Design',
+          'Wall Design',
+          'Floor Style',
+          'Garden & Backyard Design',
+          'Festive Decor',
+        ];
+      }
       
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
         name: cat,
