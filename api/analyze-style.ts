@@ -3,6 +3,33 @@ import { GoogleGenAI } from '@google/genai';
 import { verifyUserToken } from './_lib/creditsService.js';
 import { createClient } from '@supabase/supabase-js';
 
+const isModelNotFoundError = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  // @google/genai often surfaces API errors as JSON-string-like messages, e.g.:
+  // {"error":{"code":404,"message":"models/xxx is not found ...","status":"NOT_FOUND"}}
+  return (
+    message.includes('"status":"NOT_FOUND"') ||
+    message.includes('"code":404') ||
+    message.includes('models/') && message.includes('not found')
+  );
+};
+
+const getAnalyzeStyleModelCandidates = (): string[] => {
+  const raw = [
+    process.env.GEMINI_ANALYZE_STYLE_MODEL,
+    process.env.GEMINI_MODEL,
+    // Preferred: keep aligned with other endpoints in this repo.
+    'gemini-3-pro-preview',
+    // Fast + cheap fallback
+    'gemini-2.5-flash',
+    // Conservative fallback
+    'gemini-1.5-pro',
+  ].filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+
+  // de-dupe while preserving order
+  return Array.from(new Set(raw));
+};
+
 // Initialize Supabase admin client for server-side operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -146,6 +173,9 @@ export default async function handler(
   if (!originalImage) {
     return res.status(400).json({ error: 'Missing originalImage' });
   }
+  if (!Array.isArray(allowedCategories) || allowedCategories.length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid allowedCategories' });
+  }
 
   try {
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -162,17 +192,36 @@ export default async function handler(
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const imageData = originalImage.includes(',') ? originalImage.split(',')[1] : originalImage;
 
-    // Use Gemini 3.0 Pro Preview as requested
-    // If this specific model ID is invalid in the future, fallback to 'gemini-2.0-flash-exp' or 'gemini-1.5-pro'
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.0-pro-preview', 
-      contents: {
-        parts: [
-          { text: extractorPrompt },
-          { inlineData: { data: imageData, mimeType: 'image/jpeg' } }
-        ],
-      },
-    });
+    const modelCandidates = getAnalyzeStyleModelCandidates();
+    let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
+    let lastError: unknown = null;
+
+    for (const model of modelCandidates) {
+      try {
+        response = await ai.models.generateContent({
+          model,
+          contents: {
+            parts: [
+              { text: extractorPrompt },
+              { inlineData: { data: imageData, mimeType: 'image/jpeg' } }
+            ],
+          },
+        });
+        break;
+      } catch (error) {
+        lastError = error;
+        if (isModelNotFoundError(error)) {
+          console.warn(`[analyze-style] Model not found, falling back. model=${model}`);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!response) {
+      const details = lastError instanceof Error ? lastError.message : String(lastError ?? 'Unknown error');
+      throw new Error(`All Gemini models failed for analyze-style. Tried: ${modelCandidates.join(', ')}. Last error: ${details}`);
+    }
 
     if (!response || !response.text) {
       throw new Error('Empty response from Gemini');
