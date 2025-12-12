@@ -80,7 +80,7 @@ interface DbSubscription {
  */
 export async function createSubscription(data: SubscriptionData) {
   try {
-    const { data: subscription, error } = await supabase
+    const { data: subscription, error } = await (supabase as any)
       .from('subscriptions')
       .insert({
         user_id: data.userId,
@@ -135,7 +135,7 @@ export async function updateUserMembership(params: UpdateMembershipParams) {
       updateData.subscription_end_date = subscriptionEndDate;
     }
 
-    const { data: user, error } = await supabase
+    const { data: user, error } = await (supabase as any)
       .from('users')
       .update(updateData)
       .eq('id', userId)
@@ -164,7 +164,7 @@ export async function handleSubscriptionActivated(
 ) {
   try {
     // Update subscription status to active
-    const { error: subError } = await supabase
+    const { error: subError } = await (supabase as any)
       .from('subscriptions')
       .update({
         status: 'active',
@@ -179,7 +179,7 @@ export async function handleSubscriptionActivated(
     }
 
     // Get subscription details to update user
-    const { data: subscription } = await supabase
+    const { data: subscription } = await (supabase as any)
       .from('subscriptions')
       .select('*')
       .eq('creem_subscription_id', subscriptionId)
@@ -211,7 +211,7 @@ export async function handleSubscriptionActivated(
 export async function handleSubscriptionCancelled(subscriptionId: string) {
   try {
     // Update subscription status
-    const { data: subscription, error } = await supabase
+    const { data: subscription, error } = await (supabase as any)
       .from('subscriptions')
       .update({
         status: 'cancelled',
@@ -230,7 +230,7 @@ export async function handleSubscriptionCancelled(subscriptionId: string) {
     // Update user subscription status
     if (subscription) {
       const sub = subscription as DbSubscription;
-      await supabase
+      await (supabase as any)
         .from('users')
         .update({
           subscription_status: 'cancelled',
@@ -253,7 +253,7 @@ export async function handleSubscriptionCancelled(subscriptionId: string) {
 export async function handleSubscriptionExpired(subscriptionId: string) {
   try {
     // Update subscription status
-    const { data: subscription, error } = await supabase
+    const { data: subscription, error } = await (supabase as any)
       .from('subscriptions')
       .update({
         status: 'expired',
@@ -271,7 +271,7 @@ export async function handleSubscriptionExpired(subscriptionId: string) {
     // Downgrade user to free tier
     if (subscription) {
       const sub = subscription as DbSubscription;
-      await supabase
+      await (supabase as any)
         .from('users')
         .update({
           membership_tier: 'free',
@@ -297,7 +297,7 @@ export async function handleSubscriptionExpired(subscriptionId: string) {
  */
 export async function getUserActiveSubscription(userId: string): Promise<DbSubscription | null> {
   try {
-    const { data: subscription, error } = await supabase
+    const { data: subscription, error } = await (supabase as any)
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
@@ -324,7 +324,7 @@ export async function getUserActiveSubscription(userId: string): Promise<DbSubsc
  */
 export async function getUserSubscriptionHistory(userId: string): Promise<DbSubscription[]> {
   try {
-    const { data: subscriptions, error } = await supabase
+    const { data: subscriptions, error } = await (supabase as any)
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)

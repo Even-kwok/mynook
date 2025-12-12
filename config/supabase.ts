@@ -5,29 +5,37 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
-import { getEnvVar } from '../utils/env';
 
-// 从环境变量获取配置
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL');
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
+// 从环境变量获取配置 (优先使用 import.meta.env，其次使用 process.env)
+// Note: process.env is polyfilled by Vite define plugin
+const supabaseUrl = 
+  import.meta.env.VITE_SUPABASE_URL || 
+  process.env.VITE_SUPABASE_URL || 
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 
+  process.env.SUPABASE_URL || 
+  '';
 
-// 验证环境变量
+const supabaseAnonKey = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  process.env.VITE_SUPABASE_ANON_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  process.env.SUPABASE_ANON_KEY || 
+  '';
+
+// 验证环境变量 (仅在开发环境或非构建环境抛出警告，避免构建失败)
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables!');
-  console.error('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file');
-  console.log('Current URL:', supabaseUrl);
-  console.log('Key exists:', !!supabaseAnonKey);
-} else {
-  console.log('✅ Supabase config loaded:', {
-    url: supabaseUrl,
-    keyLength: supabaseAnonKey.length,
-  });
+  if (import.meta.env.DEV) {
+    console.error('❌ Missing Supabase environment variables!');
+    console.error('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file');
+  }
+} else if (import.meta.env.DEV) {
+  console.log('✅ Supabase config loaded');
 }
 
 // 创建 Supabase 客户端实例
 export const supabase = createClient<Database>(
-  supabaseUrl || '',
-  supabaseAnonKey || '',
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       autoRefreshToken: true,
@@ -45,4 +53,3 @@ export const supabase = createClient<Database>(
 
 // 导出类型以便在其他地方使用
 export type SupabaseClient = typeof supabase;
-

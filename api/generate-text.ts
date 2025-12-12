@@ -8,6 +8,7 @@ import {
   CREDIT_COSTS,
   logGeneration 
 } from './_lib/creditsService.js';
+import { resolveGeminiTextModel } from './_lib/aiModels.js';
 
 interface GenerateTextRequestBody {
   instruction?: unknown;
@@ -153,8 +154,10 @@ export default async function handler(
 
     parts.push({ text: sanitizedInstruction });
 
+    const model = resolveGeminiTextModel();
+
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model,
       contents: [{
         role: 'user',
         parts,

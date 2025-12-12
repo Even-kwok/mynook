@@ -102,7 +102,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
       {/* 工具按钮区域 - 可滚动，从顶部开始 */}
       <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-2">
         <div className="flex flex-col gap-2">
-            {tools.map((tool) => {
+            {tools.filter(t => t.isVisible !== false).map((tool) => {
             const isActive = activeTool === tool.id;
             
             return (

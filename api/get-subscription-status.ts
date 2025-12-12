@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const token = authHeader.replace('Bearer ', '');
 
     // Verify the user's session
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await (supabase.auth as any).getUser(token);
 
     if (authError || !user) {
       console.error('Auth error:', authError);
@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const subscription = await getUserActiveSubscription(user.id);
 
     // Get user's membership info
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await (supabase as any)
       .from('users')
       .select('membership_tier, credits, subscription_status, subscription_end_date')
       .eq('id', user.id)

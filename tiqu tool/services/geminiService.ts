@@ -18,7 +18,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const generateDynamicPrompt = async (themeDescription: string): Promise<string> => {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-pro-preview',
             contents: `Generate a creative and specific style for a photoshoot. The style should be described in a single, detailed sentence. Style theme: ${themeDescription}`,
         });
         return response.text;
@@ -46,7 +46,7 @@ export const generateImage = async (instruction: string, base64Images: string[])
 
         // Fix: Changed `contents` from an array `[{ parts: [...] }]` to a single object `{ parts: [...] }` to align with the recommended API usage for multi-part prompts.
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-pro-image-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -54,7 +54,6 @@ export const generateImage = async (instruction: string, base64Images: string[])
                 ],
             },
             config: {
-// @google/genai-api-rules: The `responseModalities` for `gemini-2.5-flash-image` must be an array with a single `Modality.IMAGE` element.
                 responseModalities: [Modality.IMAGE],
             },
         });
@@ -92,7 +91,7 @@ export const extractPromptFromImage = async (base64Image: string, customPrompt: 
 
         // Fix: Changed `contents` from an array `[{ parts: [...] }]` to a single object `{ parts: [...] }` to align with the recommended API usage for multi-part prompts.
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-pro-preview',
             contents: {
                 parts: [textPart, imagePart],
             },

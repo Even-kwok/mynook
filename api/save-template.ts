@@ -1,0 +1,268 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { verifyUserToken } from './_lib/creditsService.js';
+import { createClient } from '@supabase/supabase-js';
+import { Buffer } from 'node:buffer';
+
+const normalizeCategoryValue = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const lowered = trimmed.toLowerCase();
+  if (lowered === 'null' || lowered === 'undefined') return null;
+  return trimmed;
+};
+
+const normalizeInteriorRoomType = (value: unknown): string => {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return 'other';
+  const s = raw.toLowerCase();
+
+  if (/(客厅|起居室|会客)/.test(s)) return 'living-room';
+  if (/(卧室|主卧|次卧)/.test(s)) return 'bedroom';
+  if (/(厨房)/.test(s)) return 'kitchen';
+  if (/(浴室|卫生间|洗手间)/.test(s)) return 'bathroom';
+  if (/(餐厅)/.test(s)) return 'dining-room';
+  if (/(书房|办公室|工作间)/.test(s)) return 'office';
+  if (/(玄关|门厅|入口|mudroom)/.test(s)) return 'entryway';
+  if (/(走廊|过道|hallway|corridor)/.test(s)) return 'hallway';
+  if (/(儿童房|小孩房)/.test(s)) return 'kids-room';
+  if (/(婴儿房|nursery)/.test(s)) return 'nursery';
+  if (/(衣帽间|衣橱|closet)/.test(s)) return 'closet';
+  if (/(laundry)/.test(s)) return 'laundry-room';
+
+  if (/(open|open[-\s]?plan|open[-\s]?concept)/.test(s) && /(living|lounge)/.test(s)) return 'living-room';
+  if (/(living|lounge)/.test(s)) return 'living-room';
+  if (/(bed(room)?|master\s*bed(room)?)/.test(s)) return 'bedroom';
+  if (/(kitchen)/.test(s)) return 'kitchen';
+  if (/(bath(room)?|rest\s*room|washroom|toilet)/.test(s)) return 'bathroom';
+  if (/(dining)/.test(s)) return 'dining-room';
+  if (/(home\s*office|office|study)/.test(s)) return 'office';
+  if (/(entry\s*way|entryway|foyer)/.test(s)) return 'entryway';
+  if (/(kid(s)?\s*room|children('|’)?s\s*room)/.test(s)) return 'kids-room';
+
+  return 'other';
+};
+
+const sanitizeInteriorStyleName = (templateName: string): string => {
+  let name = (templateName || '').trim();
+  if (!name) return 'Interior Style';
+  if (/^(null|undefined)$/i.test(name)) return 'Interior Style';
+
+  const roomTokens = [
+    /living\s*room/gi,
+    /lounge/gi,
+    /bed\s*room/gi,
+    /kitchen/gi,
+    /bath\s*room/gi,
+    /dining\s*room/gi,
+    /home\s*office/gi,
+    /\boffice\b/gi,
+    /\bstudy\b/gi,
+    /entry\s*way/gi,
+    /\bentryway\b/gi,
+    /\bfoyer\b/gi,
+    /hall\s*way/gi,
+    /\bhallway\b/gi,
+    /\bcorridor\b/gi,
+    /kids?\s*room/gi,
+    /nursery/gi,
+    /walk[-\s]?in\s*closet/gi,
+    /\bcloset\b/gi,
+    /laundry/gi,
+    /interior/gi,
+    /\bdesign\b/gi,
+    /\broom\b/gi,
+    /空间/gi,
+    /室内/gi,
+    /设计/gi,
+    /客厅|起居室|卧室|厨房|浴室|卫生间|洗手间|餐厅|书房|办公室|玄关|门厅|入口|走廊|过道|儿童房|婴儿房|衣帽间/gi,
+  ];
+  for (const re of roomTokens) name = name.replace(re, ' ');
+
+  name = name
+    .replace(/[-–—|/,_]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (!name) name = 'Interior Style';
+  if (name.length > 32) name = name.slice(0, 32).trim();
+  return name;
+};
+
+const inferInteriorRoomTypeFromName = (templateName: string): string | null => {
+  const name = (templateName || '').toLowerCase();
+  const rules: Array<[RegExp, string]> = [
+    [/living\s*room|lounge/, 'living-room'],
+    [/bed\s*room|master\s*bedroom/, 'bedroom'],
+    [/kid(s)?\s*room|children('|’)?s\s*room/, 'kids-room'],
+    [/nursery/, 'nursery'],
+    [/kitchen/, 'kitchen'],
+    [/bath\s*room|rest\s*room|washroom|toilet/, 'bathroom'],
+    [/dining\s*room/, 'dining-room'],
+    [/home\s*office|office|study/, 'office'],
+    [/entry\s*way|entryway|foyer/, 'entryway'],
+    [/hall\s*way|hallway|corridor/, 'hallway'],
+    [/laundry/, 'laundry-room'],
+  ];
+  for (const [re, roomType] of rules) {
+    if (re.test(name)) return roomType;
+  }
+  return null;
+};
+
+// Initialize Supabase admin client
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+const supabaseAdmin = createClient(
+  supabaseUrl,
+  supabaseServiceKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Authentication check
+  const authHeader = req.headers.authorization;
+  const apiKey = req.headers['x-api-key'] as string;
+  let userId: string | null = null;
+  let isAdmin = false;
+
+  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
+    isAdmin = true;
+  } else {
+    if (!authHeader || typeof authHeader !== 'string') {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+    const { userId: verifiedUserId, error: authError } = await verifyUserToken(authHeader);
+    if (authError || !verifiedUserId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    userId = verifiedUserId;
+
+    // Verify admin permission
+    const { data: adminData, error: adminError } = await (supabaseAdmin as any)
+      .from('admin_users')
+      .select('is_active')
+      .eq('user_id', userId)
+      .single();
+
+    if (adminError || !adminData || !adminData.is_active) {
+      return res.status(403).json({ error: 'Admin permission required' });
+    }
+    isAdmin = true;
+  }
+
+  const { 
+    templateName,
+    mainCategory,
+    secondaryCategory,
+    fullPrompt,
+    thumbnailImage // base64
+  } = req.body;
+
+  if (!templateName || !mainCategory || !thumbnailImage) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // Upload thumbnail to Supabase Storage
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+    // Ensure path is clean
+    const safeMainCat = mainCategory.replace(/\//g, '-');
+    const normalizedSecondaryCategory = normalizeCategoryValue(secondaryCategory);
+
+    // For Interior Design we store room type in `room_type`, and use a stable `sub_category`.
+    // If the AI returns "null"/empty, infer from templateName; otherwise fall back to "other".
+    const isInterior = mainCategory === 'Interior Design';
+    const interiorRoomType = isInterior
+      ? normalizeInteriorRoomType(normalizedSecondaryCategory || inferInteriorRoomTypeFromName(templateName) || 'other')
+      : null;
+
+    const finalTemplateName = isInterior
+      ? sanitizeInteriorStyleName(templateName)
+      : (typeof templateName === 'string' ? templateName.trim() : templateName);
+
+    const fileSubPath = (isInterior ? interiorRoomType : (normalizedSecondaryCategory || 'uncategorized'))
+      .replace(/\//g, '-');
+    const filePath = `${safeMainCat}/${fileSubPath}/${fileName}`;
+    
+    // Extract base64 data
+    const thumbnailData = thumbnailImage.includes(',')
+      ? thumbnailImage.split(',')[1]
+      : thumbnailImage;
+    
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('template-thumbnails')
+      .upload(filePath, Buffer.from(thumbnailData, 'base64') as any, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error(`Failed to upload thumbnail: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('template-thumbnails')
+      .getPublicUrl(filePath);
+
+    // Create template record
+    
+    // For Interior Design:
+    // sub_category -> 'Modern Minimalist' (default) or extracted style if we want to change this later
+    // room_type -> The extracted room type (e.g. 'living-room')
+    
+    // For others:
+    // sub_category -> The extracted secondary category
+    // room_type -> null
+    
+    const templateData = {
+      name: finalTemplateName,
+      image_url: publicUrl,
+      prompt: fullPrompt,
+      main_category: mainCategory,
+      sub_category: isInterior ? 'Modern Minimalist' : (normalizedSecondaryCategory || 'Uncategorized'),
+      room_type: isInterior ? interiorRoomType : null,
+      enabled: true,
+      sort_order: 0,
+    };
+
+    const { data: insertedTemplate, error: insertError } = await (supabaseAdmin as any)
+      .from('design_templates')
+      .insert(templateData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Insert error:', insertError);
+      throw new Error(`Failed to create template: ${insertError.message}`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      template: insertedTemplate
+    });
+
+  } catch (error) {
+    console.error('Save template error:', error);
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : 'Save failed',
+      details: error instanceof Error ? error.toString() : 'Unknown error'
+    });
+  }
+}
+

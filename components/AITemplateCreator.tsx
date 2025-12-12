@@ -1,19 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { IconUpload, IconSparkles, IconX, IconRefresh, IconCheck } from './Icons';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { IconUpload, IconSparkles, IconX, IconRefresh, IconCheck, IconPlayerPlay, IconPlayerPause } from './Icons';
 import { toBase64, cropToSquareThumbnail } from '../utils/imageUtils';
 import { Button } from './Button';
 import { supabase } from '../config/supabase';
 
-interface ProcessResult {
-  file: File;
-  status: 'pending' | 'processing' | 'success' | 'failed';
-  thumbnailUrl?: string;
-  extractedData?: {
-    templateName: string;
-    mainCategory: string;
-    secondaryCategory: string;
-    styleDescription: string;
-  };
+// Icons for Play/Pause since they might not be in Icons.tsx yet, defining simple SVGs here or assuming existence
+const PlayIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+  </svg>
+);
+const PauseIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clipRule="evenodd" />
+  </svg>
+);
+
+type ProcessStatus = 'pending' | 'analyzing' | 'generating' | 'compressing' | 'saving' | 'success' | 'failed' | 'paused';
+
+interface ExtractedData {
+  templateName: string;
+  mainCategory: string;
+  secondaryCategory: string;
+  styleDescription: string;
+  fullPrompt: string;
+}
+
+interface QueueItem {
+  id: string;
+  file: File; // Style reference image
+  status: ProcessStatus;
+  originalPreviewUrl: string; // Local blob url for display
+  generatedPreviewUrl?: string; // Result from Gemini
+  extractedData?: ExtractedData;
   error?: string;
 }
 
@@ -22,7 +41,10 @@ interface CategoryInfo {
   description: string;
 }
 
-// 分类描述映射
+interface AITemplateCreatorProps {
+  onTemplatesUpdated?: () => void | Promise<void>;
+}
+
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Interior Design': '室内设计和装修',
   'Exterior Design': '建筑外观设计',
@@ -36,26 +58,63 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Free Canvas': '自由创作画布',
 };
 
-export const AITemplateCreator: React.FC = () => {
-  const [results, setResults] = useState<ProcessResult[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+export const AITemplateCreator: React.FC<AITemplateCreatorProps> = ({ onTemplatesUpdated }) => {
+  // Global State
+  const [baseImage, setBaseImage] = useState<string | null>(null); // Base64
+  const [baseImagePreview, setBaseImagePreview] = useState<string | null>(null); // Display URL
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const processingCountRef = useRef(0);
+  const MAX_CONCURRENT = 6; // API limit for concurrent generation
+
+  // Configuration State
   const [availableCategories, setAvailableCategories] = useState<CategoryInfo[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // 二级分类相关状态
+  // Sub-category config
   const [availableSubCategories, setAvailableSubCategories] = useState<string[]>([]);
   const [autoDetectSubCategory, setAutoDetectSubCategory] = useState<boolean>(true);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
   const [customSubCategory, setCustomSubCategory] = useState<string>('');
 
-  // 从 design_templates 表加载所有大分类
+  const baseImageInputRef = useRef<HTMLInputElement>(null);
+  const styleImageInputRef = useRef<HTMLInputElement>(null);
+  const refreshTemplatesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // NOTE: AITemplateCreator is currently used inside AdminPage.
+  // AdminPage already has `onTemplatesUpdated` which triggers a full reload from Supabase.
+  // We debounce refresh to avoid triggering a full reload for every single item in a big batch.
+  const scheduleTemplatesRefresh = useCallback((onTemplatesUpdated?: () => void | Promise<void>) => {
+    if (refreshTemplatesTimerRef.current) {
+      clearTimeout(refreshTemplatesTimerRef.current);
+    }
+    refreshTemplatesTimerRef.current = setTimeout(() => {
+      if (onTemplatesUpdated) {
+        Promise.resolve(onTemplatesUpdated()).catch((err) => {
+          console.error('Failed to refresh template data:', err);
+        });
+        return;
+      }
+      // Fallback for legacy usage (in case a parent wants to listen globally).
+      window.dispatchEvent(new CustomEvent('mynook:templates-updated'));
+    }, 1200);
+  }, []);
+
+  // --- Initialization ---
+
   useEffect(() => {
     loadCategories();
   }, []);
 
-  // 当主分类选择变化时，加载对应的二级分类
+  useEffect(() => {
+    return () => {
+      if (refreshTemplatesTimerRef.current) {
+        clearTimeout(refreshTemplatesTimerRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedCategories.length > 0) {
       loadSubCategories(selectedCategories);
@@ -64,35 +123,63 @@ export const AITemplateCreator: React.FC = () => {
     }
   }, [selectedCategories]);
 
+  // --- Data Loading ---
+
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      // 从 design_templates 表读取实际存在的分类
-      const { data, error } = await supabase
-        .from('design_templates')
-        .select('main_category');
+      // ✅ Prefer the configured main categories so AI Template Creator still works
+      // even when there are 0 templates in design_templates (e.g. after a full reset).
+      let uniqueCategories: string[] = [];
 
-      if (error) throw error;
+      try {
+        const { data: ordered, error: orderError } = await supabase
+          .from('main_category_order')
+          .select('main_category')
+          .order('sort_order');
+
+        if (!orderError && ordered && ordered.length > 0) {
+          uniqueCategories = (ordered as any[])
+            .map((item: any) => item.main_category)
+            .filter((cat): cat is string => Boolean(cat));
+        }
+      } catch (orderErr) {
+        console.warn('Failed to load main_category_order, falling back to template-based categories:', orderErr);
+      }
+
+      // Fallback: derive categories from existing templates (legacy behavior)
+      if (uniqueCategories.length === 0) {
+        const { data, error } = await supabase.from('design_templates').select('main_category');
+        if (error) throw error;
+
+        const categories = (data as any[] || [])
+          .map((item: any) => item.main_category)
+          .filter((cat): cat is string => Boolean(cat));
+        uniqueCategories = [...new Set(categories)] as string[];
+      }
+
+      // Final fallback: show the core tool categories even if DB is empty or blocked by RLS.
+      // This keeps the AI Template Creator usable right after wiping templates for retesting.
+      if (uniqueCategories.length === 0) {
+        uniqueCategories = [
+          'Interior Design',
+          'Exterior Design',
+          'Wall Design',
+          'Floor Style',
+          'Garden & Backyard Design',
+          'Festive Decor',
+        ];
+      }
       
-      // 提取并去重分类名称
-      const categories = (data as any[] || [])
-        .map((item: any) => item.main_category)
-        .filter((cat): cat is string => Boolean(cat));
-      const uniqueCategories = [...new Set(categories)] as string[];
-      
-      // 转换为选择器格式
       const categoryList: CategoryInfo[] = uniqueCategories.map(cat => ({
         name: cat,
         description: CATEGORY_DESCRIPTIONS[cat] || '',
       }));
       
       setAvailableCategories(categoryList);
-      // 默认全选
       setSelectedCategories(uniqueCategories);
     } catch (error) {
       console.error('Failed to load categories:', error);
-      setAvailableCategories([]);
-      setSelectedCategories([]);
     } finally {
       setIsLoadingCategories(false);
     }
@@ -100,14 +187,12 @@ export const AITemplateCreator: React.FC = () => {
 
   const loadSubCategories = async (mainCategories: string[]) => {
     try {
-      // 从 design_templates 表读取选中主分类下的所有二级分类
       const { data, error } = await supabase
         .from('design_templates')
         .select('sub_category, main_category, room_type');
 
       if (error) throw error;
       
-      // 提取二级分类（包括 sub_category 和 room_type）
       const subCats = (data as any[] || [])
         .filter((item: any) => mainCategories.includes(item.main_category))
         .flatMap((item: any) => {
@@ -122,7 +207,6 @@ export const AITemplateCreator: React.FC = () => {
       setAvailableSubCategories(uniqueSubCats.sort());
     } catch (error) {
       console.error('Failed to load sub-categories:', error);
-      setAvailableSubCategories([]);
     }
   };
 
@@ -131,78 +215,76 @@ export const AITemplateCreator: React.FC = () => {
     return session?.access_token || null;
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // --- Handlers ---
+
+  const handleBaseImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const base64 = await toBase64(file);
+      setBaseImage(base64);
+      setBaseImagePreview(URL.createObjectURL(file));
+    } catch (error) {
+      alert('Failed to load base image');
+    }
+  };
+
+  const handleStyleImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    
+
+    if (!baseImage) {
+      alert('请先上传标准底图 (Base Image)！');
+      return;
+    }
+
     if (selectedCategories.length === 0) {
       alert('请至少选择一个允许的分类范围！');
       return;
     }
-    
-    // 最多70张
-    const validFiles = files.slice(0, 70) as File[];
-    
+
+    // Limit to 70 as per requirement
+    const validFiles = files.slice(0, 70);
     if (files.length > 70) {
-      alert(`最多只能上传70张图片，已自动截取前70张。`);
+      alert('最多一次只能上传70张参考图，已自动截取前70张。');
     }
-    
-    // 初始化结果
-    const initialResults: ProcessResult[] = validFiles.map(file => ({
+
+    const newItems: QueueItem[] = validFiles.map(file => ({
+      id: Math.random().toString(36).substring(7),
       file,
       status: 'pending',
+      originalPreviewUrl: URL.createObjectURL(file),
     }));
-    setResults(initialResults);
 
-    // 开始处理
-    await processBatch(initialResults);
+    setQueue(prev => [...prev, ...newItems]);
+    setIsPaused(false); // Auto start
   };
 
-  const processBatch = async (batch: ProcessResult[]) => {
-    setIsProcessing(true);
-    const CONCURRENCY = 9;
+  // --- Queue Processing Engine ---
 
-    for (let i = 0; i < batch.length; i += CONCURRENCY) {
-      const chunk = batch.slice(i, i + CONCURRENCY);
-      
-      await Promise.allSettled(
-        chunk.map((result, idx) => processImage(result, i + idx))
-      );
-    }
-
-    setIsProcessing(false);
+  const updateItemStatus = (id: string, updates: Partial<QueueItem>) => {
+    setQueue(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
-  const processImage = async (result: ProcessResult, index: number) => {
-    // 更新状态为处理中
-    setResults(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], status: 'processing' };
-      return updated;
-    });
-
+  const processItem = async (item: QueueItem) => {
     try {
-      // 1. 读取原图
-      const originalImage = await toBase64(result.file);
-      
-      // 2. 本地裁切缩略图
-      const thumbnailImage = await cropToSquareThumbnail(result.file, 360, 0.85);
-
-      // 3. 调用API
       const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
+      if (!token) throw new Error('Not authenticated');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
 
-      const response = await fetch('/api/auto-create-template', {
+      // 1. Analyze Style
+      updateItemStatus(item.id, { status: 'analyzing', error: undefined });
+      const originalBase64 = await toBase64(item.file);
+      
+      const analyzeRes = await fetch('/api/analyze-style', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
-          originalImage,
-          thumbnailImage,
+          originalImage: originalBase64,
           allowedCategories: selectedCategories,
           autoDetectSubCategory,
           manualSubCategory: autoDetectSubCategory 
@@ -210,455 +292,433 @@ export const AITemplateCreator: React.FC = () => {
             : (customSubCategory.trim() || selectedSubCategory || null),
         }),
       });
+      
+      if (!analyzeRes.ok) {
+        const err = await analyzeRes.json();
+        throw new Error(err.error || 'Analysis failed');
+      }
+      const { extracted } = await analyzeRes.json();
+      updateItemStatus(item.id, { extractedData: extracted });
 
-      const data = await response.json();
+      // 2. Generate Preview
+      updateItemStatus(item.id, { status: 'generating' });
+      const generateRes = await fetch('/api/generate-preview', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          baseImage: baseImage, // The standard room image
+          prompt: extracted.fullPrompt,
+        }),
+      });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to process');
+      if (!generateRes.ok) {
+        const err = await generateRes.json();
+        throw new Error(err.error || 'Generation failed');
+      }
+      const { imageUrl: generatedImageUrl } = await generateRes.json();
+      updateItemStatus(item.id, { generatedPreviewUrl: generatedImageUrl });
+
+      // 3. Compress
+      updateItemStatus(item.id, { status: 'compressing' });
+      const compressedImage = await cropToSquareThumbnail(generatedImageUrl, 360, 0.85);
+
+      // 4. Save
+      updateItemStatus(item.id, { status: 'saving' });
+      const saveRes = await fetch('/api/save-template', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          templateName: extracted.templateName,
+          mainCategory: extracted.mainCategory,
+          secondaryCategory: extracted.secondaryCategory,
+          fullPrompt: extracted.fullPrompt,
+          thumbnailImage: compressedImage,
+        }),
+      });
+
+      if (!saveRes.ok) {
+        const err = await saveRes.json();
+        throw new Error(err.error || 'Save failed');
       }
 
-      // 成功
-      setResults(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          status: 'success',
-          thumbnailUrl: thumbnailImage,
-          extractedData: data.extracted,
-        };
-        return updated;
-      });
+      // Let other parts of the app refresh template lists (debounced).
+      scheduleTemplatesRefresh(onTemplatesUpdated);
+      updateItemStatus(item.id, { status: 'success' });
 
     } catch (error) {
-      console.error('Process image error:', error);
-      // 失败
-      setResults(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
-        };
-        return updated;
+      console.error('Processing error:', error);
+      updateItemStatus(item.id, { 
+        status: 'failed', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
+    } finally {
+      processingCountRef.current--;
+      triggerProcessing(); // Try to start next
     }
   };
 
-  const retryFailed = async () => {
-    const failedIndices: number[] = [];
-    const failedResults: ProcessResult[] = [];
-    
-    results.forEach((r, idx) => {
-      if (r.status === 'failed') {
-        failedIndices.push(idx);
-        failedResults.push({ ...r, status: 'pending' });
+  const getDisplayName = (item: QueueItem) => {
+    const name = item.extractedData?.templateName?.trim();
+    return name && name.length > 0 ? name : item.file.name;
+  };
+
+  const getDisplayCategoryLine = (item: QueueItem) => {
+    const main = item.extractedData?.mainCategory;
+    const sub = item.extractedData?.secondaryCategory;
+    if (!main) return '等待分析...';
+    // For Interior Design, do NOT show room_type here (already categorized under room type elsewhere).
+    if (main === 'Interior Design') return main;
+    return sub ? `${main} / ${sub}` : main;
+  };
+
+  const triggerProcessing = useCallback(() => {
+    if (isPaused) return;
+
+    setQueue(currentQueue => {
+      // We need to count how many are *currently* active based on state
+      // But React state update is async, so we use ref for immediate counting
+      // Actually, relying on ref for concurrency is safer.
+      
+      const pendingItems = currentQueue.filter(i => i.status === 'pending');
+      if (pendingItems.length === 0) return currentQueue;
+
+      let startedCount = 0;
+      // Try to fill slots
+      while (processingCountRef.current < MAX_CONCURRENT && pendingItems.length > 0) {
+        const nextItem = pendingItems.shift(); // Remove from local array
+        if (nextItem) {
+            processingCountRef.current++;
+            processItem(nextItem); // Start async process
+            startedCount++;
+        }
       }
+
+      return currentQueue; // State doesn't change here, processItem will update it
     });
+  }, [isPaused, baseImage, selectedCategories, autoDetectSubCategory, customSubCategory, selectedSubCategory]);
 
-    if (failedResults.length === 0) return;
+  // Trigger whenever queue length changes or paused state changes
+  useEffect(() => {
+    triggerProcessing();
+  }, [queue.length, isPaused, triggerProcessing]);
 
-    // 重置失败项状态
-    setResults(prev => {
-      const updated = [...prev];
-      failedIndices.forEach(idx => {
-        updated[idx] = { ...updated[idx], status: 'pending', error: undefined };
-      });
-      return updated;
-    });
 
-    // 重新处理
-    await processBatch(failedResults);
+  const handleRetry = (id: string) => {
+    updateItemStatus(id, { status: 'pending', error: undefined });
+    // Trigger will pick it up
   };
 
-  const clearResults = () => {
-    setResults([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const handleClear = () => {
+    if (window.confirm('确定要清空所有任务吗？正在处理的任务将在后台继续完成。')) {
+      setQueue([]);
+      processingCountRef.current = 0;
     }
   };
 
-  const successCount = results.filter(r => r.status === 'success').length;
-  const failedCount = results.filter(r => r.status === 'failed').length;
-  const processingCount = results.filter(r => r.status === 'processing').length;
-  const pendingCount = results.filter(r => r.status === 'pending').length;
+  // --- Render ---
 
   return (
-    <div className="space-y-6">
-      {/* 分类范围选择器 */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="font-semibold text-slate-900">选择AI识别范围</h3>
-            <p className="text-sm text-slate-600 mt-1">
-              AI将在选中的分类范围内识别图片。例如：只勾选 "Floor Style"，上传木地板图片，AI会自动识别木纹、材质、颜色等。
-            </p>
-          </div>
-          <div className="flex gap-2 text-sm">
-            <button
-              onClick={() => setSelectedCategories(availableCategories.map(c => c.name))}
-              className="px-3 py-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-              disabled={isProcessing || isLoadingCategories}
-            >
-              全选
-            </button>
-            <button
-              onClick={() => setSelectedCategories([])}
-              className="px-3 py-1 text-slate-600 hover:bg-slate-50 rounded transition-colors"
-              disabled={isProcessing || isLoadingCategories}
-            >
-              清空
-            </button>
-          </div>
-        </div>
-        
-        {isLoadingCategories ? (
-          <div className="animate-pulse space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-16 bg-slate-100 rounded-lg"></div>
-            ))}
-          </div>
-        ) : availableCategories.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            <p>暂无可用分类</p>
-            <p className="text-sm mt-2">请联系管理员添加分类或检查数据库连接</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {availableCategories.map(category => (
-              <label 
-                key={category.name} 
-                className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  selectedCategories.includes(category.name)
-                    ? 'border-indigo-400 bg-indigo-50'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
+    <div className="space-y-8 pb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Configuration */}
+        <div className="lg:col-span-1 space-y-6">
+          
+          {/* 1. Base Image Upload */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">1</span>
+              设置标准底图 (Base Image)
+            </h3>
+            <div className="space-y-4">
+              <div 
+                className={`relative aspect-square rounded-lg border-2 border-dashed overflow-hidden flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  baseImage ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
                 }`}
+                onClick={() => baseImageInputRef.current?.click()}
               >
+                {baseImagePreview ? (
+                  <img src={baseImagePreview} alt="Base" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <IconUpload className="w-8 h-8 text-slate-400 mb-2" />
+                    <span className="text-xs text-slate-500 text-center px-4">
+                      点击上传标准房间图<br/>(AI将把所有风格套用在此图上)
+                    </span>
+                  </>
+                )}
+                <input 
+                  ref={baseImageInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleBaseImageSelect}
+                  className="hidden" 
+                />
+              </div>
+              {baseImage && (
+                <button 
+                  onClick={() => baseImageInputRef.current?.click()}
+                  className="w-full text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  更换底图
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 2. Category Configuration */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+             <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">2</span>
+              配置分类范围
+            </h3>
+            
+            {/* Main Categories */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-medium text-slate-700">主分类 (Main Category)</label>
+                <div className="flex gap-2 text-xs">
+                  <button onClick={() => setSelectedCategories(availableCategories.map(c => c.name))} className="text-indigo-600">全选</button>
+                  <button onClick={() => setSelectedCategories([])} className="text-slate-500">清空</button>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {availableCategories.map(cat => (
+                  <label key={cat.name} className="flex items-center gap-2 p-2 rounded hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(cat.name)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedCategories([...selectedCategories, cat.name]);
+                        else setSelectedCategories(selectedCategories.filter(c => c !== cat.name));
+                      }}
+                      className="rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-slate-700">{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub Categories */}
+            <div className="border-t pt-4">
+               <label className="flex items-center gap-2 mb-4 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={selectedCategories.includes(category.name)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedCategories([...selectedCategories, category.name]);
-                    } else {
-                      setSelectedCategories(selectedCategories.filter(c => c !== category.name));
-                    }
-                  }}
-                  disabled={isProcessing}
-                  className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  checked={autoDetectSubCategory}
+                  onChange={(e) => setAutoDetectSubCategory(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-slate-900 flex items-center gap-2">
-                    {category.name}
-                    {selectedCategories.includes(category.name) && (
-                      <IconCheck className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    )}
-                  </div>
-                  {category.description && (
-                    <p className="text-xs text-slate-600 mt-1">{category.description}</p>
-                  )}
-                </div>
+                <span className="text-sm font-medium text-slate-900">AI自动识别二级分类</span>
               </label>
-            ))}
-          </div>
-        )}
-        
-        <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <IconSparkles className="w-4 h-4 text-blue-600 flex-shrink-0" />
-          <span>
-            已选择 <strong className="text-blue-700">{selectedCategories.length}</strong> 个分类
-            {selectedCategories.length > 0 && (
-              <span className="ml-2 text-slate-500">
-                （{selectedCategories.join('、')}）
-              </span>
-            )}
-          </span>
-        </div>
-      </div>
 
-      {/* 二级分类设置 */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 className="font-semibold text-slate-900 mb-4">二级分类设置</h3>
-        
-        {/* AI自动识别开关 */}
-        <label className="flex items-start gap-3 mb-4 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200 cursor-pointer hover:border-indigo-300 transition-colors">
-          <input
-            type="checkbox"
-            checked={autoDetectSubCategory}
-            onChange={(e) => {
-              setAutoDetectSubCategory(e.target.checked);
-              if (e.target.checked) {
-                // 开启自动识别时清空手动选择
-                setSelectedSubCategory('');
-                setCustomSubCategory('');
-              }
-            }}
-            disabled={isProcessing}
-            className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-5 h-5"
-          />
-          <div className="flex-1">
-            <div className="font-medium text-slate-900 flex items-center gap-2">
-              <IconSparkles className="w-5 h-5 text-indigo-600" />
-              使用AI自动识别/创建二级分类
-            </div>
-            <p className="text-xs text-slate-600 mt-1">
-              开启后，AI会根据图片内容自动识别并创建合适的二级分类（例如：Floor Style → "Hardwood - Herringbone"）
-            </p>
-          </div>
-        </label>
-
-        {/* 手动选择/创建区域 */}
-        {!autoDetectSubCategory && (
-          <div className="space-y-4 pl-8 border-l-2 border-indigo-200">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                选择现有二级分类
-              </label>
-              {availableSubCategories.length > 0 ? (
-                <select
-                  value={selectedSubCategory}
-                  onChange={(e) => {
-                    setSelectedSubCategory(e.target.value);
-                    setCustomSubCategory(''); // 清空自定义输入
-                  }}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  disabled={isProcessing}
-                >
-                  <option value="">-- 选择现有分类 --</option>
-                  {availableSubCategories.map(subCat => (
-                    <option key={subCat} value={subCat}>{subCat}</option>
-                  ))}
-                </select>
-              ) : (
-                <div className="text-sm text-slate-500 py-2 px-3 bg-slate-50 rounded-lg border border-slate-200">
-                  暂无可用的二级分类，请先选择主分类或直接创建新分类
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-300"></div>
-              <span className="text-xs text-slate-500 font-medium">或</span>
-              <div className="flex-1 h-px bg-slate-300"></div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                创建新的二级分类
-              </label>
-              <input
-                type="text"
-                value={customSubCategory}
-                onChange={(e) => {
-                  setCustomSubCategory(e.target.value);
-                  setSelectedSubCategory(''); // 清空下拉选择
-                }}
-                placeholder="例如: Modern Minimalist, Scandinavian Style, Oak Herringbone..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                disabled={isProcessing}
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                💡 建议使用英文命名，多个单词用空格或连字符分隔
-              </p>
-            </div>
-
-            {/* 验证提示 */}
-            {!selectedSubCategory && !customSubCategory && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <span className="text-amber-600 text-lg">⚠️</span>
-                <p className="text-sm text-amber-800">
-                  请选择现有分类或输入新的分类名称
-                </p>
-              </div>
-            )}
-            
-            {/* 当前设置显示 */}
-            {(selectedSubCategory || customSubCategory) && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <IconCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <p className="text-sm text-green-800">
-                  将使用二级分类: <strong>{customSubCategory || selectedSubCategory}</strong>
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 上传区域 */}
-      <div className="bg-white p-8 rounded-xl shadow-sm border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-colors">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileSelect}
-          disabled={isProcessing}
-          className="hidden"
-        />
-        <div className="text-center">
-          <IconUpload className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
-            AI自动模板创建
-          </h3>
-          <p className="text-sm text-slate-600 mb-6">
-            上传设计图片，AI将自动提取提示词、分类信息，并创建模板
-          </p>
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing || selectedCategories.length === 0 || isLoadingCategories}
-            primary
-            className="inline-flex items-center"
-          >
-            <IconSparkles className="w-5 h-5 mr-2" />
-            选择图片 (最多70张)
-          </Button>
-          {selectedCategories.length === 0 && !isLoadingCategories && (
-            <p className="text-red-600 text-sm mt-2">请先选择至少一个分类范围</p>
-          )}
-        </div>
-      </div>
-
-      {/* 进度统计 */}
-      {results.length > 0 && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-6 text-sm">
-              <span className="text-slate-700">总计: <strong>{results.length}</strong></span>
-              <span className="text-green-600">成功: <strong>{successCount}</strong></span>
-              <span className="text-red-600">失败: <strong>{failedCount}</strong></span>
-              <span className="text-blue-600">处理中: <strong>{processingCount}</strong></span>
-              {pendingCount > 0 && (
-                <span className="text-slate-500">待处理: <strong>{pendingCount}</strong></span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {failedCount > 0 && !isProcessing && (
-                <Button onClick={retryFailed} className="text-sm">
-                  <IconRefresh className="w-4 h-4 mr-1" />
-                  重试失败项
-                </Button>
-              )}
-              {!isProcessing && (
-                <Button onClick={clearResults} className="text-sm">
-                  <IconX className="w-4 h-4 mr-1" />
-                  清空结果
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* 进度条 */}
-          {isProcessing && (
-            <div className="mb-4">
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div 
-                  className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(successCount + failedCount) / results.length * 100}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-600 mt-2">
-                正在处理: {successCount + failedCount} / {results.length}
-              </p>
-            </div>
-          )}
-
-          {/* 结果列表 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-            {results.map((result, idx) => (
-              <div 
-                key={idx} 
-                className="relative aspect-square rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-50"
-                title={result.extractedData?.templateName || result.error || 'Processing...'}
-              >
-                {result.thumbnailUrl && (
-                  <img 
-                    src={result.thumbnailUrl} 
-                    alt={result.extractedData?.templateName || `Image ${idx + 1}`}
-                    className="w-full h-full object-cover" 
+              {!autoDetectSubCategory && (
+                <div className="space-y-3 pl-6 border-l-2 border-slate-100">
+                  <select
+                    value={selectedSubCategory}
+                    onChange={(e) => {
+                      setSelectedSubCategory(e.target.value);
+                      setCustomSubCategory('');
+                    }}
+                    className="w-full text-sm border-slate-300 rounded-lg"
+                  >
+                    <option value="">-- 选择现有 --</option>
+                    {availableSubCategories.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={customSubCategory}
+                    onChange={(e) => {
+                      setCustomSubCategory(e.target.value);
+                      setSelectedSubCategory('');
+                    }}
+                    placeholder="或输入新分类名称..."
+                    className="w-full text-sm border-slate-300 rounded-lg"
                   />
-                )}
-                {result.status === 'processing' && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="animate-spin h-6 w-6 border-2 border-white rounded-full border-t-transparent" />
-                  </div>
-                )}
-                {result.status === 'success' && (
-                  <div className="absolute top-1 right-1">
-                    <div className="bg-green-500 text-white rounded-full p-1 shadow-md">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-                {result.status === 'failed' && (
-                  <div className="absolute inset-0 bg-red-500/90 flex flex-col items-center justify-center text-white text-xs p-2">
-                    <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-center line-clamp-2">{result.error}</span>
-                  </div>
-                )}
-                {result.status === 'pending' && (
-                  <div className="absolute inset-0 bg-slate-200/80 flex items-center justify-center">
-                    <span className="text-slate-600 text-xs">待处理</span>
-                  </div>
-                )}
-                {result.extractedData && result.status === 'success' && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-1 text-xs truncate">
-                    {result.extractedData.templateName}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* 详细结果表格 */}
-          {successCount > 0 && (
-            <div className="mt-6">
-              <h4 className="font-semibold text-slate-900 mb-3">创建成功的模板</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-700">模板名称</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-700">主分类</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-700">二级分类</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-700">文件名</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {results
-                      .filter(r => r.status === 'success' && r.extractedData)
-                      .map((result, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="px-4 py-2 text-sm text-slate-900">{result.extractedData!.templateName}</td>
-                          <td className="px-4 py-2 text-sm text-slate-600">{result.extractedData!.mainCategory}</td>
-                          <td className="px-4 py-2 text-sm text-slate-600">{result.extractedData!.secondaryCategory}</td>
-                          <td className="px-4 py-2 text-sm text-slate-500">{result.file.name}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+          {/* 3. Batch Upload */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">3</span>
+              批量上传风格参考图
+            </h3>
+            
+            <div className={`text-center p-6 border-2 border-dashed rounded-xl transition-colors ${
+              !baseImage ? 'bg-slate-50 border-slate-200 cursor-not-allowed opacity-60' : 'bg-indigo-50/50 border-indigo-200 hover:border-indigo-400 cursor-pointer'
+            }`}>
+              <IconSparkles className="mx-auto h-10 w-10 text-indigo-400 mb-3" />
+              <p className="text-sm text-slate-600 mb-4">
+                {baseImage ? '选择多张风格参考图片 (Max 70)' : '请先在上方设置标准底图'}
+              </p>
+              <Button
+                onClick={() => styleImageInputRef.current?.click()}
+                disabled={!baseImage}
+                primary
+                className="w-full"
+              >
+                选择图片
+              </Button>
+              <input 
+                ref={styleImageInputRef}
+                type="file" 
+                multiple 
+                accept="image/*" 
+                onChange={handleStyleImagesSelect}
+                className="hidden" 
+                disabled={!baseImage}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Queue & Status */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[600px] flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
+              <div className="flex items-center gap-4">
+                <h3 className="font-semibold text-slate-900">生成队列 ({queue.length})</h3>
+                <div className="flex gap-2 text-xs font-medium">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    处理中: {queue.filter(i => ['analyzing', 'generating', 'compressing', 'saving'].includes(i.status)).length}
+                  </span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                    完成: {queue.filter(i => i.status === 'success').length}
+                  </span>
+                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full">
+                    失败: {queue.filter(i => i.status === 'failed').length}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setIsPaused(!isPaused);
+                    if (isPaused) triggerProcessing(); // Resume immediately
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    isPaused 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                      : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                  }`}
+                  disabled={queue.length === 0 || queue.every(i => i.status === 'success')}
+                >
+                  {isPaused ? <><PlayIcon className="w-4 h-4"/> 继续</> : <><PauseIcon className="w-4 h-4"/> 暂停</>}
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm"
+                  disabled={queue.length === 0}
+                >
+                  清空
+                </button>
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* 使用说明 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h4 className="font-semibold text-blue-900 mb-2">使用说明</h4>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li>支持批量上传最多70张图片</li>
-          <li>并发处理9张图片，提高效率</li>
-          <li>AI自动提取模板名称、分类和完整提示词</li>
-          <li>图片自动裁切压缩为360×360px缩略图</li>
-          <li>失败的图片可以一键重试</li>
-          <li>支持Zapier等自动化工具集成（使用API Key）</li>
-        </ul>
+            {/* List */}
+            <div className="flex-1 p-4 overflow-y-auto max-h-[800px]">
+              {queue.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                  <IconSparkles className="w-12 h-12 mb-4 opacity-20" />
+                  <p>任务队列空闲</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {queue.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-3 flex gap-3 bg-white hover:shadow-md transition-shadow">
+                      {/* Left: Original Ref */}
+                      <div className="w-20 h-20 flex-shrink-0 relative">
+                        <img src={item.originalPreviewUrl} className="w-full h-full object-cover rounded bg-slate-100" alt="Ref" />
+                        <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] text-center py-0.5">参考图</span>
+                      </div>
+
+                      {/* Middle: Status & Info */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium text-slate-900 text-sm truncate" title={item.file.name}>
+                              {getDisplayName(item)}
+                            </h4>
+                            {item.status === 'failed' && (
+                              <button onClick={() => handleRetry(item.id)} className="text-indigo-600 hover:text-indigo-700" title="重试">
+                                <IconRefresh className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 truncate">
+                            {getDisplayCategoryLine(item)}
+                          </p>
+                        </div>
+
+                        {/* Status Bar */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                            <span>
+                              {item.status === 'pending' && '等待中'}
+                              {item.status === 'analyzing' && '正在分析风格...'}
+                              {item.status === 'generating' && 'AI 绘制中...'}
+                              {item.status === 'compressing' && '压缩处理...'}
+                              {item.status === 'saving' && '正在入库...'}
+                              {item.status === 'success' && '已完成'}
+                              {item.status === 'failed' && '失败'}
+                              {item.status === 'paused' && '已暂停'}
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-500 ${
+                                item.status === 'success' ? 'bg-green-500' :
+                                item.status === 'failed' ? 'bg-red-500' :
+                                item.status === 'pending' ? 'bg-slate-300' :
+                                'bg-indigo-500 animate-pulse'
+                              }`}
+                              style={{
+                                width: 
+                                  item.status === 'pending' ? '0%' :
+                                  item.status === 'analyzing' ? '25%' :
+                                  item.status === 'generating' ? '50%' :
+                                  item.status === 'compressing' ? '75%' :
+                                  item.status === 'saving' ? '90%' :
+                                  '100%'
+                              }}
+                            />
+                          </div>
+                          {item.error && (
+                            <p className="text-[10px] text-red-500 truncate" title={item.error}>
+                              {item.error}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Result Preview */}
+                      <div className="w-20 h-20 flex-shrink-0 relative border border-slate-100 rounded bg-slate-50 flex items-center justify-center">
+                        {item.generatedPreviewUrl ? (
+                          <>
+                            <img src={item.generatedPreviewUrl} className="w-full h-full object-cover rounded" alt="Result" />
+                            <span className="absolute bottom-0 left-0 right-0 bg-indigo-600/80 text-white text-[10px] text-center py-0.5">
+                              生成结果
+                            </span>
+                          </>
+                        ) : (
+                          <div className="text-slate-300 text-xs text-center px-1">
+                            {item.status === 'failed' ? '无结果' : '等待生成'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
